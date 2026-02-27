@@ -45,6 +45,7 @@
       --bg3:         #ede0c0;
       --surface:     #fff9ef;
       --surface2:    #fdf0d5;
+      --gold-dark:   #7a5c10;
       --border:      rgba(122,92,16,0.3);
       --text:        #3b2d1a;
       --text-muted:  #5c4a2a;
@@ -608,7 +609,6 @@
     }
 
     /* ── LIGHT THEME TEXT COLOUR OVERRIDES ─────────────── */
-    /* gold (#d4a843) fails contrast on light bg — use gold-dark (#7a5c10) for all text */
     [data-theme="light"] .nav-title,
     [data-theme="light"] .nav-links a:hover,
     [data-theme="light"] .theme-toggle:hover,
@@ -626,13 +626,9 @@
     [data-theme="light"] .announce-date {
       color: var(--gold-dark) !important;
     }
-
-    /* gold-light (#f0cc74) on light bg fails badly — use heading color instead */
     [data-theme="light"] h1 span {
       color: var(--heading) !important;
     }
-
-    /* borders using gold are decorative — keep but darken slightly */
     [data-theme="light"] .btn-secondary,
     [data-theme="light"] .badge-tournament,
     [data-theme="light"] .theme-toggle:hover {
