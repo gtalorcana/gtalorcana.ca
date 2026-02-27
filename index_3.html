@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GTA Lorcana — Greater Toronto Area</title>
-  <link rel="icon" type="image/svg+xml" href="/gtalorcana-logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
@@ -607,16 +606,13 @@
     }
 
     /* ── RESPONSIVE ──────────────────────────────────────── */
-    @media (max-width: 768px) {
+    @media (max-width: 700px) {
       nav { padding: 1rem 1.25rem; }
       .nav-links { display: none; }
       #about .about-grid { grid-template-columns: 1fr; }
       .join-inner { padding: 2.5rem 1.5rem; }
       .step-arrow { display: none; }
       .btn { font-size: .85rem !important; padding: .85rem 1.25rem !important; width: 100%; box-sizing: border-box; text-align: center; }
-    }
-    @media (max-width: 640px) {
-      .btn { font-size: .60rem !important; padding: .60rem 1.05rem !important; width: 100%; box-sizing: border-box; text-align: center; }
     }
   </style>
 </head>
@@ -628,7 +624,9 @@
 <!-- NAV -->
 <nav>
   <a class="nav-logo" href="#hero">
-    <img src="gtalorcana-logo.svg" alt="GTA Lorcana Logo" />
+    <!-- Replace src with your logo URL -->
+    <!-- <img src="your-logo.png" alt="GTA Lorcana Logo" /> -->
+    <div class="logo-placeholder">✦</div>
     <span class="nav-title">GTA Lorcana</span>
   </a>
   <ul class="nav-links">
@@ -648,14 +646,15 @@
   <div class="hero-glow hero-glow-1"></div>
   <div class="hero-glow hero-glow-2"></div>
 
-  <img src="gtalorcana-logo.svg" class="hero-logo" alt="GTA Lorcana" />
+  <!-- Replace with your logo: <img src="your-logo.png" class="hero-logo" alt="GTA Lorcana" /> -->
+  <div class="hero-logo-placeholder">✦</div>
 
   <p class="hero-eyebrow">Greater Toronto Area</p>
   <h1>GTA Lorcana<span>Where the Great Illuminary shines</span></h1>
   <p class="hero-desc">A community of Disney Lorcana enthusiasts across the GTA — connecting players, hosting events, and celebrating the magic of the Inklands.</p>
   <div class="hero-cta">
     <a class="btn btn-primary" href="#join">Join Our Community</a>
-    <a class="btn btn-secondary" href="https://discord.gg/sNyzVMnTs6" target="_blank" rel="noopener">💬 Discord</a>
+    <a class="btn btn-secondary" href="https://discord.gg/YOUR_INVITE" target="_blank" rel="noopener">💬 Discord</a>
   </div>
 </section>
 
@@ -743,7 +742,7 @@
 
   <div class="discord-sync-note reveal" style="transition-delay:.2s">
     <span>💬</span>
-    <span>Announcements sync automatically from our <a href="https://discord.gg/sNyzVMnTs6" target="_blank" style="color:var(--gold)">Discord server</a>. Post in #announcements there to update this page!</span>
+    <span>Announcements sync automatically from our <a href="https://discord.gg/YOUR_INVITE" target="_blank" style="color:var(--gold)">Discord server</a>. Post in #announcements there to update this page!</span>
   </div>
 </section>
 
@@ -776,7 +775,7 @@
       </div>
     </div>
 
-    <a class="btn btn-primary" href="https://discord.gg/sNyzVMnTs6" target="_blank" rel="noopener" style="font-size:.9rem;padding:1rem 2.5rem;">
+    <a class="btn btn-primary" href="https://discord.gg/YOUR_INVITE" target="_blank" rel="noopener" style="font-size:.9rem;padding:1rem 2rem;max-width:90%;width:auto;text-align:center;white-space:normal;word-break:break-word;display:inline-block;">
       💬 Join GTA Lorcana on Discord
     </a>
 
@@ -802,21 +801,23 @@
   <div class="footer-logo">GTA Lorcana</div>
   <p>Greater Toronto Area's Disney Lorcana Community</p>
   <p style="margin-top:.5rem">
-    <a href="https://discord.gg/sNyzVMnTs6" target="_blank">Discord</a>
+    <a href="https://discord.gg/YOUR_INVITE" target="_blank">Discord</a>
     &nbsp;·&nbsp;
     <a href="https://www.disneylorcana.com" target="_blank">Disney Lorcana Official</a>
   </p>
-  <p style="margin-top:1rem;opacity:.4">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger’s Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
+  <p style="margin-top:1rem;opacity:.4">Not affiliated with Disney or Ravensburger · Fan-run community</p>
 </footer>
 
 <script>
   /* ── CONFIG — update these to match your repo ─── */
+  const GITHUB_OWNER = 'YOUR_GITHUB_USERNAME';
+  const GITHUB_REPO  = 'YOUR_REPO_NAME';
   const ANNOUNCEMENTS_PATH = 'data/announcements.json';
 
   /* ── LOAD ANNOUNCEMENTS ─── */
   async function loadAnnouncements() {
     const list = document.getElementById('announce-list');
-    const url = `/${ANNOUNCEMENTS_PATH}`;
+    const url = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/refs/heads/main/${ANNOUNCEMENTS_PATH}`;
 
     try {
       const res = await fetch(`${url}?t=${Date.now()}`); // cache-bust
@@ -846,7 +847,7 @@
       list.innerHTML = `
         <div class="discord-sync-note">
           <span>⚠️</span>
-          <span>Couldn't load announcements right now. Check our <a href="https://discord.gg/sNyzVMnTs6" target="_blank" style="color:var(--gold)">Discord</a> for the latest news.</span>
+          <span>Couldn't load announcements right now. Check our <a href="https://discord.gg/YOUR_INVITE" target="_blank" style="color:var(--gold)">Discord</a> for the latest news.</span>
         </div>`;
     }
   }
