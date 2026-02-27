@@ -53,24 +53,6 @@
       --star:        rgba(122,92,16,0.5);
     }
 
-    /* ── SKIP NAV ────────────────────────────────────────── */
-    .skip-nav {
-      position: absolute;
-      top: -100%;
-      left: 1rem;
-      background: var(--gold);
-      color: var(--ink);
-      padding: .5rem 1rem;
-      border-radius: 4px;
-      font-family: 'Cinzel', serif;
-      font-size: .85rem;
-      font-weight: 600;
-      z-index: 9999;
-      text-decoration: none;
-      transition: top .2s;
-    }
-    .skip-nav:focus { top: 1rem; }
-
     /* ── RESET & BASE ────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -321,7 +303,7 @@
       color: var(--gold);
       font-size: 1.2rem;
       letter-spacing: .5em;
-      opacity: .5;
+      opacity: .8;
     }
 
     /* ── SECTIONS ────────────────────────────────────────── */
@@ -493,7 +475,7 @@
       color: var(--text-muted);
       font-family: 'Cinzel', serif;
       letter-spacing: .1em;
-      opacity: .6;
+      opacity: 1;
     }
 
     .discord-sync-note {
@@ -558,7 +540,7 @@
       color: var(--text-muted);
     }
     .step-arrow {
-      color: var(--gold); opacity: .4; font-size: 1.5rem;
+      color: var(--gold); opacity: .8; font-size: 1.5rem;
       align-self: center; margin-top: -1rem;
     }
 
@@ -656,6 +638,24 @@
     [data-theme="light"] .theme-toggle:hover {
       border-color: var(--gold-dark) !important;
     }
+
+    /* ── SKIP NAV ────────────────────────────────────────── */
+    .skip-nav {
+      position: absolute;
+      top: -100%;
+      left: 1rem;
+      background: var(--gold);
+      color: var(--ink);
+      padding: .5rem 1rem;
+      border-radius: 4px;
+      font-family: 'Cinzel', serif;
+      font-size: .85rem;
+      font-weight: 600;
+      z-index: 9999;
+      text-decoration: none;
+      transition: top .2s;
+    }
+    .skip-nav:focus { top: 1rem; }
 
     /* ── RESPONSIVE ──────────────────────────────────────── */
 
@@ -901,7 +901,7 @@
     &nbsp;·&nbsp;
     <a href="https://www.disneylorcana.com" target="_blank">Disney Lorcana Official</a>
   </p>
-  <p style="margin-top:1rem;opacity:.4">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger’s Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
+  <p style="margin-top:1rem;">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger’s Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
 </footer>
 
 <script>
