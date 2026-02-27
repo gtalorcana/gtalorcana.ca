@@ -806,14 +806,12 @@
 
 <script>
   /* ── CONFIG — update these to match your repo ─── */
-  const GITHUB_OWNER = 'gtalorcana';
-  const GITHUB_REPO  = 'gtalorcana.ca';
   const ANNOUNCEMENTS_PATH = 'data/announcements.json';
 
   /* ── LOAD ANNOUNCEMENTS ─── */
   async function loadAnnouncements() {
     const list = document.getElementById('announce-list');
-    const url = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/refs/heads/main/${ANNOUNCEMENTS_PATH}`;
+    const url = `/${ANNOUNCEMENTS_PATH}`;
 
     try {
       const res = await fetch(`${url}?t=${Date.now()}`); // cache-bust
