@@ -813,7 +813,7 @@
   /* ── LOAD ANNOUNCEMENTS ─── */
   async function loadAnnouncements() {
     const list = document.getElementById('announce-list');
-    const url = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${ANNOUNCEMENTS_PATH}`;
+    const url = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/refs/heads/main/${ANNOUNCEMENTS_PATH}`;
 
     try {
       const res = await fetch(`${url}?t=${Date.now()}`); // cache-bust
