@@ -53,6 +53,24 @@
       --star:        rgba(122,92,16,0.5);
     }
 
+    /* ── SKIP NAV ────────────────────────────────────────── */
+    .skip-nav {
+      position: absolute;
+      top: -100%;
+      left: 1rem;
+      background: var(--gold);
+      color: var(--ink);
+      padding: .5rem 1rem;
+      border-radius: 4px;
+      font-family: 'Cinzel', serif;
+      font-size: .85rem;
+      font-weight: 600;
+      z-index: 9999;
+      text-decoration: none;
+      transition: top .2s;
+    }
+    .skip-nav:focus { top: 1rem; }
+
     /* ── RESET & BASE ────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -607,6 +625,38 @@
       transform: none;
     }
 
+    /* ── LIGHT THEME TEXT COLOUR OVERRIDES ─────────────── */
+    /* gold (#d4a843) fails contrast on light bg — use gold-dark (#7a5c10) for all text */
+    [data-theme="light"] .nav-title,
+    [data-theme="light"] .nav-links a:hover,
+    [data-theme="light"] .theme-toggle:hover,
+    [data-theme="light"] .hero-eyebrow,
+    [data-theme="light"] .btn-secondary,
+    [data-theme="light"] .divider,
+    [data-theme="light"] .section-label,
+    [data-theme="light"] .stat-num,
+    [data-theme="light"] .event-date,
+    [data-theme="light"] .badge-tournament,
+    [data-theme="light"] .step-num,
+    [data-theme="light"] .step-arrow,
+    [data-theme="light"] footer a,
+    [data-theme="light"] .footer-logo,
+    [data-theme="light"] .announce-date {
+      color: var(--gold-dark) !important;
+    }
+
+    /* gold-light (#f0cc74) on light bg fails badly — use heading color instead */
+    [data-theme="light"] h1 span {
+      color: var(--heading) !important;
+    }
+
+    /* borders using gold are decorative — keep but darken slightly */
+    [data-theme="light"] .btn-secondary,
+    [data-theme="light"] .badge-tournament,
+    [data-theme="light"] .theme-toggle:hover {
+      border-color: var(--gold-dark) !important;
+    }
+
     /* ── RESPONSIVE ──────────────────────────────────────── */
 
     /* Large desktops — 1200px+ uses default styles */
@@ -661,6 +711,8 @@
 </head>
 <body>
 
+<a href="#main-content" class="skip-nav">Skip to content</a>
+
 <!-- Starfield -->
 <div id="stars"></div>
 
@@ -683,6 +735,7 @@
 </nav>
 
 <!-- HERO -->
+<main id="main-content">
 <section id="hero">
   <div class="hero-glow hero-glow-1"></div>
   <div class="hero-glow hero-glow-2"></div>
@@ -839,6 +892,7 @@
 </section>
 
 <!-- FOOTER -->
+</main>
 <footer>
   <div class="footer-logo">GTA Lorcana</div>
   <p>Greater Toronto Area's Disney Lorcana Community</p>
