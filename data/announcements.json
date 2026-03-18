@@ -1,5 +1,14 @@
 [
   {
+    "id": "1483902968322457772",
+    "title": "@everyone",
+    "text": "@everyone \n\n📣 GTA Lorcana — Server Update\n\nA few things have been cooking behind the scenes. Here's what's new:\n\n🌐 Website Rework\nFully rebuilt — cleaner, faster, more useful. Check it out at [gtalorcana.ca](https://gtalorcana.ca/) and share with people in your community!\n\n⭐ Roles\nWe now have a rarity-based role system reflecting your league achievements, assigned automatically based on your results. See <#1483899917616550080> for the full breakdown and to make sure your account is linked correctly.\n\n🤖 Bot Updates\nThe GTA Lorcana Bot has been running quietly — here's what it actually does:\n<#1479988278164852746> — automatically updated with active local stores and stores that need our support\n<#1253943193519784028> — standings pulled and logged automatically after events\n<#1422319248218525727> — auto-populated starting two weeks before set champs season\n<#1481489441746059395> (beta) — monitors events for open spots. Get notified when space opens up in a watched event (yes, this means you, Montreal CCQ)\nFull automation means less room for manual corrections — results should be submitted correctly at your local store. If something looks wrong, message Ryan.\n\n💜 Server Boosts\nWe're at Level 1. Five more boosts gets us to Level 2, which would unlock custom role icons — the actual Lorcana rarity symbols on your roles. I already contribute 2 boosts myself. If you've been thinking about it, now's a great time.\n\n💬 Feedback\nHave ideas? City roles? Something broken? Something you'd like to see? Drop it in <#1346159732490240020> or use the anonymous form linked there.",
+    "author": "GTA Lorcana",
+    "date": "March 18, 2026",
+    "timestamp": "2026-03-18T19:00:37.232000+00:00",
+    "icon": "📅"
+  },
+  {
     "id": "1476774569749647502",
     "title": "Hello from Discord!",
     "text": "Hello from Discord!",
