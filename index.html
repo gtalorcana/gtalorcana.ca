@@ -799,7 +799,9 @@
   <ul class="nav-links">
     <li><a href="#about">About</a></li>
     <li><a href="#events">Events</a></li>
+    <!-- Temporarily omit Announcements for Soft Launch
     <li><a href="#announcements">News</a></li>
+    -->
     <li><a href="#partners">Partners</a></li>
     <li><a href="#join">Join</a></li>
   </ul>
@@ -876,14 +878,17 @@
     <p class="events-note">📣 Full event listings and RSVPs are posted in our Discord server.</p>
   </section>
 
+  <!-- Temporarily omit Announcements for Soft Launch
+
   <div class="divider">✦ ✦ ✦</div>
 
-  <!-- ANNOUNCEMENTS -->
+
+  <!- - ANNOUNCEMENTS - ->
   <section id="announcements">
     <p class="section-label">Latest News</p>
     <h2>Announcements</h2>
     <div class="section-rule"></div>
-    <!-- Announcements load dynamically from data/announcements.json -->
+    <!- - Announcements load dynamically from data/announcements.json - ->
     <div class="announce-list" id="announce-list">
       <div class="announce-loading">
         <span class="loading-dot"></span>
@@ -892,6 +897,8 @@
       </div>
     </div>
   </section>
+
+  -->
 
   <div class="divider">✦ ✦ ✦</div>
 
@@ -934,7 +941,7 @@
         <div class="step-arrow">→</div>
         <div class="step">
           <div class="step-num">2</div>
-          <span class="step-label">Find Your Store</span>
+          <span class="step-label">Find A Nearby Store</span>
           <span class="step-desc">Check #where-to-play for events near you.</span>
         </div>
         <div class="step-arrow">→</div>
@@ -1066,8 +1073,8 @@
             .replace(/&/g,'&amp;').replace(/</g,'&lt;')
             .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-
-  loadAnnouncements();
+  // Temporarily omit Announcements for Soft Launch
+  // loadAnnouncements();
   loadEvents();
 
   /* ── STARFIELD ─── */
