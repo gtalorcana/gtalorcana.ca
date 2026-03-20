@@ -10,6 +10,7 @@ const RPH_BASE = 'https://api.cloudflare.ravensburgerplay.com/hydraproxy/api/v2'
 
 const ALLOWED_ORIGINS = [
   'https://gtalorcana.ca',
+  'https://www.gtalorcana.ca',
   'http://localhost',
   'http://127.0.0.1',
 ];

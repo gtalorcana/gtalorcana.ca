@@ -9,6 +9,5 @@ invocation_logs = true
 
 [env.production]
 routes = [
-  { pattern = "gtalorcana.ca/id-check/event", zone_name = "gtalorcana.ca" },
-  { pattern = "gtalorcana.ca/id-check/analyze", zone_name = "gtalorcana.ca" },
+  { pattern = "api.gtalorcana.ca/*", zone_name = "gtalorcana.ca" },
 ]
