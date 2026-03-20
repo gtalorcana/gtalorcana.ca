@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:title" content="ID Check — GTA Lorcana" />
+  <meta property="og:description" content="Should you take the Intentional Draw? Find out instantly." />
+  <meta property="og:image" content="https://www.gtalorcana.ca/gtalorcana-logo.svg" />
+  <title>ID Check — GTA Lorcana</title>
+  <link rel="icon" type="image/svg+xml" href="/gtalorcana-logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ── TOKENS ──────────────────────────────────────────── */
+    :root {
+      --gold:       #d4a843;
+      --gold-light: #f0cc74;
+      --gold-dark:  #9a7520;
+      --transition: 0.3s cubic-bezier(.4,0,.2,1);
+    }
+    [data-theme="dark"] {
+      --bg:         #0d0b14;
+      --bg2:        #13101e;
+      --surface:    #1e1a2e;
+      --surface2:   #262040;
+      --border:     rgba(212,168,67,0.18);
+      --text:       #e8dfc8;
+      --text-muted: #9488b0;
+      --heading:    #f0cc74;
+      --glow:       rgba(212,168,67,0.22);
+      --star:       rgba(212,168,67,0.55);
+    }
+    [data-theme="light"] {
+      --bg:         #fdf6e3;
+      --bg2:        #f5ead2;
+      --surface:    #fff9ef;
+      --surface2:   #fdf0d5;
+      --border:     rgba(122,92,16,0.3);
+      --text:       #3b2d1a;
+      --text-muted: #5c4a2a;
+      --heading:    #7a5c10;
+      --glow:       rgba(122,92,16,0.12);
+      --star:       rgba(122,92,16,0.45);
+    }
+
+    /* ── RESET ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* ── STARFIELD ───────────────────────────────────────── */
+    #stars {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .star {
+      position: absolute; border-radius: 50%;
+      background: var(--star);
+      animation: twinkle var(--dur, 3s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+    @keyframes twinkle {
+      0%,100% { opacity: .1; transform: scale(1); }
+      50%      { opacity: .85; transform: scale(1.4); }
+    }
+    [data-theme="light"] #stars { opacity: 0.35; }
+
+    /* ── NOISE ───────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      background-size: 180px; opacity: .6;
+    }
+
+    /* ── NAV ─────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .85rem 1.5rem;
+      background: rgba(13,11,20,0.75);
+      backdrop-filter: blur(18px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+    [data-theme="light"] nav { background: rgba(253,246,227,0.85); }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: .65rem;
+      text-decoration: none;
+    }
+    .nav-logo img {
+      height: 38px; width: 38px; border-radius: 50%;
+      border: 2px solid var(--gold); padding: 2px; object-fit: contain;
+    }
+    .nav-title {
+      font-family: 'Cinzel', serif; font-size: .88rem; font-weight: 600;
+      color: var(--gold); letter-spacing: .08em;
+    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-back {
+      font-family: 'Cinzel', serif; font-size: .72rem; letter-spacing: .1em;
+      text-decoration: none; color: var(--text-muted);
+      text-transform: uppercase; transition: color .2s;
+    }
+    .nav-back:hover { color: var(--gold); }
+    .theme-toggle {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 999px; padding: .3rem .8rem; cursor: pointer;
+      font-size: .75rem; color: var(--text-muted);
+      transition: all .2s; display: flex; align-items: center; gap: .35rem;
+    }
+    .theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── PAGE LAYOUT ─────────────────────────────────────── */
+    main {
+      position: relative; z-index: 2;
+      padding: 6rem 1rem 3rem;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 1.5rem;
+    }
+
+    .page-header { text-align: center; margin-bottom: .5rem; }
+    .page-header h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
+      color: var(--heading);
+      letter-spacing: .06em;
+    }
+    .page-header p {
+      color: var(--text-muted); font-size: .9rem; margin-top: .4rem;
+    }
+
+    /* ── CARD ────────────────────────────────────────────── */
+    .card {
+      width: 100%; max-width: 480px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: 0 0 40px var(--glow);
+    }
+
+    .card-title {
+      font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 1rem;
+    }
+
+    /* ── FORM ELEMENTS ───────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      font-family: 'Cinzel', serif; font-size: .72rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted);
+    }
+
+    input, select {
+      font-family: 'Lora', serif; font-size: 16px; /* prevents iOS zoom */
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: .65rem .9rem; width: 100%;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+      min-height: 44px;
+      -webkit-appearance: none; appearance: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212,168,67,0.15);
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23d4a843' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right .9rem center;
+      padding-right: 2.5rem;
+    }
+    input:disabled, select:disabled {
+      opacity: .5; cursor: not-allowed;
+    }
+
+    .input-row { display: flex; gap: .6rem; }
+    .input-row input { flex: 1; }
+
+    /* ── BUTTONS ─────────────────────────────────────────── */
+    .btn {
+      font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      border: none; border-radius: 8px; cursor: pointer;
+      padding: .65rem 1.2rem; min-height: 44px;
+      transition: all .2s; white-space: nowrap;
+    }
+    .btn-secondary {
+      background: var(--surface2); color: var(--gold);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover:not(:disabled) { border-color: var(--gold); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: #0d0b14; width: 100%;
+      box-shadow: 0 2px 16px rgba(212,168,67,0.3);
+    }
+    .btn-primary:hover:not(:disabled) {
+      box-shadow: 0 4px 24px rgba(212,168,67,0.5);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+
+    /* ── RADIO GROUP ─────────────────────────────────────── */
+    .radio-group { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .radio-option {
+      flex: 1; min-width: 80px;
+      position: relative;
+    }
+    .radio-option input[type="radio"] { display: none; }
+    .radio-option label {
+      display: flex; align-items: center; justify-content: center;
+      font-size: .78rem; padding: .55rem .4rem; min-height: 44px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer;
+      transition: all .2s; text-transform: uppercase; letter-spacing: .08em;
+      text-align: center; line-height: 1.2;
+    }
+    .radio-option input:checked + label {
+      border-color: var(--gold); color: var(--gold);
+      background: rgba(212,168,67,0.1);
+      box-shadow: 0 0 0 2px rgba(212,168,67,0.2);
+    }
+
+    /* ── EVENT INFO STRIP ────────────────────────────────── */
+    .event-info {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: .75rem 1rem;
+      font-size: .85rem; display: none; flex-direction: column; gap: .2rem;
+    }
+    .event-info.visible { display: flex; }
+    .event-info-name {
+      font-family: 'Cinzel', serif; font-size: .88rem; color: var(--heading);
+    }
+    .event-info-meta { color: var(--text-muted); font-size: .8rem; }
+
+    /* ── DIVIDER ─────────────────────────────────────────── */
+    .divider {
+      border: none; border-top: 1px solid var(--border); margin: .75rem 0;
+    }
+
+    /* ── SPINNER ─────────────────────────────────────────── */
+    .spinner {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 3px solid rgba(212,168,67,0.2);
+      border-top-color: var(--gold);
+      animation: spin .7s linear infinite;
+      margin: 1.5rem auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESULT CARD ─────────────────────────────────────── */
+    #result { display: none; }
+    #result.visible { display: block; }
+
+    .result-header {
+      text-align: center; margin-bottom: 1.25rem;
+    }
+    .result-name {
+      font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--heading);
+    }
+    .result-record {
+      color: var(--text-muted); font-size: .85rem; margin-top: .2rem;
+    }
+
+    .verdict-block { margin-bottom: 1rem; }
+    .verdict-label {
+      font-family: 'Cinzel', serif; font-size: .72rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: .4rem;
+    }
+    .verdict-badge {
+      display: flex; align-items: center; gap: .6rem;
+      padding: .7rem 1rem; border-radius: 8px; font-weight: 600;
+      font-size: 1rem; margin-bottom: .3rem;
+    }
+    .verdict-badge.safe    { background: rgba(34,197,94,.12);  color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
+    .verdict-badge.risky   { background: rgba(245,158,11,.12); color: #f59e0b; border: 1px solid rgba(245,158,11,.3); }
+    .verdict-badge.unsafe  { background: rgba(239,68,68,.12);  color: #ef4444; border: 1px solid rgba(239,68,68,.3); }
+    .verdict-detail { font-size: .82rem; color: var(--text-muted); padding: 0 .2rem; }
+
+    /* ── TIEBREAKER TABLE ────────────────────────────────── */
+    .tb-row {
+      display: flex; justify-content: space-between;
+      font-size: .8rem; padding: .25rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tb-row:last-child { border-bottom: none; }
+    .tb-key { color: var(--text-muted); }
+    .tb-val { color: var(--text); font-variant-numeric: tabular-nums; }
+
+    /* ── DANGER LIST ─────────────────────────────────────── */
+    .section-label {
+      font-family: 'Cinzel', serif; font-size: .72rem; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .danger-player {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .55rem .6rem; border-radius: 6px;
+      margin-bottom: .35rem; background: var(--surface2);
+      font-size: .82rem; gap: .5rem;
+    }
+    .danger-player:last-child { margin-bottom: 0; }
+    .dp-name { flex: 1; font-family: 'Cinzel', serif; font-size: .8rem; color: var(--text); }
+    .dp-pts  { color: var(--text-muted); font-size: .75rem; white-space: nowrap; }
+    .dp-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* ── CAVEAT ──────────────────────────────────────────── */
+    .caveat {
+      font-size: .75rem; color: var(--text-muted); font-style: italic;
+      text-align: center; margin-top: .75rem;
+    }
+
+    /* ── ERROR ───────────────────────────────────────────── */
+    .error-msg {
+      background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+      border-radius: 8px; padding: .65rem .9rem;
+      font-size: .82rem; color: #ef4444; display: none;
+    }
+    .error-msg.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- Starfield -->
+<div id="stars"></div>
+
+<!-- Nav -->
+<nav>
+  <a class="nav-logo" href="/">
+    <img src="/gtalorcana-logo.svg" alt="GTA Lorcana" onerror="this.style.display='none'" />
+    <span class="nav-title">GTA Lorcana</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-back" href="/">← Home</a>
+    <button class="theme-toggle" id="themeToggle">☀️ Light</button>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>🎴 ID Check</h1>
+    <p>Can you safely take the Intentional Draw?</p>
+  </div>
+
+  <!-- Form Card -->
+  <div class="card">
+    <div class="card-title">Event</div>
+
+    <div class="field">
+      <label for="eventId">Event ID</label>
+      <div class="input-row">
+        <input type="text" id="eventId" inputmode="numeric" pattern="\d+"
+               placeholder="e.g. 213150" autocomplete="off" />
+        <button class="btn btn-secondary" id="fetchBtn" onclick="fetchEvent()">Fetch</button>
+      </div>
+    </div>
+
+    <div class="event-info" id="eventInfo">
+      <span class="event-info-name" id="eventName">—</span>
+      <span class="event-info-meta" id="eventMeta">—</span>
+    </div>
+
+    <div class="error-msg" id="fetchError"></div>
+
+    <hr class="divider" />
+    <div class="card-title">You</div>
+
+    <div class="field">
+      <label for="playerSelect">You are</label>
+      <select id="playerSelect" disabled>
+        <option value="">— fetch event first —</option>
+      </select>
+    </div>
+
+    <div class="field" style="flex-direction: row; gap: .75rem;">
+      <div style="flex: 1;">
+        <label for="totalRounds">Total Swiss Rounds</label>
+        <input type="number" id="totalRounds" min="1" max="20" value="" placeholder="—" disabled />
+      </div>
+      <div style="flex: 1;">
+        <label for="topCut">Top Cut</label>
+        <input type="number" id="topCut" min="1" max="256" value="8" />
+      </div>
+    </div>
+
+    <hr class="divider" />
+    <div class="card-title">Analysis Depth</div>
+
+    <div class="field">
+      <div class="radio-group">
+        <div class="radio-option">
+          <input type="radio" name="depth" id="depthSimple" value="simple" />
+          <label for="depthSimple">Simple</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" name="depth" id="depthMedium" value="medium" />
+          <label for="depthMedium">Medium</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" name="depth" id="depthFull" value="full" checked />
+          <label for="depthFull">Full</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="analyzeError"></div>
+
+    <div style="margin-top: 1rem;">
+      <button class="btn btn-primary" id="analyzeBtn" onclick="runAnalysis()" disabled>
+        Can I ID?
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" style="display:none; width:100%; max-width:480px;">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Result Card -->
+  <div class="card" id="result">
+    <div class="result-header">
+      <div class="result-name" id="resName">—</div>
+      <div class="result-record" id="resRecord">—</div>
+    </div>
+
+    <!-- ID one round -->
+    <div class="verdict-block">
+      <div class="verdict-label">ID this round</div>
+      <div class="verdict-badge" id="verdict1Badge">—</div>
+      <div class="verdict-detail" id="verdict1Detail">—</div>
+    </div>
+
+    <!-- ID two rounds -->
+    <div class="verdict-block">
+      <div class="verdict-label">ID this AND next round</div>
+      <div class="verdict-badge" id="verdict2Badge">—</div>
+      <div class="verdict-detail" id="verdict2Detail">—</div>
+    </div>
+
+    <!-- Tiebreakers (hidden in simple mode) -->
+    <div id="tbSection" style="display:none;">
+      <hr class="divider" />
+      <div class="section-label">Your Tiebreakers</div>
+      <div id="tbRows"></div>
+    </div>
+
+    <!-- Danger players -->
+    <div id="dangerSection" style="display:none; margin-top: 1rem;">
+      <div class="section-label">Danger Players</div>
+      <div id="dangerList"></div>
+    </div>
+
+    <!-- Caveat -->
+    <div class="caveat" id="caveatText" style="display:none;"></div>
+
+    <hr class="divider" style="margin-top: 1rem;" />
+    <button class="btn btn-secondary" style="width:100%;" onclick="resetForm()">
+      Check Again
+    </button>
+  </div>
+</main>
+
+<script>
+  // ── Config ──────────────────────────────────────────────
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  const WORKER = isLocal ? 'http://localhost:8787' : '';
+
+  // ── State ───────────────────────────────────────────────
+  let eventData = null;
+
+  // ── Starfield ───────────────────────────────────────────
+  (function () {
+    const container = document.getElementById('stars');
+    for (let i = 0; i < 60; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2.5 + 1;
+      s.style.cssText = `
+        width:${size}px; height:${size}px;
+        top:${Math.random()*100}%; left:${Math.random()*100}%;
+        --dur:${(Math.random()*4+2).toFixed(1)}s;
+        --delay:-${(Math.random()*5).toFixed(1)}s;
+      `;
+      container.appendChild(s);
+    }
+  })();
+
+  // ── Theme toggle ─────────────────────────────────────────
+  const html = document.documentElement;
+  const themeBtn = document.getElementById('themeToggle');
+  themeBtn.addEventListener('click', () => {
+    const isDark = html.dataset.theme === 'dark';
+    html.dataset.theme = isDark ? 'light' : 'dark';
+    themeBtn.textContent = isDark ? '🌙 Dark' : '☀️ Light';
+  });
+
+  // ── Enter key on event ID field ──────────────────────────
+  document.getElementById('eventId').addEventListener('keydown', e => {
+    if (e.key === 'Enter') fetchEvent();
+  });
+
+  // ── Fetch Event ──────────────────────────────────────────
+  async function fetchEvent() {
+    const id = document.getElementById('eventId').value.trim();
+    if (!id || !/^\d+$/.test(id)) {
+      showError('fetchError', 'Please enter a valid numeric event ID.');
+      return;
+    }
+
+    const fetchBtn = document.getElementById('fetchBtn');
+    fetchBtn.disabled = true;
+    fetchBtn.textContent = '…';
+    clearError('fetchError');
+    hideEventInfo();
+
+    try {
+      const res = await fetch(`${WORKER}/id-check/event?id=${id}`);
+      const data = await res.json();
+      if (!res.ok) { showError('fetchError', data.error ?? 'Unknown error.'); return; }
+
+      eventData = data;
+
+      // Populate event info strip
+      document.getElementById('eventName').textContent = data.event_name;
+      document.getElementById('eventMeta').textContent =
+        `${data.player_count} players · Round ${data.current_round} of ${data.total_swiss_rounds}`;
+      document.getElementById('eventInfo').classList.add('visible');
+
+      // Populate fields
+      document.getElementById('totalRounds').value = data.total_swiss_rounds;
+      document.getElementById('totalRounds').disabled = false;
+
+      const sel = document.getElementById('playerSelect');
+      sel.innerHTML = '<option value="">— select yourself —</option>';
+      for (const p of data.players) {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        sel.appendChild(opt);
+      }
+      sel.disabled = false;
+
+      document.getElementById('analyzeBtn').disabled = false;
+    } catch (e) {
+      showError('fetchError', 'Network error — is the worker running?');
+    } finally {
+      fetchBtn.disabled = false;
+      fetchBtn.textContent = 'Fetch';
+    }
+  }
+
+  // ── Run Analysis ─────────────────────────────────────────
+  async function runAnalysis() {
+    clearError('analyzeError');
+
+    const playerId = parseInt(document.getElementById('playerSelect').value, 10);
+    const totalRounds = parseInt(document.getElementById('totalRounds').value, 10);
+    const topCut = parseInt(document.getElementById('topCut').value, 10);
+    const depth = document.querySelector('input[name="depth"]:checked')?.value ?? 'full';
+
+    if (!eventData)           { showError('analyzeError', 'Fetch an event first.'); return; }
+    if (!playerId)            { showError('analyzeError', 'Please select yourself from the dropdown.'); return; }
+    if (!totalRounds || totalRounds < 1) { showError('analyzeError', 'Total rounds must be at least 1.'); return; }
+    if (!topCut || topCut < 1)           { showError('analyzeError', 'Top cut must be at least 1.'); return; }
+
+    document.getElementById('result').classList.remove('visible');
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('analyzeBtn').disabled = true;
+
+    try {
+      const res = await fetch(`${WORKER}/id-check/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_id: eventData.event_id,
+          total_swiss_rounds: totalRounds,
+          top_cut: topCut,
+          player_id: playerId,
+          depth,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showError('analyzeError', data.error ?? 'Unknown error.'); return; }
+
+      renderResult(data);
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+      showError('analyzeError', 'Network error — is the worker running?');
+    } finally {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('analyzeBtn').disabled = false;
+    }
+  }
+
+  // ── Render Result ─────────────────────────────────────────
+  function renderResult(d) {
+    document.getElementById('resName').textContent = d.player_name;
+    document.getElementById('resRecord').textContent =
+      `${d.current_record} · ${d.current_points} pts · ${d.rounds_remaining} round(s) remaining`;
+
+    renderVerdict('verdict1Badge', 'verdict1Detail', d.id_one_round, d.top_cut);
+    renderVerdict('verdict2Badge', 'verdict2Detail', d.id_two_rounds, d.top_cut);
+
+    // Tiebreakers
+    const tbSection = document.getElementById('tbSection');
+    if (d.your_tiebreakers) {
+      tbSection.style.display = 'block';
+      const tb = d.your_tiebreakers;
+      const rows = [
+        ['OMW%', pct(tb.omw_pct)],
+        tb.gw_pct != null ? ['GW%', pct(tb.gw_pct)] : null,
+        ['OGW%', pct(tb.ogw_pct)],
+      ].filter(Boolean);
+      document.getElementById('tbRows').innerHTML = rows.map(([k, v]) =>
+        `<div class="tb-row"><span class="tb-key">${k}</span><span class="tb-val">${v}</span></div>`
+      ).join('');
+    } else {
+      tbSection.style.display = 'none';
+    }
+
+    // Danger players
+    const dangerSection = document.getElementById('dangerSection');
+    const dangerList = document.getElementById('dangerList');
+    if (d.danger_players && d.danger_players.length > 0) {
+      dangerSection.style.display = 'block';
+      dangerList.innerHTML = d.danger_players.map(p => {
+        const icon = tbIcon(p.tiebreaker_vs_you);
+        const pts = `${p.current_points}pts → ${p.max_possible_points}pts`;
+        return `
+          <div class="danger-player">
+            <span class="dp-name">${esc(p.name)}</span>
+            <span class="dp-pts">${pts}</span>
+            <span class="dp-icon" title="${tbTitle(p.tiebreaker_vs_you)}">${icon}</span>
+          </div>`;
+      }).join('');
+    } else {
+      dangerSection.style.display = 'none';
+    }
+
+    // Caveat
+    const caveatEl = document.getElementById('caveatText');
+    if (d.caveat) {
+      caveatEl.textContent = d.caveat;
+      caveatEl.style.display = 'block';
+    } else {
+      caveatEl.style.display = 'none';
+    }
+
+    document.getElementById('result').classList.add('visible');
+  }
+
+  function renderVerdict(badgeId, detailId, scenario, topCut) {
+    const badge = document.getElementById(badgeId);
+    const detail = document.getElementById(detailId);
+    badge.className = `verdict-badge ${scenario.verdict}`;
+
+    const icons = { safe: '✅', risky: '⚠️', unsafe: '❌' };
+    const labels = { safe: 'SAFE', risky: 'RISKY', unsafe: 'UNSAFE' };
+    badge.innerHTML = `<span>${icons[scenario.verdict]}</span><span>${labels[scenario.verdict]}</span>`;
+
+    const n = scenario.danger_count;
+    const playerWord = n === 1 ? 'player' : 'players';
+    if (scenario.verdict === 'safe') {
+      detail.textContent = `${n} ${playerWord} can catch you. Top ${topCut} cut — you're in.`;
+    } else if (scenario.verdict === 'risky') {
+      detail.textContent = `${n} ${playerWord} can catch you. Exactly on the bubble — tiebreakers decide.`;
+    } else {
+      detail.textContent = `${n} ${playerWord} can catch you. Too many — reconsider the ID.`;
+    }
+  }
+
+  function tbIcon(tiebreaker) {
+    if (tiebreaker === 'wins')     return '😰'; // they beat you
+    if (tiebreaker === 'loses')    return '😌'; // you beat them
+    if (tiebreaker === 'too_close') return '😬';
+    return '❓';
+  }
+  function tbTitle(tiebreaker) {
+    if (tiebreaker === 'wins')      return 'They beat you on tiebreakers';
+    if (tiebreaker === 'loses')     return 'You beat them on tiebreakers';
+    if (tiebreaker === 'too_close') return 'Too close to call';
+    return 'Unknown (Simple mode)';
+  }
+
+  function pct(v) { return v != null ? (v * 100).toFixed(1) + '%' : '—'; }
+  function esc(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // ── Reset ────────────────────────────────────────────────
+  function resetForm() {
+    document.getElementById('result').classList.remove('visible');
+    document.getElementById('eventId').value = '';
+    document.getElementById('eventId').focus();
+    clearError('fetchError');
+    clearError('analyzeError');
+    hideEventInfo();
+    eventData = null;
+    const sel = document.getElementById('playerSelect');
+    sel.innerHTML = '<option value="">— fetch event first —</option>';
+    sel.disabled = true;
+    document.getElementById('totalRounds').value = '';
+    document.getElementById('totalRounds').disabled = true;
+    document.getElementById('analyzeBtn').disabled = true;
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+  function clearError(id) {
+    const el = document.getElementById(id);
+    el.textContent = '';
+    el.classList.remove('visible');
+  }
+  function hideEventInfo() {
+    document.getElementById('eventInfo').classList.remove('visible');
+  }
+</script>
+</body>
+</html>

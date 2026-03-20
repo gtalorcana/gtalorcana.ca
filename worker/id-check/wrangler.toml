@@ -1,0 +1,14 @@
+name = "gta-lorcana-id-check"
+main = "index.js"
+compatibility_date = "2025-09-27"
+
+[observability]
+[observability.logs]
+enabled = true
+invocation_logs = true
+
+[env.production]
+routes = [
+  { pattern = "gtalorcana.ca/id-check/event", zone_name = "gtalorcana.ca" },
+  { pattern = "gtalorcana.ca/id-check/analyze", zone_name = "gtalorcana.ca" },
+]
