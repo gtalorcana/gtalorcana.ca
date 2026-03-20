@@ -96,12 +96,12 @@ async function handleEvent(url, origin) {
     return errResponse('Event has no tournament phases', 400, origin);
   }
 
-  const totalSwissRounds = swissPhase.number_of_rounds;
   const rounds = (swissPhase.rounds ?? []).map(r => ({
     id: r.id,
     round_number: r.round_number,
     status: r.status,
   }));
+  const totalSwissRounds = rounds.length;
 
   // Determine current round (first non-complete, or last round if all done)
   const inProgress = rounds.find(r => r.status !== 'COMPLETE');
@@ -156,7 +156,7 @@ async function handleAnalyze(request, origin) {
     return errResponse('Invalid JSON body', 400, origin);
   }
 
-  const { event_id, total_swiss_rounds, top_cut, player_id, depth } = body;
+  const { event_id, total_swiss_rounds, top_cut, player_id, depth, override_round_id } = body;
 
   if (!event_id || !total_swiss_rounds || !top_cut || !player_id || !depth) {
     return errResponse('Missing required fields: event_id, total_swiss_rounds, top_cut, player_id, depth', 400, origin);
@@ -176,6 +176,7 @@ async function handleAnalyze(request, origin) {
   const results = eventData.results ?? [];
   if (results.length === 0) return errResponse('Event not found', 404, origin);
   const event = results[0];
+  const playerCount = event.starting_player_count ?? 0;
 
   const phases = event.tournament_phases ?? [];
   const swissPhase = phases.find(p => p.round_type === 'SWISS') ?? phases[0];
@@ -187,21 +188,36 @@ async function handleAnalyze(request, origin) {
     status: r.status,
   }));
 
-  const inProgress = rounds.find(r => r.status !== 'COMPLETE');
-  const currentRound = inProgress
-    ? inProgress.round_number
-    : rounds.length > 0 ? rounds[rounds.length - 1].round_number : 1;
-
   const completedRounds = rounds.filter(r => r.status === 'COMPLETE');
   if (completedRounds.length === 0) {
     return errResponse('No completed rounds yet — nothing to analyze', 400, origin);
   }
-  const lastCompleted = completedRounds[completedRounds.length - 1];
 
-  // Fetch standings for last completed round
+  // Determine which round's standings to use and what currentRound is
+  let standingsRoundId;
+  let currentRound;
+  let roundsForMatches;
+
+  if (override_round_id) {
+    const overrideRound = rounds.find(r => r.id === override_round_id);
+    if (!overrideRound) return errResponse('override_round_id not found in event rounds', 400, origin);
+    standingsRoundId = override_round_id;
+    currentRound = overrideRound.round_number;
+    roundsForMatches = rounds.filter(r => r.round_number <= overrideRound.round_number);
+  } else {
+    const inProgress = rounds.find(r => r.status !== 'COMPLETE');
+    currentRound = inProgress
+      ? inProgress.round_number
+      : rounds.length > 0 ? rounds[rounds.length - 1].round_number : 1;
+    const lastCompleted = completedRounds[completedRounds.length - 1];
+    standingsRoundId = lastCompleted.id;
+    roundsForMatches = completedRounds;
+  }
+
+  // Fetch standings
   let standingsData;
   try {
-    standingsData = await rphFetch(`${RPH_BASE}/tournament-rounds/${lastCompleted.id}/standings`);
+    standingsData = await rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`);
   } catch (e) {
     return errResponse(`RPH API error fetching standings: ${e.message}`, 502, origin);
   }
@@ -213,19 +229,41 @@ async function handleAnalyze(request, origin) {
   if (!myStanding) return errResponse('Player not found in standings', 404, origin);
 
   const playerName = myStanding.user_event_status?.best_identifier ?? `Player ${player_id}`;
-  const currentPoints = myStanding.match_points ?? 0;
+  const currentPoints = myStanding.points ?? 0;
   const record = myStanding.record ?? '0-0-0';
 
   const roundsRemaining = Math.max(0, total_swiss_rounds - currentRound);
   const pointsIfIdOne = currentPoints + 1;
   const pointsIfIdTwo = currentPoints + 2;
 
+  // Handle all-players-advance edge case
+  if (playerCount > 0 && playerCount <= top_cut) {
+    const response = {
+      player_name: playerName,
+      current_record: record,
+      current_points: currentPoints,
+      rounds_remaining: roundsRemaining,
+      top_cut,
+      depth,
+      all_players_advance: true,
+      id_one_round: { points_if_id: pointsIfIdOne, danger_count: 0, verdict: 'safe' },
+      id_two_rounds: roundsRemaining > 1
+        ? { points_if_id: pointsIfIdTwo, danger_count: 0, verdict: 'safe' }
+        : null,
+      caveat: 'Top cut equals or exceeds player count — all players advance.',
+    };
+    if (roundsRemaining <= 1) {
+      response.id_two_rounds_note = 'Only 1 round remaining — double ID not applicable.';
+    }
+    return jsonResponse(response, 200, origin);
+  }
+
   const otherStandings = standings.filter(s => s.player?.id !== player_id);
 
   function computeScenario(pointsIfId) {
-    const alreadyAbove = otherStandings.filter(s => (s.match_points ?? 0) > pointsIfId).length;
+    const alreadyAbove = otherStandings.filter(s => (s.points ?? 0) > pointsIfId).length;
     const canCatch = otherStandings.filter(s =>
-      (s.match_points ?? 0) + roundsRemaining * 3 >= pointsIfId
+      (s.points ?? 0) + roundsRemaining * 3 >= pointsIfId
     );
     const dangerCount = canCatch.length - alreadyAbove;
     let verdict;
@@ -236,7 +274,7 @@ async function handleAnalyze(request, origin) {
   }
 
   const oneRound = computeScenario(pointsIfIdOne);
-  const twoRounds = computeScenario(pointsIfIdTwo);
+  const twoRounds = roundsRemaining > 1 ? computeScenario(pointsIfIdTwo) : null;
 
   const response = {
     player_name: playerName,
@@ -245,24 +283,27 @@ async function handleAnalyze(request, origin) {
     rounds_remaining: roundsRemaining,
     top_cut,
     depth,
+    all_players_advance: false,
     id_one_round: {
       points_if_id: oneRound.pointsIfId,
       danger_count: oneRound.dangerCount,
       verdict: oneRound.verdict,
     },
-    id_two_rounds: {
-      points_if_id: twoRounds.pointsIfId,
-      danger_count: twoRounds.dangerCount,
-      verdict: twoRounds.verdict,
-    },
+    id_two_rounds: twoRounds
+      ? { points_if_id: twoRounds.pointsIfId, danger_count: twoRounds.dangerCount, verdict: twoRounds.verdict }
+      : null,
   };
 
-  // Simple: return with unknown tiebreakers
+  if (roundsRemaining <= 1) {
+    response.id_two_rounds_note = 'Only 1 round remaining — double ID not applicable.';
+  }
+
+  // Simple: return with unknown tiebreakers, no caveat
   if (depth === 'simple') {
     response.danger_players = oneRound.canCatch.map(s => ({
       name: s.user_event_status?.best_identifier ?? `Player ${s.player?.id}`,
-      current_points: s.match_points ?? 0,
-      max_possible_points: (s.match_points ?? 0) + roundsRemaining * 3,
+      current_points: s.points ?? 0,
+      max_possible_points: (s.points ?? 0) + roundsRemaining * 3,
       tiebreaker_vs_you: 'unknown',
     })).sort((a, b) => b.max_possible_points - a.max_possible_points);
     return jsonResponse(response, 200, origin);
@@ -284,7 +325,7 @@ async function handleAnalyze(request, origin) {
     let allMatchData;
     try {
       allMatchData = await Promise.all(
-        completedRounds.map(r => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`))
+        roundsForMatches.map(r => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`))
       );
     } catch (e) {
       return errResponse(`RPH API error fetching matches: ${e.message}`, 502, origin);
@@ -338,7 +379,7 @@ async function handleAnalyze(request, origin) {
       const pid = s.player?.id;
       const theirOmw = s.opponent_match_win_percentage ?? 0;
       const theirOgw = s.opponent_game_win_percentage ?? 0;
-      const maxPossible = (s.match_points ?? 0) + roundsRemaining * 3;
+      const maxPossible = (s.points ?? 0) + roundsRemaining * 3;
 
       let tiebreakerVsYou;
       if (depth === 'full') {
@@ -366,7 +407,7 @@ async function handleAnalyze(request, origin) {
 
       const entry = {
         name: s.user_event_status?.best_identifier ?? `Player ${pid}`,
-        current_points: s.match_points ?? 0,
+        current_points: s.points ?? 0,
         max_possible_points: maxPossible,
         omw_pct: theirOmw,
         ogw_pct: theirOgw,
