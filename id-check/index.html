@@ -652,7 +652,7 @@
     'simple':  'Shows how many players can catch you. No tiebreaker data.',
     'medium':  'Adds OMW% and OGW% tiebreaker comparison against danger players.',
     'full':    'Adds GW% computed from raw match history for the most accurate tiebreaker picture.',
-    'full+':   'Simulates all possible round outcomes for bubble players. Most accurate — only available after pairings are posted.',
+    'full+':   'Simulates win/loss outcomes for bubble matches using current pairings. More precise than Full, but non-bubble results are estimated. Only available after pairings are posted.',
   };
   function updateDepthNote() {
     const val = document.querySelector('input[name="depth"]:checked')?.value;
