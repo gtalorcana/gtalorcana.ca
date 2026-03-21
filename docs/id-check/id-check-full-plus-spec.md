@@ -279,8 +279,9 @@ Analysis Depth:
 ```
 
 Show a small info tooltip or note under Full+:
-*"Simulates all possible round outcomes for bubble players. Most accurate — only
-available after pairings are posted."*
+*"Simulates win/loss outcomes for bubble matches using current pairings. More
+precise than Full, but non-bubble results are estimated. Only available after
+pairings are posted."*
 
 ### Result card additions (Full+ only)
 
