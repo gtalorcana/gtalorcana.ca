@@ -451,7 +451,7 @@
     </div>
 
     <!-- ID two rounds -->
-    <div class="verdict-block">
+    <div class="verdict-block" id="verdict2Block">
       <div class="verdict-label">ID this AND next round</div>
       <div class="verdict-badge" id="verdict2Badge">—</div>
       <div class="verdict-detail" id="verdict2Detail">—</div>
@@ -628,7 +628,13 @@
       `${d.current_record} · ${d.current_points} pts · ${d.rounds_remaining} round(s) remaining`;
 
     renderVerdict('verdict1Badge', 'verdict1Detail', d.id_one_round, d.top_cut);
-    renderVerdict('verdict2Badge', 'verdict2Detail', d.id_two_rounds, d.top_cut);
+    const v2block = document.getElementById('verdict2Block');
+    if (d.id_two_rounds) {
+      v2block.style.display = '';
+      renderVerdict('verdict2Badge', 'verdict2Detail', d.id_two_rounds, d.top_cut);
+    } else {
+      v2block.style.display = 'none';
+    }
 
     // Tiebreakers
     const tbSection = document.getElementById('tbSection');
