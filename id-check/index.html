@@ -329,6 +329,31 @@
       text-align: center; margin-top: .75rem;
     }
 
+    /* ── FULL+ ───────────────────────────────────────────── */
+    .sim-stat {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: .3rem 0; border-bottom: 1px solid var(--border);
+      font-size: .82rem;
+    }
+    .sim-stat:last-child { border-bottom: none; }
+    .sim-key { color: var(--text-muted); }
+    .sim-val { color: var(--text); font-variant-numeric: tabular-nums; }
+    .sim-val.highlight { color: var(--gold); font-weight: 600; }
+
+    .root-for {
+      margin-top: .75rem;
+      font-size: .8rem;
+    }
+    .root-for-label {
+      font-family: 'Cinzel', serif; font-size: .72rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: .4rem;
+    }
+    .root-for-item {
+      padding: .3rem .5rem; background: var(--surface2);
+      border-radius: 5px; margin-bottom: .3rem;
+      font-size: .8rem; color: var(--text);
+    }
+
     /* ── ERROR ───────────────────────────────────────────── */
     .error-msg {
       background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
@@ -419,6 +444,13 @@
           <input type="radio" name="depth" id="depthFull" value="full" checked />
           <label for="depthFull">Full</label>
         </div>
+        <div class="radio-option">
+          <input type="radio" name="depth" id="depthFullPlus" value="full+" />
+          <label for="depthFullPlus">Full+</label>
+        </div>
+      </div>
+      <div id="fullPlusNote" style="display:none; font-size:.75rem; color:var(--text-muted); margin-top:.5rem; font-style:italic;">
+        Simulates all possible round outcomes for bubble players. Most accurate — only available after pairings are posted.
       </div>
     </div>
 
@@ -473,6 +505,13 @@
     <!-- Caveat -->
     <div class="caveat" id="caveatText" style="display:none;"></div>
 
+    <!-- Full+ simulation result -->
+    <div id="fullPlusSection" style="display:none; margin-top: 1rem;">
+      <hr class="divider" />
+      <div class="section-label">Full+ Simulation</div>
+      <div id="fullPlusBody"></div>
+    </div>
+
     <hr class="divider" style="margin-top: 1rem;" />
     <button class="btn btn-secondary" style="width:100%;" onclick="resetForm()">
       Check Again
@@ -512,6 +551,14 @@
     const isDark = html.dataset.theme === 'dark';
     html.dataset.theme = isDark ? 'light' : 'dark';
     themeBtn.textContent = isDark ? '🌙 Dark' : '☀️ Light';
+  });
+
+  // ── Show Full+ note when Full+ is selected ───────────────
+  document.querySelectorAll('input[name="depth"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.getElementById('fullPlusNote').style.display =
+        document.querySelector('input[name="depth"]:checked')?.value === 'full+' ? 'block' : 'none';
+    });
   });
 
   // ── Enter key on event ID field ──────────────────────────
@@ -609,7 +656,18 @@
         }),
       });
       const data = await res.json();
-      if (!res.ok) { showError('analyzeError', data.error ?? 'Unknown error.'); return; }
+      if (!res.ok) {
+        if (data.error === 'pairings_not_available') {
+          showError('analyzeError', data.message + ' Switching to Full mode.');
+          // Re-run in full mode automatically
+          document.getElementById('depthFull').checked = true;
+          document.getElementById('fullPlusNote').style.display = 'none';
+          document.getElementById('depthFullPlus').closest('.radio-option').style.opacity = '0.5';
+          return;
+        }
+        showError('analyzeError', data.error ?? 'Unknown error.');
+        return;
+      }
 
       renderResult(data);
       document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -681,7 +739,51 @@
       caveatEl.style.display = 'none';
     }
 
+    // Full+ simulation
+    const fpSection = document.getElementById('fullPlusSection');
+    if (d.full_plus) {
+      fpSection.style.display = 'block';
+      renderFullPlus(d.full_plus, d.top_cut);
+    } else {
+      fpSection.style.display = 'none';
+    }
+
     document.getElementById('result').classList.add('visible');
+  }
+
+  function renderFullPlus(fp, topCut) {
+    const isMC = fp.simulation_mode === 'monte_carlo';
+    const pct = fp.makes_cut_pct;
+    const verdictColour = pct >= 75 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
+
+    const scenarioLabel = isMC
+      ? `Sampled ${fp.total_scenarios.toLocaleString()} of ~2<sup>${fp.bubble_matches}</sup> cases`
+      : `Checked all ${fp.total_scenarios.toLocaleString()} scenarios`;
+
+    const cutLine = isMC
+      ? `${fp.makes_cut_scenarios.toLocaleString()} of ${fp.total_scenarios.toLocaleString()} <span style="color:${verdictColour}">✅ you make top ${topCut}</span><br><small style="color:var(--text-muted)">(~${pct}% ± ${fp.margin_of_error_pct}%)</small>`
+      : `${fp.makes_cut_scenarios.toLocaleString()} of ${fp.total_scenarios.toLocaleString()} <span style="color:${verdictColour}">✅ you make top ${topCut}</span>`;
+
+    let html = `
+      <div class="sim-stat"><span class="sim-key">${scenarioLabel}</span></div>
+      <div class="sim-stat"><span class="sim-key">${cutLine}</span></div>
+      <div class="sim-stat"><span class="sim-key">Best case</span><span class="sim-val highlight">Rank ${fp.best_rank ?? '—'}</span></div>
+      <div class="sim-stat"><span class="sim-key">Worst case</span><span class="sim-val">Rank ${fp.worst_rank ?? '—'}</span></div>
+    `;
+
+    if (isMC && fp.bubble_matches) {
+      html += `<div class="sim-stat"><span class="sim-key" style="color:var(--text-muted);font-style:italic;">${fp.bubble_matches} bubble matches — too many to check exhaustively</span></div>`;
+    }
+
+    if (fp.best_scenario && fp.best_scenario.length > 0) {
+      html += `<div class="root-for"><div class="root-for-label">Root for</div>`;
+      for (const s of fp.best_scenario) {
+        html += `<div class="root-for-item">🙏 ${esc(s.winner)} to beat ${esc(s.loser)}</div>`;
+      }
+      html += `</div>`;
+    }
+
+    document.getElementById('fullPlusBody').innerHTML = html;
   }
 
   function renderVerdict(badgeId, detailId, scenario, topCut) {
@@ -723,6 +825,8 @@
   // ── Reset ────────────────────────────────────────────────
   function resetForm() {
     document.getElementById('result').classList.remove('visible');
+    document.getElementById('fullPlusSection').style.display = 'none';
+    document.getElementById('depthFullPlus').closest('.radio-option').style.opacity = '';
     document.getElementById('eventId').value = '';
     document.getElementById('eventId').focus();
     clearError('fetchError');

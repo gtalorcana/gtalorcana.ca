@@ -186,14 +186,17 @@ async function handleAnalyze(request, origin, ctx) {
     return errResponse('Invalid JSON body', 400, origin);
   }
 
-  const { event_id, total_swiss_rounds, top_cut, player_id, depth, override_round_id } = body;
+  const {
+    event_id, total_swiss_rounds, top_cut, player_id, depth,
+    override_round_id, override_current_pairings_round_id,
+  } = body;
   const useCache = !override_round_id;
 
   if (!event_id || !total_swiss_rounds || !top_cut || !player_id || !depth) {
     return errResponse('Missing required fields: event_id, total_swiss_rounds, top_cut, player_id, depth', 400, origin);
   }
-  if (!['simple', 'medium', 'full'].includes(depth)) {
-    return errResponse('depth must be "simple", "medium", or "full"', 400, origin);
+  if (!['simple', 'medium', 'full', 'full+'].includes(depth)) {
+    return errResponse('depth must be "simple", "medium", "full", or "full+"', 400, origin);
   }
 
   // Fetch event to determine current round and round IDs
@@ -344,7 +347,7 @@ async function handleAnalyze(request, origin, ctx) {
     return jsonResponse(response, 200, origin);
   }
 
-  // Medium + Full: add tiebreaker data from standings
+  // Medium + Full + Full+: add tiebreaker data from standings
   const myOmw = myStanding.opponent_match_win_percentage ?? 0;
   const myOgw = myStanding.opponent_game_win_percentage ?? 0;
 
@@ -354,9 +357,11 @@ async function handleAnalyze(request, origin, ctx) {
     ogw_pct: myOgw,
   };
 
-  // Full: compute GW% for every player from raw match history
+  // Full + Full+: compute GW% and match history from raw match data
   const gwByPlayer = {};
-  if (depth === 'full') {
+  let hist = null;
+
+  if (depth === 'full' || depth === 'full+') {
     let allMatchData;
     try {
       allMatchData = await Promise.all(
@@ -384,7 +389,6 @@ async function handleAnalyze(request, origin, ctx) {
           }
           continue;
         }
-        // Skip draws (no game wins to attribute)
         if (match.match_is_intentional_draw || match.match_is_unintentional_draw) continue;
 
         const winnerId = match.winning_player;
@@ -410,6 +414,9 @@ async function handleAnalyze(request, origin, ctx) {
     }
 
     response.your_tiebreakers.gw_pct = gwByPlayer[player_id] ?? 0.33;
+
+    // Build match history (wins/played/opps) for Full+ simulation
+    hist = buildMatchHistory(allMatchData);
   }
 
   // Build danger players list, sorted by max possible points DESC then OMW% DESC
@@ -421,7 +428,7 @@ async function handleAnalyze(request, origin, ctx) {
       const maxPossible = (s.points ?? 0) + roundsRemaining * 3;
 
       let tiebreakerVsYou;
-      if (depth === 'full') {
+      if (depth === 'full' || depth === 'full+') {
         const myGw = gwByPlayer[player_id] ?? 0.33;
         const theirGw = gwByPlayer[pid] ?? 0.33;
         if (Math.abs(myOmw - theirOmw) > 0.01) {
@@ -452,7 +459,7 @@ async function handleAnalyze(request, origin, ctx) {
         ogw_pct: theirOgw,
         tiebreaker_vs_you: tiebreakerVsYou,
       };
-      if (depth === 'full') entry.gw_pct = gwByPlayer[pid] ?? 0.33;
+      if (depth === 'full' || depth === 'full+') entry.gw_pct = gwByPlayer[pid] ?? 0.33;
       return entry;
     })
     .sort((a, b) =>
@@ -463,5 +470,303 @@ async function handleAnalyze(request, origin, ctx) {
 
   response.caveat = 'Tiebreakers will shift as the current round completes.';
 
+  if (depth !== 'full+') {
+    return jsonResponse(response, 200, origin);
+  }
+
+  // ── Full+ ─────────────────────────────────────────────────────────────────
+
+  // Determine which round to use for current pairings
+  let currentPairingsRoundId;
+  if (override_current_pairings_round_id) {
+    currentPairingsRoundId = override_current_pairings_round_id;
+  } else if (override_round_id) {
+    const overrideRound = rounds.find(r => r.id === override_round_id);
+    const nextRound = rounds.find(r => r.round_number === overrideRound.round_number + 1);
+    currentPairingsRoundId = nextRound?.id ?? null;
+  } else {
+    const inProgressRound = rounds.find(r => r.status !== 'COMPLETE');
+    currentPairingsRoundId = inProgressRound?.id ?? null;
+  }
+
+  if (!currentPairingsRoundId) {
+    return jsonResponse(
+      { ...response, error: 'pairings_not_available', message: 'No current round found for Full+ simulation.', fallback_depth: 'full' },
+      400, origin
+    );
+  }
+
+  // Fetch current round pairings
+  let currentPairings;
+  try {
+    currentPairings = override_current_pairings_round_id
+      ? await rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`)
+      : await fetchWithCache(
+          `matches:current:${currentPairingsRoundId}`,
+          () => rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`),
+          30,
+          ctx
+        );
+  } catch (e) {
+    return errResponse(`RPH API error fetching current pairings: ${e.message}`, 502, origin);
+  }
+
+  const pairingMatches = currentPairings.matches ?? currentPairings.results ?? [];
+  if (pairingMatches.length === 0) {
+    return jsonResponse(
+      {
+        ...response,
+        pairings_available: false,
+        error: 'pairings_not_available',
+        message: "Pairings for this round haven't been generated yet. Try Full mode, or check back once pairings are posted.",
+        fallback_depth: 'full',
+      },
+      400, origin
+    );
+  }
+
+  const fullPlusResult = computeFullPlus({
+    standings,
+    hist,
+    gwByPlayer,
+    currentPairings,
+    targetPlayerId: player_id,
+    topCut: top_cut,
+  });
+
+  response.pairings_available = true;
+  response.full_plus = fullPlusResult;
+
   return jsonResponse(response, 200, origin);
+}
+
+// ── Full+ simulation ──────────────────────────────────────────────────────────
+
+function buildMatchHistory(allMatchData) {
+  const wins = {};
+  const played = {};
+  const opps = {};
+
+  for (const roundData of allMatchData) {
+    const matches = roundData.matches ?? roundData.results ?? [];
+    for (const match of matches) {
+      const players = match.players ?? [];
+      if (match.match_is_bye || players.length < 2) continue;
+      const [p1, p2] = players;
+
+      opps[p1] = opps[p1] ?? [];
+      opps[p2] = opps[p2] ?? [];
+      opps[p1].push(p2);
+      opps[p2].push(p1);
+
+      played[p1] = (played[p1] ?? 0) + 1;
+      played[p2] = (played[p2] ?? 0) + 1;
+
+      if (!match.match_is_intentional_draw && !match.match_is_unintentional_draw) {
+        const w = match.winning_player;
+        if (w != null) wins[w] = (wins[w] ?? 0) + 1;
+      }
+    }
+  }
+
+  return { wins, played, opps };
+}
+
+function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetPlayerId, topCut }) {
+  const EXHAUSTIVE_THRESHOLD = 12;
+  const MONTE_CARLO_SAMPLES = 1000;
+
+  // Per-player lookup from standings
+  const standingsMap = {};
+  for (const s of standings) {
+    const pid = s.player?.id;
+    if (pid == null) continue;
+    standingsMap[pid] = {
+      pts: s.points ?? 0,
+      omwBase: s.opponent_match_win_percentage ?? 0,
+      gw: gwByPlayer[pid] ?? 0.33,
+      ogw: s.opponent_game_win_percentage ?? 0,
+    };
+  }
+
+  const targetPts = standingsMap[targetPlayerId]?.pts ?? 0;
+  const targetPointsAfterID = targetPts + 1;
+
+  // Identify bubble players: can catch target if they win this round
+  const bubblePlayerSet = new Set();
+  for (const s of standings) {
+    const pid = s.player?.id;
+    if (pid == null || pid === targetPlayerId) continue;
+    if ((s.points ?? 0) + 3 >= targetPointsAfterID) bubblePlayerSet.add(pid);
+  }
+
+  // Process current round pairings
+  const pairingMatches = currentPairings.matches ?? currentPairings.results ?? [];
+
+  const bubbleMatches = [];
+  const nonBubbleAddWins = {};
+  const nonBubbleAddPlayed = {};
+  const pointDelta = {};
+  const currentRoundOpps = {};
+
+  // Target player IDs (+1 each, draw = no win, +1 played)
+  pointDelta[targetPlayerId] = 1;
+  nonBubbleAddPlayed[targetPlayerId] = 1;
+
+  for (const m of pairingMatches) {
+    const players = m.players ?? [];
+
+    // Bye
+    if (m.match_is_bye) {
+      const pid = players[0];
+      if (pid != null) pointDelta[pid] = (pointDelta[pid] ?? 0) + 3;
+      continue;
+    }
+
+    if (players.length < 2) continue;
+    const [p1, p2] = players;
+
+    // Target player's match: mark their opponent
+    if (p1 === targetPlayerId || p2 === targetPlayerId) {
+      const opp = p1 === targetPlayerId ? p2 : p1;
+      pointDelta[opp] = (pointDelta[opp] ?? 0) + 1;
+      nonBubbleAddPlayed[opp] = (nonBubbleAddPlayed[opp] ?? 0) + 1;
+      currentRoundOpps[targetPlayerId] = opp;
+      currentRoundOpps[opp] = targetPlayerId;
+      continue;
+    }
+
+    currentRoundOpps[p1] = p2;
+    currentRoundOpps[p2] = p1;
+
+    if (bubblePlayerSet.has(p1) || bubblePlayerSet.has(p2)) {
+      bubbleMatches.push({ p1, p2 });
+    } else {
+      // Non-bubble: higher current points wins
+      const pts1 = standingsMap[p1]?.pts ?? 0;
+      const pts2 = standingsMap[p2]?.pts ?? 0;
+      const winner = pts1 >= pts2 ? p1 : p2;
+      const loser = winner === p1 ? p2 : p1;
+      pointDelta[winner] = (pointDelta[winner] ?? 0) + 3;
+      nonBubbleAddWins[winner] = (nonBubbleAddWins[winner] ?? 0) + 1;
+      nonBubbleAddPlayed[winner] = (nonBubbleAddPlayed[winner] ?? 0) + 1;
+      nonBubbleAddPlayed[loser] = (nonBubbleAddPlayed[loser] ?? 0) + 1;
+    }
+  }
+
+  const N = bubbleMatches.length;
+  const isExhaustive = N <= EXHAUSTIVE_THRESHOLD;
+  const totalScenarios = isExhaustive ? Math.pow(2, N) : MONTE_CARLO_SAMPLES;
+
+  // allPlayers array for ranking
+  const allPlayers = standings
+    .filter(s => s.player?.id != null)
+    .map(s => ({
+      pid: s.player.id,
+      basePoints: s.points ?? 0,
+      gw: gwByPlayer[s.player.id] ?? 0.33,
+      ogw: s.opponent_game_win_percentage ?? 0,
+    }));
+
+  function simulateScenario(bubbleOutcomes) {
+    // bubbleOutcomes: [{ p1, p2, winner }]
+    const addWins = { ...nonBubbleAddWins };
+    const addPlayed = { ...nonBubbleAddPlayed };
+    const ptDelta = { ...pointDelta };
+
+    for (const { p1, p2, winner } of bubbleOutcomes) {
+      const loser = winner === p1 ? p2 : p1;
+      addWins[winner] = (addWins[winner] ?? 0) + 1;
+      addPlayed[winner] = (addPlayed[winner] ?? 0) + 1;
+      addPlayed[loser] = (addPlayed[loser] ?? 0) + 1;
+      ptDelta[winner] = (ptDelta[winner] ?? 0) + 3;
+    }
+
+    function omwOf(pid) {
+      const pastOpps = hist.opps[pid] ?? [];
+      const currOpp = currentRoundOpps[pid];
+      const allOpps = currOpp != null ? [...pastOpps, currOpp] : pastOpps;
+      if (allOpps.length === 0) return 0.33;
+      const total = allOpps.reduce((sum, opp) => {
+        const w = (hist.wins[opp] ?? 0) + (addWins[opp] ?? 0);
+        const p = (hist.played[opp] ?? 0) + (addPlayed[opp] ?? 0);
+        return sum + Math.max(0.33, p > 0 ? w / p : 0.33);
+      }, 0);
+      return total / allOpps.length;
+    }
+
+    const ranked = allPlayers.map(({ pid, basePoints, gw, ogw }) => ({
+      pid,
+      pts: basePoints + (ptDelta[pid] ?? 0),
+      omw: omwOf(pid),
+      gw,
+      ogw,
+    })).sort((a, b) => {
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      const omwD = b.omw - a.omw;
+      if (Math.abs(omwD) > 0.0001) return omwD;
+      const gwD = b.gw - a.gw;
+      if (Math.abs(gwD) > 0.0001) return gwD;
+      return b.ogw - a.ogw;
+    });
+
+    return ranked.findIndex(p => p.pid === targetPlayerId) + 1;
+  }
+
+  function playerName(pid) {
+    const s = standings.find(s => s.player?.id === pid);
+    return s?.user_event_status?.best_identifier ?? `Player ${pid}`;
+  }
+
+  function scenarioToNames(outcomes) {
+    return outcomes.map(({ p1, p2, winner }) => ({
+      winner: playerName(winner),
+      loser: playerName(winner === p1 ? p2 : p1),
+    }));
+  }
+
+  let makesCut = 0;
+  let bestRank = Infinity;
+  let worstRank = 0;
+  let bestScenario = null;
+  let worstScenario = null;
+
+  if (isExhaustive) {
+    for (let mask = 0; mask < totalScenarios; mask++) {
+      const outcomes = bubbleMatches.map((m, i) => ({
+        p1: m.p1, p2: m.p2,
+        winner: (mask >> i) & 1 ? m.p1 : m.p2,
+      }));
+      const rank = simulateScenario(outcomes);
+      if (rank <= topCut) makesCut++;
+      if (rank < bestRank) { bestRank = rank; bestScenario = outcomes; }
+      if (rank > worstRank) { worstRank = rank; worstScenario = outcomes; }
+    }
+    bestScenario = bestScenario ? scenarioToNames(bestScenario) : null;
+    worstScenario = worstScenario ? scenarioToNames(worstScenario) : null;
+  } else {
+    for (let i = 0; i < MONTE_CARLO_SAMPLES; i++) {
+      const outcomes = bubbleMatches.map(m => ({
+        p1: m.p1, p2: m.p2,
+        winner: Math.random() < 0.5 ? m.p1 : m.p2,
+      }));
+      const rank = simulateScenario(outcomes);
+      if (rank <= topCut) makesCut++;
+      if (rank < bestRank) bestRank = rank;
+      if (rank > worstRank) worstRank = rank;
+    }
+  }
+
+  return {
+    simulation_mode: isExhaustive ? 'exhaustive' : 'monte_carlo',
+    total_scenarios: totalScenarios,
+    makes_cut_scenarios: makesCut,
+    makes_cut_pct: parseFloat(((makesCut / totalScenarios) * 100).toFixed(1)),
+    margin_of_error_pct: isExhaustive ? 0 : 3.5,
+    best_rank: bestRank === Infinity ? null : bestRank,
+    worst_rank: worstRank === 0 ? null : worstRank,
+    bubble_matches: N,
+    best_scenario: isExhaustive ? bestScenario : null,
+    worst_scenario: isExhaustive ? worstScenario : null,
+  };
 }
