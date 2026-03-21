@@ -195,8 +195,8 @@ async function handleAnalyze(request, origin, ctx) {
   if (!event_id || !total_swiss_rounds || !top_cut || !player_id || !depth) {
     return errResponse('Missing required fields: event_id, total_swiss_rounds, top_cut, player_id, depth', 400, origin);
   }
-  if (!['simple', 'medium', 'full', 'full+'].includes(depth)) {
-    return errResponse('depth must be "simple", "medium", "full", or "full+"', 400, origin);
+  if (!['simple', 'full'].includes(depth)) {
+    return errResponse('depth must be "simple" or "full"', 400, origin);
   }
 
   // Fetch event to determine current round and round IDs
@@ -347,7 +347,7 @@ async function handleAnalyze(request, origin, ctx) {
     return jsonResponse(response, 200, origin);
   }
 
-  // Medium + Full + Full+: add tiebreaker data from standings
+  // Full: add tiebreaker data from standings + compute GW% from raw match data
   const myOmw = myStanding.opponent_match_win_percentage ?? 0;
   const myOgw = myStanding.opponent_game_win_percentage ?? 0;
 
@@ -357,11 +357,10 @@ async function handleAnalyze(request, origin, ctx) {
     ogw_pct: myOgw,
   };
 
-  // Full + Full+: compute GW% and match history from raw match data
   const gwByPlayer = {};
   let hist = null;
 
-  if (depth === 'full' || depth === 'full+') {
+  if (depth === 'full') {
     let allMatchData;
     try {
       allMatchData = await Promise.all(
@@ -427,28 +426,17 @@ async function handleAnalyze(request, origin, ctx) {
       const theirOgw = s.opponent_game_win_percentage ?? 0;
       const maxPossible = (s.points ?? 0) + roundsRemaining * 3;
 
+      const myGw = gwByPlayer[player_id] ?? 0.33;
+      const theirGw = gwByPlayer[pid] ?? 0.33;
       let tiebreakerVsYou;
-      if (depth === 'full' || depth === 'full+') {
-        const myGw = gwByPlayer[player_id] ?? 0.33;
-        const theirGw = gwByPlayer[pid] ?? 0.33;
-        if (Math.abs(myOmw - theirOmw) > 0.01) {
-          tiebreakerVsYou = myOmw > theirOmw ? 'loses' : 'wins';
-        } else if (Math.abs(myGw - theirGw) > 0.01) {
-          tiebreakerVsYou = myGw > theirGw ? 'loses' : 'wins';
-        } else if (Math.abs(myOgw - theirOgw) > 0.01) {
-          tiebreakerVsYou = myOgw > theirOgw ? 'loses' : 'wins';
-        } else {
-          tiebreakerVsYou = 'too_close';
-        }
+      if (Math.abs(myOmw - theirOmw) > 0.01) {
+        tiebreakerVsYou = myOmw > theirOmw ? 'loses' : 'wins';
+      } else if (Math.abs(myGw - theirGw) > 0.01) {
+        tiebreakerVsYou = myGw > theirGw ? 'loses' : 'wins';
+      } else if (Math.abs(myOgw - theirOgw) > 0.01) {
+        tiebreakerVsYou = myOgw > theirOgw ? 'loses' : 'wins';
       } else {
-        // Medium: OMW% → OGW%
-        if (Math.abs(myOmw - theirOmw) > 0.01) {
-          tiebreakerVsYou = myOmw > theirOmw ? 'loses' : 'wins';
-        } else if (Math.abs(myOgw - theirOgw) > 0.01) {
-          tiebreakerVsYou = myOgw > theirOgw ? 'loses' : 'wins';
-        } else {
-          tiebreakerVsYou = 'too_close';
-        }
+        tiebreakerVsYou = 'too_close';
       }
 
       const entry = {
@@ -456,10 +444,10 @@ async function handleAnalyze(request, origin, ctx) {
         current_points: s.points ?? 0,
         max_possible_points: maxPossible,
         omw_pct: theirOmw,
+        gw_pct: gwByPlayer[pid] ?? 0.33,
         ogw_pct: theirOgw,
         tiebreaker_vs_you: tiebreakerVsYou,
       };
-      if (depth === 'full' || depth === 'full+') entry.gw_pct = gwByPlayer[pid] ?? 0.33;
       return entry;
     })
     .sort((a, b) =>
@@ -470,11 +458,7 @@ async function handleAnalyze(request, origin, ctx) {
 
   response.caveat = 'Tiebreakers will shift as the current round completes.';
 
-  if (depth !== 'full+') {
-    return jsonResponse(response, 200, origin);
-  }
-
-  // ── Full+ ─────────────────────────────────────────────────────────────────
+  // ── Full: attempt pairing simulation ─────────────────────────────────────
 
   // Determine which round to use for current pairings
   let currentPairingsRoundId;
@@ -490,10 +474,8 @@ async function handleAnalyze(request, origin, ctx) {
   }
 
   if (!currentPairingsRoundId) {
-    return jsonResponse(
-      { ...response, error: 'pairings_not_available', message: 'No current round found for Full+ simulation.', fallback_depth: 'full' },
-      400, origin
-    );
+    response.pairings_available = false;
+    return jsonResponse(response, 200, origin);
   }
 
   // Fetch current round pairings
@@ -513,16 +495,8 @@ async function handleAnalyze(request, origin, ctx) {
 
   const pairingMatches = currentPairings.matches ?? currentPairings.results ?? [];
   if (pairingMatches.length === 0) {
-    return jsonResponse(
-      {
-        ...response,
-        pairings_available: false,
-        error: 'pairings_not_available',
-        message: "Pairings for this round haven't been generated yet. Try Full mode, or check back once pairings are posted.",
-        fallback_depth: 'full',
-      },
-      400, origin
-    );
+    response.pairings_available = false;
+    return jsonResponse(response, 200, origin);
   }
 
   const fullPlusResult = computeFullPlus({

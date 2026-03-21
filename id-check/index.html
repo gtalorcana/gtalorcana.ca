@@ -462,16 +462,8 @@
           <label for="depthSimple">Simple</label>
         </div>
         <div class="radio-option">
-          <input type="radio" name="depth" id="depthMedium" value="medium" />
-          <label for="depthMedium">Medium</label>
-        </div>
-        <div class="radio-option">
           <input type="radio" name="depth" id="depthFull" value="full" />
           <label for="depthFull">Full</label>
-        </div>
-        <div class="radio-option">
-          <input type="radio" name="depth" id="depthFullPlus" value="full+" />
-          <label for="depthFullPlus">Full+</label>
         </div>
       </div>
       <div id="depthNote" style="display:none; font-size:.75rem; color:var(--text-muted); margin-top:.5rem; font-style:italic;"></div>
@@ -650,9 +642,7 @@
   // ── Depth note ───────────────────────────────────────────
   const DEPTH_NOTES = {
     'simple':  'Shows how many players can catch you. No tiebreaker data.',
-    'medium':  'Compares tiebreakers using OMW% → OGW% from RPH standings. Skips GW% (not provided by RPH), so tiebreaker calls may be wrong when OMW% is very close.',
-    'full':    'Fetches raw match data to compute GW%, giving the full OMW% → GW% → OGW% tiebreaker chain. Most accurate tiebreaker comparison, at the cost of more API calls.',
-    'full+':   'Simulates win/loss outcomes for bubble matches using current pairings. More precise than Full, but non-bubble results are estimated. Only available after pairings are posted.',
+    'full':    'Computes OMW% → GW% → OGW% tiebreakers from raw match history, then simulates bubble match outcomes using current pairings (if available). Non-bubble results are estimated.',
   };
   function updateDepthNote() {
     const val = document.querySelector('input[name="depth"]:checked')?.value;
@@ -755,14 +745,6 @@
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === 'pairings_not_available') {
-          showError('analyzeError', data.message + ' Switching to Full mode.');
-          // Re-run in full mode automatically
-          document.getElementById('depthFull').checked = true;
-          updateDepthNote();
-          document.getElementById('depthFullPlus').closest('.radio-option').style.opacity = '0.5';
-          return;
-        }
         showError('analyzeError', data.error ?? 'Unknown error.');
         return;
       }
@@ -837,11 +819,16 @@
       caveatEl.style.display = 'none';
     }
 
-    // Full+ simulation
+    // Simulation section (Full mode)
     const fpSection = document.getElementById('fullPlusSection');
-    if (d.full_plus) {
+    if (d.depth === 'full') {
       fpSection.style.display = 'block';
-      renderFullPlus(d.full_plus, d.top_cut);
+      if (d.full_plus) {
+        renderFullPlus(d.full_plus, d.top_cut);
+      } else {
+        document.getElementById('fullPlusBody').innerHTML =
+          '<div style="font-size:.8rem; color:var(--text-muted); font-style:italic;">Pairings not yet posted — simulation unavailable. Check back once the organizer generates round pairings.</div>';
+      }
     } else {
       fpSection.style.display = 'none';
     }
@@ -924,7 +911,6 @@
   function resetForm() {
     document.getElementById('result').classList.remove('visible');
     document.getElementById('fullPlusSection').style.display = 'none';
-    document.getElementById('depthFullPlus').closest('.radio-option').style.opacity = '';
     playerData = [];
     selectedPlayerId = null;
     playerSearch.value = '';
