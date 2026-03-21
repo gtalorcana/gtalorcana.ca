@@ -329,6 +329,28 @@
       text-align: center; margin-top: .75rem;
     }
 
+    /* ── AUTOCOMPLETE ────────────────────────────────────── */
+    .autocomplete-wrap { position: relative; }
+    .autocomplete-list {
+      display: none;
+      position: absolute; left: 0; right: 0; top: calc(100% + 2px);
+      background: var(--surface2); border: 1px solid var(--gold);
+      border-radius: 8px; z-index: 50;
+      max-height: 220px; overflow-y: auto;
+    }
+    .autocomplete-list.open { display: block; }
+    .autocomplete-item {
+      padding: .6rem .9rem; font-family: 'Lora', serif; font-size: .88rem;
+      cursor: pointer; color: var(--text);
+    }
+    .autocomplete-item:hover, .autocomplete-item.active {
+      background: rgba(212,168,67,0.15); color: var(--gold);
+    }
+    .autocomplete-item.no-match {
+      color: var(--text-muted); font-style: italic; cursor: default;
+    }
+    .autocomplete-item.no-match:hover { background: none; color: var(--text-muted); }
+
     /* ── FULL+ ───────────────────────────────────────────── */
     .sim-stat {
       display: flex; justify-content: space-between; align-items: baseline;
@@ -410,10 +432,13 @@
     <div class="card-title">You</div>
 
     <div class="field">
-      <label for="playerSelect">You are</label>
-      <select id="playerSelect" disabled>
-        <option value="">— fetch event first —</option>
-      </select>
+      <label for="playerSearch">You are</label>
+      <div class="autocomplete-wrap" id="playerWrap">
+        <input type="text" id="playerSearch" placeholder="— fetch event first —"
+               autocomplete="off" disabled />
+        <div class="autocomplete-list" id="playerList"></div>
+      </div>
+      <input type="hidden" id="playerSelect" />
     </div>
 
     <div class="field" style="flex-direction: row; gap: .75rem;">
@@ -433,7 +458,7 @@
     <div class="field">
       <div class="radio-group">
         <div class="radio-option">
-          <input type="radio" name="depth" id="depthSimple" value="simple" />
+          <input type="radio" name="depth" id="depthSimple" value="simple" checked />
           <label for="depthSimple">Simple</label>
         </div>
         <div class="radio-option">
@@ -441,7 +466,7 @@
           <label for="depthMedium">Medium</label>
         </div>
         <div class="radio-option">
-          <input type="radio" name="depth" id="depthFull" value="full" checked />
+          <input type="radio" name="depth" id="depthFull" value="full" />
           <label for="depthFull">Full</label>
         </div>
         <div class="radio-option">
@@ -551,6 +576,77 @@
     themeBtn.textContent = isDark ? '🌙 Dark' : '☀️ Light';
   });
 
+  // ── Player autocomplete ──────────────────────────────────
+  let playerData = []; // [{ id, name }]
+  let selectedPlayerId = null;
+
+  const playerSearch = document.getElementById('playerSearch');
+  const playerList  = document.getElementById('playerList');
+  const playerHidden = document.getElementById('playerSelect');
+
+  function populatePlayers(players) {
+    playerData = players;
+    playerSearch.disabled = false;
+    playerSearch.placeholder = 'Type your name…';
+    selectedPlayerId = null;
+    playerHidden.value = '';
+    playerList.innerHTML = '';
+    playerList.classList.remove('open');
+  }
+
+  function renderList(query) {
+    const q = query.toLowerCase();
+    const filtered = q
+      ? playerData.filter(p => p.name.toLowerCase().includes(q))
+      : playerData;
+
+    playerList.innerHTML = '';
+    if (filtered.length === 0) {
+      playerList.innerHTML = '<div class="autocomplete-item no-match">No players found</div>';
+    } else {
+      filtered.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.textContent = p.name;
+        item.addEventListener('mousedown', e => {
+          e.preventDefault();
+          selectPlayer(p);
+        });
+        playerList.appendChild(item);
+      });
+    }
+    playerList.classList.add('open');
+  }
+
+  function selectPlayer(p) {
+    selectedPlayerId = p.id;
+    playerHidden.value = p.id;
+    playerSearch.value = p.name;
+    playerList.classList.remove('open');
+    document.getElementById('analyzeBtn').disabled = false;
+  }
+
+  playerSearch.addEventListener('input', () => {
+    selectedPlayerId = null;
+    playerHidden.value = '';
+    document.getElementById('analyzeBtn').disabled = true;
+    if (playerData.length > 0) renderList(playerSearch.value);
+  });
+  playerSearch.addEventListener('focus', () => {
+    if (playerData.length > 0) renderList(playerSearch.value);
+  });
+  playerSearch.addEventListener('blur', () => {
+    // Delay so mousedown on item fires first
+    setTimeout(() => playerList.classList.remove('open'), 150);
+  });
+
+  // Close on outside click
+  document.addEventListener('click', e => {
+    if (!document.getElementById('playerWrap').contains(e.target)) {
+      playerList.classList.remove('open');
+    }
+  });
+
   // ── Depth note ───────────────────────────────────────────
   const DEPTH_NOTES = {
     'simple':  'Shows how many players can catch you. No tiebreaker data.',
@@ -558,18 +654,20 @@
     'full':    'Adds GW% computed from raw match history for the most accurate tiebreaker picture.',
     'full+':   'Simulates all possible round outcomes for bubble players. Most accurate — only available after pairings are posted.',
   };
+  function updateDepthNote() {
+    const val = document.querySelector('input[name="depth"]:checked')?.value;
+    const noteEl = document.getElementById('depthNote');
+    if (val && DEPTH_NOTES[val]) {
+      noteEl.textContent = DEPTH_NOTES[val];
+      noteEl.style.display = 'block';
+    } else {
+      noteEl.style.display = 'none';
+    }
+  }
   document.querySelectorAll('input[name="depth"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const val = document.querySelector('input[name="depth"]:checked')?.value;
-      const noteEl = document.getElementById('depthNote');
-      if (val && DEPTH_NOTES[val]) {
-        noteEl.textContent = DEPTH_NOTES[val];
-        noteEl.style.display = 'block';
-      } else {
-        noteEl.style.display = 'none';
-      }
-    });
+    radio.addEventListener('change', updateDepthNote);
   });
+  updateDepthNote(); // show Simple note on load
 
   // ── Enter key on event ID field ──────────────────────────
   document.getElementById('eventId').addEventListener('keydown', e => {
@@ -616,17 +714,7 @@
       document.getElementById('totalRounds').value = data.total_swiss_rounds;
       document.getElementById('totalRounds').disabled = false;
 
-      const sel = document.getElementById('playerSelect');
-      sel.innerHTML = '<option value="">— select yourself —</option>';
-      for (const p of data.players) {
-        const opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.name;
-        sel.appendChild(opt);
-      }
-      sel.disabled = false;
-
-      document.getElementById('analyzeBtn').disabled = false;
+      populatePlayers(data.players);
     } catch (e) {
       showError('fetchError', 'Network error — is the worker running?');
     } finally {
@@ -639,13 +727,13 @@
   async function runAnalysis() {
     clearError('analyzeError');
 
-    const playerId = parseInt(document.getElementById('playerSelect').value, 10);
+    const playerId = selectedPlayerId;
     const totalRounds = parseInt(document.getElementById('totalRounds').value, 10);
     const topCut = parseInt(document.getElementById('topCut').value, 10);
     const depth = document.querySelector('input[name="depth"]:checked')?.value ?? 'full';
 
-    if (!eventData)           { showError('analyzeError', 'Fetch an event first.'); return; }
-    if (!playerId)            { showError('analyzeError', 'Please select yourself from the dropdown.'); return; }
+    if (!eventData)   { showError('analyzeError', 'Fetch an event first.'); return; }
+    if (!playerId)    { showError('analyzeError', 'Please select yourself from the list.'); return; }
     if (!totalRounds || totalRounds < 1) { showError('analyzeError', 'Total rounds must be at least 1.'); return; }
     if (!topCut || topCut < 1)           { showError('analyzeError', 'Top cut must be at least 1.'); return; }
 
@@ -671,9 +759,7 @@
           showError('analyzeError', data.message + ' Switching to Full mode.');
           // Re-run in full mode automatically
           document.getElementById('depthFull').checked = true;
-          const noteEl = document.getElementById('depthNote');
-          noteEl.textContent = DEPTH_NOTES['full'];
-          noteEl.style.display = 'block';
+          updateDepthNote();
           document.getElementById('depthFullPlus').closest('.radio-option').style.opacity = '0.5';
           return;
         }
@@ -839,6 +925,12 @@
     document.getElementById('result').classList.remove('visible');
     document.getElementById('fullPlusSection').style.display = 'none';
     document.getElementById('depthFullPlus').closest('.radio-option').style.opacity = '';
+    playerData = [];
+    selectedPlayerId = null;
+    playerSearch.value = '';
+    playerSearch.placeholder = '— fetch event first —';
+    playerSearch.disabled = true;
+    playerList.classList.remove('open');
     document.getElementById('eventId').value = '';
     document.getElementById('eventId').focus();
     clearError('fetchError');
