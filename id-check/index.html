@@ -650,8 +650,8 @@
   // ── Depth note ───────────────────────────────────────────
   const DEPTH_NOTES = {
     'simple':  'Shows how many players can catch you. No tiebreaker data.',
-    'medium':  'Adds OMW% and OGW% tiebreaker comparison against danger players.',
-    'full':    'Adds GW% computed from raw match history for the most accurate tiebreaker picture.',
+    'medium':  'Compares tiebreakers using OMW% → OGW% from RPH standings. Skips GW% (not provided by RPH), so tiebreaker calls may be wrong when OMW% is very close.',
+    'full':    'Fetches raw match data to compute GW%, giving the full OMW% → GW% → OGW% tiebreaker chain. Most accurate tiebreaker comparison, at the cost of more API calls.',
     'full+':   'Simulates win/loss outcomes for bubble matches using current pairings. More precise than Full, but non-bubble results are estimated. Only available after pairings are posted.',
   };
   function updateDepthNote() {
