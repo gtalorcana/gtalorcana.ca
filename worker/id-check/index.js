@@ -43,10 +43,32 @@ async function rphFetch(url) {
   return res.json();
 }
 
+async function fetchWithCache(cacheKey, fetchFn, ttl, ctx) {
+  const cache = caches.default;
+  const cacheUrl = new URL(`https://api.gtalorcana.ca/__cache__/${cacheKey}`);
+  const cacheRequest = new Request(cacheUrl.toString());
+
+  const cached = await cache.match(cacheRequest);
+  console.log(`[cache] ${cacheKey}: ${cached ? 'HIT' : 'MISS'}`);
+  if (cached) return cached.json();
+
+  const data = await fetchFn();
+
+  const cacheResponse = new Response(JSON.stringify(data), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': `public, max-age=${ttl}`,
+    },
+  });
+  ctx.waitUntil(cache.put(cacheRequest, cacheResponse));
+
+  return data;
+}
+
 // ── Router ───────────────────────────────────────────────────────────────────
 
 export default {
-  async fetch(request) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const origin = request.headers.get('Origin') || '';
 
@@ -55,11 +77,11 @@ export default {
     }
 
     if (url.pathname === '/id-check/event' && request.method === 'GET') {
-      return handleEvent(url, origin);
+      return handleEvent(url, origin, ctx);
     }
 
     if (url.pathname === '/id-check/analyze' && request.method === 'POST') {
-      return handleAnalyze(request, origin);
+      return handleAnalyze(request, origin, ctx);
     }
 
     return errResponse('Not found', 404, origin);
@@ -68,7 +90,7 @@ export default {
 
 // ── GET /id-check/event?id={event_id} ────────────────────────────────────────
 
-async function handleEvent(url, origin) {
+async function handleEvent(url, origin, ctx) {
   const eventIdStr = url.searchParams.get('id');
   if (!eventIdStr || !/^\d+$/.test(eventIdStr)) {
     return errResponse('Missing or invalid event ID', 400, origin);
@@ -78,7 +100,12 @@ async function handleEvent(url, origin) {
   // Fetch event from RPH
   let eventData;
   try {
-    eventData = await rphFetch(`${RPH_BASE}/events/?id=${eventId}`);
+    eventData = await fetchWithCache(
+      `event:${eventId}`,
+      () => rphFetch(`${RPH_BASE}/events/?id=${eventId}`),
+      60,
+      ctx
+    );
   } catch (e) {
     return errResponse(`RPH API error: ${e.message}`, 502, origin);
   }
@@ -119,8 +146,11 @@ async function handleEvent(url, origin) {
   // Fetch standings for last completed round (used to build player list)
   let standingsData;
   try {
-    standingsData = await rphFetch(
-      `${RPH_BASE}/tournament-rounds/${lastCompleted.id}/standings`
+    standingsData = await fetchWithCache(
+      `standings:${lastCompleted.id}`,
+      () => rphFetch(`${RPH_BASE}/tournament-rounds/${lastCompleted.id}/standings`),
+      60,
+      ctx
     );
   } catch (e) {
     return errResponse(`RPH API error fetching standings: ${e.message}`, 502, origin);
@@ -148,7 +178,7 @@ async function handleEvent(url, origin) {
 
 // ── POST /id-check/analyze ────────────────────────────────────────────────────
 
-async function handleAnalyze(request, origin) {
+async function handleAnalyze(request, origin, ctx) {
   let body;
   try {
     body = await request.json();
@@ -157,6 +187,7 @@ async function handleAnalyze(request, origin) {
   }
 
   const { event_id, total_swiss_rounds, top_cut, player_id, depth, override_round_id } = body;
+  const useCache = !override_round_id;
 
   if (!event_id || !total_swiss_rounds || !top_cut || !player_id || !depth) {
     return errResponse('Missing required fields: event_id, total_swiss_rounds, top_cut, player_id, depth', 400, origin);
@@ -168,7 +199,9 @@ async function handleAnalyze(request, origin) {
   // Fetch event to determine current round and round IDs
   let eventData;
   try {
-    eventData = await rphFetch(`${RPH_BASE}/events/?id=${event_id}`);
+    eventData = useCache
+      ? await fetchWithCache(`event:${event_id}`, () => rphFetch(`${RPH_BASE}/events/?id=${event_id}`), 60, ctx)
+      : await rphFetch(`${RPH_BASE}/events/?id=${event_id}`);
   } catch (e) {
     return errResponse(`RPH API error: ${e.message}`, 502, origin);
   }
@@ -217,7 +250,9 @@ async function handleAnalyze(request, origin) {
   // Fetch standings
   let standingsData;
   try {
-    standingsData = await rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`);
+    standingsData = useCache
+      ? await fetchWithCache(`standings:${standingsRoundId}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`), 60, ctx)
+      : await rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`);
   } catch (e) {
     return errResponse(`RPH API error fetching standings: ${e.message}`, 502, origin);
   }
@@ -325,7 +360,11 @@ async function handleAnalyze(request, origin) {
     let allMatchData;
     try {
       allMatchData = await Promise.all(
-        roundsForMatches.map(r => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`))
+        roundsForMatches.map(r =>
+          useCache
+            ? fetchWithCache(`matches:${r.id}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`), 300, ctx)
+            : rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`)
+        )
       );
     } catch (e) {
       return errResponse(`RPH API error fetching matches: ${e.message}`, 502, origin);

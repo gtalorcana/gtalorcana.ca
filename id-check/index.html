@@ -366,10 +366,10 @@
     <div class="card-title">Event</div>
 
     <div class="field">
-      <label for="eventId">Event ID</label>
+      <label for="eventId">Event ID or URL</label>
       <div class="input-row">
-        <input type="text" id="eventId" inputmode="numeric" pattern="\d+"
-               placeholder="e.g. 213150" autocomplete="off" />
+        <input type="text" id="eventId"
+               placeholder="e.g. https://tcg.ravensburgerplay.com/events/341947" autocomplete="off" />
         <button class="btn btn-secondary" id="fetchBtn" onclick="fetchEvent()">Fetch</button>
       </div>
     </div>
@@ -519,11 +519,20 @@
     if (e.key === 'Enter') fetchEvent();
   });
 
+  // ── Parse event ID from raw number or URL ────────────────
+  function parseEventId(raw) {
+    const s = raw.trim();
+    if (/^\d+$/.test(s)) return s;
+    // Extract trailing numeric segment from a URL path
+    const m = s.match(/\/(\d+)\/?$/);
+    return m ? m[1] : null;
+  }
+
   // ── Fetch Event ──────────────────────────────────────────
   async function fetchEvent() {
-    const id = document.getElementById('eventId').value.trim();
-    if (!id || !/^\d+$/.test(id)) {
-      showError('fetchError', 'Please enter a valid numeric event ID.');
+    const id = parseEventId(document.getElementById('eventId').value);
+    if (!id) {
+      showError('fetchError', 'Please enter a valid event ID or paste the event URL.');
       return;
     }
 
