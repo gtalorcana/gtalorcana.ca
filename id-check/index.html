@@ -449,9 +449,7 @@
           <label for="depthFullPlus">Full+</label>
         </div>
       </div>
-      <div id="fullPlusNote" style="display:none; font-size:.75rem; color:var(--text-muted); margin-top:.5rem; font-style:italic;">
-        Simulates all possible round outcomes for bubble players. Most accurate — only available after pairings are posted.
-      </div>
+      <div id="depthNote" style="display:none; font-size:.75rem; color:var(--text-muted); margin-top:.5rem; font-style:italic;"></div>
     </div>
 
     <div class="error-msg" id="analyzeError"></div>
@@ -553,11 +551,23 @@
     themeBtn.textContent = isDark ? '🌙 Dark' : '☀️ Light';
   });
 
-  // ── Show Full+ note when Full+ is selected ───────────────
+  // ── Depth note ───────────────────────────────────────────
+  const DEPTH_NOTES = {
+    'simple':  'Shows how many players can catch you. No tiebreaker data.',
+    'medium':  'Adds OMW% and OGW% tiebreaker comparison against danger players.',
+    'full':    'Adds GW% computed from raw match history for the most accurate tiebreaker picture.',
+    'full+':   'Simulates all possible round outcomes for bubble players. Most accurate — only available after pairings are posted.',
+  };
   document.querySelectorAll('input[name="depth"]').forEach(radio => {
     radio.addEventListener('change', () => {
-      document.getElementById('fullPlusNote').style.display =
-        document.querySelector('input[name="depth"]:checked')?.value === 'full+' ? 'block' : 'none';
+      const val = document.querySelector('input[name="depth"]:checked')?.value;
+      const noteEl = document.getElementById('depthNote');
+      if (val && DEPTH_NOTES[val]) {
+        noteEl.textContent = DEPTH_NOTES[val];
+        noteEl.style.display = 'block';
+      } else {
+        noteEl.style.display = 'none';
+      }
     });
   });
 
@@ -661,7 +671,9 @@
           showError('analyzeError', data.message + ' Switching to Full mode.');
           // Re-run in full mode automatically
           document.getElementById('depthFull').checked = true;
-          document.getElementById('fullPlusNote').style.display = 'none';
+          const noteEl = document.getElementById('depthNote');
+          noteEl.textContent = DEPTH_NOTES['full'];
+          noteEl.style.display = 'block';
           document.getElementById('depthFullPlus').closest('.radio-option').style.opacity = '0.5';
           return;
         }
