@@ -428,7 +428,7 @@ Actual result: ryanfan finished 5th (22pts, 7-1-1). Previous simulation predicte
 best case rank 6 — one-spot difference caused by non-bubble results not going chalk.
 Cut verdict was correct: 100% of scenarios made top 32.
 
-**Test validation result (run 2026-03-22 after full simulation rewrite):**
+**Test validation result (run 2026-03-22 after exact OMW% formula fix):**
 
 ```json
 {
@@ -436,30 +436,19 @@ Cut verdict was correct: 100% of scenarios made top 32.
   "total_scenarios": 1,
   "makes_cut_scenarios": 1,
   "makes_cut_pct": 100,
-  "best_rank": 6,
-  "worst_rank": 6,
+  "best_rank": 5,
+  "worst_rank": 5,
   "known_results": 84,
   "unknown_results": 0
 }
 ```
 
-**Finding:** Since round 9 is fully complete in historical data, all 84 matches are
-classified as known results. `unknown_results: 0` → single deterministic scenario →
-rank 6 predicted vs actual rank 5.
+**Finding:** rank 5 predicted, actual rank 5. ✓ 100% makes top 16. Correct.
 
-**Why still rank 6 (not 5):** GW% is computed from completed rounds only (rounds 1–8),
-not updated with round 9 game results per scenario. ryanfan is tied at 22pts
-post-round with FPG_Dragonjonz (GW% 0.933) and Level9001🦈 (GW% 0.824), both
-beating ryanfan's 0.70 on GW%. In the actual final standings, RPH computed GW%
-with round 9 games included, shifting the ordering enough to place ryanfan 5th.
-This is the known GW% limitation — within-round game results are not tracked
-per scenario because it is too expensive.
-
-**Conclusion:** The 1-spot drift is a GW% staleness artifact, not a logic bug.
-The new simulation's improvements (ID probability weighting, 3-outcome draws,
-all matches simulated) are only observable during a live round with unknown matches
-in progress. This historical test cannot demonstrate them — both old and new code
-produce rank 6 deterministically when `unknown_results: 0`.
+**Previous incorrect result (rank 6):** was caused by the wrong OMW% formula
+(wins/played), not a GW% staleness artifact as originally diagnosed. The correct
+formula (`points / (3 × rounds)`) accounts for draws giving 1/3 of a win, fixing
+the tiebreaker ordering.
 
 ---
 
