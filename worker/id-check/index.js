@@ -509,7 +509,7 @@ async function handleAnalyze(request, origin, ctx) {
   });
 
   response.pairings_available = true;
-  response.full_plus = fullPlusResult;
+  response.simulation = fullPlusResult;
 
   return jsonResponse(response, 200, origin);
 }
@@ -557,7 +557,6 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     if (pid == null) continue;
     standingsMap[pid] = {
       pts: s.points ?? 0,
-      omwBase: s.opponent_match_win_percentage ?? 0,
       gw: gwByPlayer[pid] ?? 0.33,
       ogw: s.opponent_game_win_percentage ?? 0,
     };
@@ -566,71 +565,100 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   const targetPts = standingsMap[targetPlayerId]?.pts ?? 0;
   const targetPointsAfterID = targetPts + 1;
 
-  // Identify bubble players: can catch target if they win this round
-  const bubblePlayerSet = new Set();
-  for (const s of standings) {
-    const pid = s.player?.id;
-    if (pid == null || pid === targetPlayerId) continue;
-    if ((s.points ?? 0) + 3 >= targetPointsAfterID) bubblePlayerSet.add(pid);
+  // Classify a player by their situation relative to the cut line.
+  // locked: already at or above the points target — safe even without winning
+  // bubble: can reach the target by winning this round
+  // other:  below the bubble
+  function classifyPlayer(pid) {
+    const pts = standingsMap[pid]?.pts ?? 0;
+    if (pts >= targetPointsAfterID) return 'locked';
+    if (pts + 3 >= targetPointsAfterID) return 'bubble';
+    return 'other';
   }
 
-  // Process current round pairings
+  // Probability that an unknown match ends in an intentional draw.
+  // Outcomes: draw, p1 wins, p2 wins — each unknown match supplies its own idProbability.
+  function getIdProbability(p1, p2) {
+    const c1 = classifyPlayer(p1);
+    const c2 = classifyPlayer(p2);
+    if (c1 === 'locked' && c2 === 'locked') return 0.90;
+    if (c1 === 'locked' || c2 === 'locked') return 0.10; // one locked, one not
+    if (c1 === 'bubble' && c2 === 'bubble') return 0.03;
+    return 0.02; // neither near cut
+  }
+
+  // A match result is already known when the status is COMPLETE,
+  // draw flags are set, or a winner is recorded.
+  function isKnownResult(m) {
+    return m.status === 'COMPLETE'
+      || m.match_is_intentional_draw === true
+      || m.match_is_unintentional_draw === true
+      || m.winning_player != null;
+  }
+
+  // Process current round matches — split into known (applied as facts)
+  // and unknown (to be simulated).
   const pairingMatches = currentPairings.matches ?? currentPairings.results ?? [];
 
-  const bubbleMatches = [];
-  const nonBubbleAddWins = {};
-  const nonBubbleAddPlayed = {};
-  const pointDelta = {};
+  const knownAddWins = {};
+  const knownAddPlayed = {};
+  const knownPtDelta = {};
   const currentRoundOpps = {};
+  const unknownMatches = [];
+  let knownResultsCount = 0;
 
-  // Target player IDs (+1 each, draw = no win, +1 played)
-  pointDelta[targetPlayerId] = 1;
-  nonBubbleAddPlayed[targetPlayerId] = 1;
+  // Target player always IDs (+1 point each, +1 played for both, no win credited)
+  knownPtDelta[targetPlayerId] = 1;
+  knownAddPlayed[targetPlayerId] = 1;
 
   for (const m of pairingMatches) {
     const players = m.players ?? [];
 
-    // Bye
+    // Bye — always a known result
     if (m.match_is_bye) {
       const pid = players[0];
-      if (pid != null) pointDelta[pid] = (pointDelta[pid] ?? 0) + 3;
+      if (pid != null) knownPtDelta[pid] = (knownPtDelta[pid] ?? 0) + 3;
+      knownResultsCount++;
       continue;
     }
 
     if (players.length < 2) continue;
     const [p1, p2] = players;
 
-    // Target player's match: mark their opponent
+    // Target player's match: treated as ID regardless of actual status
     if (p1 === targetPlayerId || p2 === targetPlayerId) {
       const opp = p1 === targetPlayerId ? p2 : p1;
-      pointDelta[opp] = (pointDelta[opp] ?? 0) + 1;
-      nonBubbleAddPlayed[opp] = (nonBubbleAddPlayed[opp] ?? 0) + 1;
+      knownPtDelta[opp] = (knownPtDelta[opp] ?? 0) + 1;
+      knownAddPlayed[opp] = (knownAddPlayed[opp] ?? 0) + 1;
       currentRoundOpps[targetPlayerId] = opp;
       currentRoundOpps[opp] = targetPlayerId;
+      knownResultsCount++;
       continue;
     }
 
     currentRoundOpps[p1] = p2;
     currentRoundOpps[p2] = p1;
 
-    if (bubblePlayerSet.has(p1) || bubblePlayerSet.has(p2)) {
-      bubbleMatches.push({ p1, p2 });
+    if (isKnownResult(m)) {
+      knownResultsCount++;
+      knownAddPlayed[p1] = (knownAddPlayed[p1] ?? 0) + 1;
+      knownAddPlayed[p2] = (knownAddPlayed[p2] ?? 0) + 1;
+      if (m.match_is_intentional_draw || m.match_is_unintentional_draw) {
+        knownPtDelta[p1] = (knownPtDelta[p1] ?? 0) + 1;
+        knownPtDelta[p2] = (knownPtDelta[p2] ?? 0) + 1;
+      } else {
+        const winner = m.winning_player;
+        const loser = winner === p1 ? p2 : p1;
+        knownAddWins[winner] = (knownAddWins[winner] ?? 0) + 1;
+        knownPtDelta[winner] = (knownPtDelta[winner] ?? 0) + 3;
+      }
     } else {
-      // Non-bubble: higher current points wins
-      const pts1 = standingsMap[p1]?.pts ?? 0;
-      const pts2 = standingsMap[p2]?.pts ?? 0;
-      const winner = pts1 >= pts2 ? p1 : p2;
-      const loser = winner === p1 ? p2 : p1;
-      pointDelta[winner] = (pointDelta[winner] ?? 0) + 3;
-      nonBubbleAddWins[winner] = (nonBubbleAddWins[winner] ?? 0) + 1;
-      nonBubbleAddPlayed[winner] = (nonBubbleAddPlayed[winner] ?? 0) + 1;
-      nonBubbleAddPlayed[loser] = (nonBubbleAddPlayed[loser] ?? 0) + 1;
+      unknownMatches.push({ p1, p2, idProbability: getIdProbability(p1, p2) });
     }
   }
 
-  const N = bubbleMatches.length;
+  const N = unknownMatches.length;
   const isExhaustive = N <= EXHAUSTIVE_THRESHOLD;
-  const totalScenarios = isExhaustive ? Math.pow(2, N) : MONTE_CARLO_SAMPLES;
 
   // allPlayers array for ranking
   const allPlayers = standings
@@ -642,18 +670,26 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       ogw: s.opponent_game_win_percentage ?? 0,
     }));
 
-  function simulateScenario(bubbleOutcomes) {
-    // bubbleOutcomes: [{ p1, p2, winner }]
-    const addWins = { ...nonBubbleAddWins };
-    const addPlayed = { ...nonBubbleAddPlayed };
-    const ptDelta = { ...pointDelta };
+  // Simulate one combination of unknown match outcomes and return the target's rank.
+  // outcomes: [{ p1, p2, outcome }]  outcome: 0=draw, 1=p1 wins, 2=p2 wins
+  function simulateScenario(outcomes) {
+    const addWins = { ...knownAddWins };
+    const addPlayed = { ...knownAddPlayed };
+    const ptDelta = { ...knownPtDelta };
 
-    for (const { p1, p2, winner } of bubbleOutcomes) {
-      const loser = winner === p1 ? p2 : p1;
-      addWins[winner] = (addWins[winner] ?? 0) + 1;
-      addPlayed[winner] = (addPlayed[winner] ?? 0) + 1;
-      addPlayed[loser] = (addPlayed[loser] ?? 0) + 1;
-      ptDelta[winner] = (ptDelta[winner] ?? 0) + 3;
+    for (const { p1, p2, outcome } of outcomes) {
+      addPlayed[p1] = (addPlayed[p1] ?? 0) + 1;
+      addPlayed[p2] = (addPlayed[p2] ?? 0) + 1;
+      if (outcome === 0) {
+        ptDelta[p1] = (ptDelta[p1] ?? 0) + 1;
+        ptDelta[p2] = (ptDelta[p2] ?? 0) + 1;
+      } else if (outcome === 1) {
+        addWins[p1] = (addWins[p1] ?? 0) + 1;
+        ptDelta[p1] = (ptDelta[p1] ?? 0) + 3;
+      } else {
+        addWins[p2] = (addWins[p2] ?? 0) + 1;
+        ptDelta[p2] = (ptDelta[p2] ?? 0) + 3;
+      }
     }
 
     function omwOf(pid) {
@@ -669,7 +705,7 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       return total / allOpps.length;
     }
 
-    const ranked = allPlayers.map(({ pid, basePoints, gw, ogw }) => ({
+    return allPlayers.map(({ pid, basePoints, gw, ogw }) => ({
       pid,
       pts: basePoints + (ptDelta[pid] ?? 0),
       omw: omwOf(pid),
@@ -682,9 +718,7 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       const gwD = b.gw - a.gw;
       if (Math.abs(gwD) > 0.0001) return gwD;
       return b.ogw - a.ogw;
-    });
-
-    return ranked.findIndex(p => p.pid === targetPlayerId) + 1;
+    }).findIndex(p => p.pid === targetPlayerId) + 1;
   }
 
   function playerName(pid) {
@@ -693,26 +727,38 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   }
 
   function scenarioToNames(outcomes) {
-    return outcomes.map(({ p1, p2, winner }) => ({
-      winner: playerName(winner),
-      loser: playerName(winner === p1 ? p2 : p1),
-    }));
+    return outcomes.map(({ p1, p2, outcome }) => {
+      if (outcome === 0) return { type: 'draw', players: [playerName(p1), playerName(p2)] };
+      const winner = outcome === 1 ? p1 : p2;
+      const loser = outcome === 1 ? p2 : p1;
+      return { type: 'win', winner: playerName(winner), loser: playerName(loser) };
+    });
   }
 
-  let makesCut = 0;
+  let makesCutCount = 0;
+  let weightedMakesCut = 0;
+  let totalWeight = 0;
   let bestRank = Infinity;
   let worstRank = 0;
   let bestScenario = null;
   let worstScenario = null;
 
   if (isExhaustive) {
-    for (let mask = 0; mask < totalScenarios; mask++) {
-      const outcomes = bubbleMatches.map((m, i) => ({
-        p1: m.p1, p2: m.p2,
-        winner: (mask >> i) & 1 ? m.p1 : m.p2,
-      }));
+    const total = Math.pow(3, N);
+    for (let combo = 0; combo < total; combo++) {
+      let weight = 1.0;
+      const outcomes = unknownMatches.map((m, i) => {
+        const digit = Math.floor(combo / Math.pow(3, i)) % 3;
+        const winProb = (1 - m.idProbability) * 0.5;
+        weight *= digit === 0 ? m.idProbability : winProb;
+        return { p1: m.p1, p2: m.p2, outcome: digit };
+      });
       const rank = simulateScenario(outcomes);
-      if (rank <= topCut) makesCut++;
+      totalWeight += weight;
+      if (rank <= topCut) {
+        makesCutCount++;
+        weightedMakesCut += weight;
+      }
       if (rank < bestRank) { bestRank = rank; bestScenario = outcomes; }
       if (rank > worstRank) { worstRank = rank; worstScenario = outcomes; }
     }
@@ -720,26 +766,37 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     worstScenario = worstScenario ? scenarioToNames(worstScenario) : null;
   } else {
     for (let i = 0; i < MONTE_CARLO_SAMPLES; i++) {
-      const outcomes = bubbleMatches.map(m => ({
-        p1: m.p1, p2: m.p2,
-        winner: Math.random() < 0.5 ? m.p1 : m.p2,
-      }));
+      const outcomes = unknownMatches.map(m => {
+        const roll = Math.random();
+        let outcome;
+        if (roll < m.idProbability) outcome = 0;
+        else if (roll < m.idProbability + (1 - m.idProbability) * 0.5) outcome = 1;
+        else outcome = 2;
+        return { p1: m.p1, p2: m.p2, outcome };
+      });
       const rank = simulateScenario(outcomes);
-      if (rank <= topCut) makesCut++;
+      if (rank <= topCut) makesCutCount++;
       if (rank < bestRank) bestRank = rank;
       if (rank > worstRank) worstRank = rank;
     }
+    totalWeight = MONTE_CARLO_SAMPLES;
+    weightedMakesCut = makesCutCount;
   }
+
+  const makesCutPct = totalWeight > 0
+    ? parseFloat(((weightedMakesCut / totalWeight) * 100).toFixed(1))
+    : 0;
 
   return {
     simulation_mode: isExhaustive ? 'exhaustive' : 'monte_carlo',
-    total_scenarios: totalScenarios,
-    makes_cut_scenarios: makesCut,
-    makes_cut_pct: parseFloat(((makesCut / totalScenarios) * 100).toFixed(1)),
+    total_scenarios: isExhaustive ? Math.pow(3, N) : MONTE_CARLO_SAMPLES,
+    makes_cut_scenarios: makesCutCount,
+    makes_cut_pct: makesCutPct,
     margin_of_error_pct: isExhaustive ? 0 : 3.5,
     best_rank: bestRank === Infinity ? null : bestRank,
     worst_rank: worstRank === 0 ? null : worstRank,
-    bubble_matches: N,
+    known_results: knownResultsCount,
+    unknown_results: N,
     best_scenario: isExhaustive ? bestScenario : null,
     worst_scenario: isExhaustive ? worstScenario : null,
   };
