@@ -68,8 +68,8 @@ tiebreaker calculations:
 
 **Match points:** +1 to each player (same as each other, different from win/loss)
 
-**GW%:** Both draw types are excluded — no game wins attributed to either player.
-`games_won_by_winner` and `games_won_by_loser` are null for draws.
+**GW%:** Both draw types **are included** — game data is present even for draws.
+`players[0]` is credited with `games_won_by_winner` games won and `players[1]` with `games_won_by_loser` games won; both players add `games_won_by_winner + games_won_by_loser` to games played. In practice, draws are almost always 1-1, so each player gets 1 win and 2 played.
 
 **OMW%:** RPH uses a points-based formula: each opponent's MW% = `opponent_points / (3 × rounds_played)`, floored at 0.33. A draw gives 1pt out of 3 possible, so it counts as 1/3 of a win — distinct from the MTG approach (0 wins) and the 0.5-win approach. See "OMW% Formula" section below for the derivation and verification.
 
@@ -234,20 +234,20 @@ Fetch raw match data for all completed rounds. For each player:
 
 ```
 For each completed match:
-  - If winning_player == player_id:
-      games_won   += games_won_by_winner
-      games_played += games_won_by_winner + games_won_by_loser
-  - Else if losing:
-      games_won   += games_won_by_loser
-      games_played += games_won_by_winner + games_won_by_loser
   - If match_is_bye:
-      games_won   += 2
-      games_played += 2
-  - If match_is_intentional_draw OR match_is_unintentional_draw:
-      skip — no game wins attributed (games_drawn is null for draws)
+      skip — game data not meaningful for byes
+  - If match_is_intentional_draw OR match_is_unintentional_draw (or winning_player == null):
+      players[0] gets games_won_by_winner won, players[1] gets games_won_by_loser won
+      both players add games_won_by_winner + games_won_by_loser to games_played
+  - Else (decisive win/loss):
+      winner gets games_won_by_winner won, loser gets games_won_by_loser won
+      both add games_won_by_winner + games_won_by_loser to games_played
 
 gw_pct = max(0.33, games_won / games_played)
 ```
+
+Verified against RPH `opponent_game_win_percentage` for event 399108, round 4 (4 opponents):
+computed OGW% = 0.56388889 vs RPH 0.56388889 ✓ exact match when draws are included.
 
 ---
 

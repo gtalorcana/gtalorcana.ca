@@ -401,20 +401,34 @@ async function handleAnalyze(request, origin, ctx) {
   const gamesPlayed = {};
   let hist = null;
 
-  // Helper: apply a single completed non-draw match's game data into gamesWon/gamesPlayed
+  // Helper: apply a single completed match's game data into gamesWon/gamesPlayed
   function applyGameData(match) {
-    if (match.match_is_bye || match.match_is_intentional_draw || match.match_is_unintentional_draw) return;
-    const winnerId = match.winning_player;
-    if (winnerId == null) return;
+    if (match.match_is_bye) return;
     const ww = match.games_won_by_winner;
     const wl = match.games_won_by_loser;
-    if (ww == null || wl == null) return; // no game data (shouldn't happen for non-draw wins)
-    const loserId = (match.players ?? []).find(p => p !== winnerId);
-    gamesWon[winnerId] = (gamesWon[winnerId] ?? 0) + ww;
-    gamesPlayed[winnerId] = (gamesPlayed[winnerId] ?? 0) + ww + wl;
-    if (loserId != null) {
-      gamesWon[loserId] = (gamesWon[loserId] ?? 0) + wl;
-      gamesPlayed[loserId] = (gamesPlayed[loserId] ?? 0) + ww + wl;
+    if (ww == null || wl == null) return;
+    const players = match.players ?? [];
+
+    if (match.match_is_intentional_draw || match.match_is_unintentional_draw || match.winning_player == null) {
+      // Draw: players[0] credited with games_won_by_winner, players[1] with games_won_by_loser
+      const [p1, p2] = players;
+      if (p1 != null) {
+        gamesWon[p1] = (gamesWon[p1] ?? 0) + ww;
+        gamesPlayed[p1] = (gamesPlayed[p1] ?? 0) + ww + wl;
+      }
+      if (p2 != null) {
+        gamesWon[p2] = (gamesWon[p2] ?? 0) + wl;
+        gamesPlayed[p2] = (gamesPlayed[p2] ?? 0) + ww + wl;
+      }
+    } else {
+      const winnerId = match.winning_player;
+      const loserId = players.find(p => p !== winnerId);
+      gamesWon[winnerId] = (gamesWon[winnerId] ?? 0) + ww;
+      gamesPlayed[winnerId] = (gamesPlayed[winnerId] ?? 0) + ww + wl;
+      if (loserId != null) {
+        gamesWon[loserId] = (gamesWon[loserId] ?? 0) + wl;
+        gamesPlayed[loserId] = (gamesPlayed[loserId] ?? 0) + ww + wl;
+      }
     }
   }
 
