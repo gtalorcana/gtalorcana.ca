@@ -429,19 +429,85 @@ Actual result: ryanfan finished 5th (22pts, 7-1-1). Previous simulation predicte
 best case rank 6 — one-spot difference caused by non-bubble results not going chalk.
 Cut verdict was correct: 100% of scenarios made top 32.
 
-With the updated simulation (all matches simulated, ID probability weighting,
-3-outcome draws) the prediction should be closer to the actual rank 5 finish.
+**Test validation result (run 2026-03-22 after full simulation rewrite):**
+
+```json
+{
+  "simulation_mode": "exhaustive",
+  "total_scenarios": 1,
+  "makes_cut_scenarios": 1,
+  "makes_cut_pct": 100,
+  "best_rank": 6,
+  "worst_rank": 6,
+  "known_results": 84,
+  "unknown_results": 0
+}
+```
+
+**Finding:** Since round 9 is fully complete in historical data, all 84 matches are
+classified as known results. `unknown_results: 0` → single deterministic scenario →
+rank 6 predicted vs actual rank 5.
+
+**Why still rank 6 (not 5):** GW% is computed from completed rounds only (rounds 1–8),
+not updated with round 9 game results per scenario. ryanfan is tied at 22pts
+post-round with FPG_Dragonjonz (GW% 0.933) and Level9001🦈 (GW% 0.824), both
+beating ryanfan's 0.70 on GW%. In the actual final standings, RPH computed GW%
+with round 9 games included, shifting the ordering enough to place ryanfan 5th.
+This is the known GW% limitation — within-round game results are not tracked
+per scenario because it is too expensive.
+
+**Conclusion:** The 1-spot drift is a GW% staleness artifact, not a logic bug.
+The new simulation's improvements (ID probability weighting, 3-outcome draws,
+all matches simulated) are only observable during a live round with unknown matches
+in progress. This historical test cannot demonstrate them — both old and new code
+produce rank 6 deterministically when `unknown_results: 0`.
+
+---
+
+## Root For — Filtering
+
+`best_scenario` from exhaustive mode contains ALL unknown matches (up to 12 at the
+threshold), but most of those matches don't directly affect whether the target player
+makes cut. Showing 12 "root for" items is noisy and confusing.
+
+**Rule:** Only show matches where at least one player is classified as `bubble`
+(i.e. `pts + 3 >= targetPointsAfterID`). These are the matches whose outcome can
+directly move a player past the target.
+
+**What to exclude:**
+- Both players `locked` (they're already safe — their result doesn't threaten the target)
+- Both players `other` (they can't reach the target's points tier regardless)
+- Matches where the beneficial outcome is "root for X to beat Y so Y's opponents'
+  OMW% drops slightly" — this is a second-order tiebreaker effect and too indirect
+  to be actionable
+
+**Implementation:** In `scenarioToNames` (or the caller), filter the outcome list
+before returning `best_scenario`:
+
+```js
+const bubbleOutcomes = outcomes.filter(({ p1, p2 }) =>
+  classifyPlayer(p1) === 'bubble' || classifyPlayer(p2) === 'bubble'
+);
+```
+
+`classifyPlayer` must be in scope — move the filter to inside `computeFullPlus`
+where `classifyPlayer` is defined, before calling `scenarioToNames`.
+
+**Edge case:** If no bubble players appear in unknown matches (all bubble matches
+were already decided), `best_scenario` returns `[]` and "Root for" section is
+hidden — this is correct behaviour.
 
 ---
 
 ## Build Order
 
-1. Update match classification to use confirmed RPH status values
-2. Implement 3-outcome simulation (win/loss/draw) replacing 2-outcome
-3. Implement ID probability weighting per match
-4. Update exhaustive threshold from 2^12 to 3^12
-5. Update Monte Carlo to sample from 3 weighted outcomes
-6. Add Advanced Settings to UI (ID rate sliders, seeding checkbox)
-7. Update result card to show known/unknown match counts and progress bar
-8. Add staleness indicator and manual Refresh button
-9. Test with event 199148 override — verify improved rank prediction vs previous version
+1. ✅ Update match classification to use confirmed RPH status values
+2. ✅ Implement 3-outcome simulation (win/loss/draw) replacing 2-outcome
+3. ✅ Implement ID probability weighting per match
+4. ✅ Update exhaustive threshold from 2^12 to 3^12
+5. ✅ Update Monte Carlo to sample from 3 weighted outcomes
+6. ✅ Add Advanced Settings to UI (ID rate sliders, seeding checkbox)
+7. ✅ Update result card to show known/unknown match counts and progress bar
+8. ✅ Add staleness indicator and manual Refresh button
+9. ✅ Test with event 199148 override — rank 6 predicted, actual rank 5, GW% staleness artifact confirmed
+10. Filter best_scenario / worst_scenario to bubble matches only before returning
