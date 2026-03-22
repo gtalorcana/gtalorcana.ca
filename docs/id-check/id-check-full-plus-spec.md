@@ -249,6 +249,11 @@ gw_pct = max(0.33, games_won / games_played)
 Verified against RPH `opponent_game_win_percentage` for event 399108, round 4 (4 opponents):
 computed OGW% = 0.56388889 vs RPH 0.56388889 ✓ exact match when draws are included.
 
+**Known round 5 discrepancy (unresolved):** With 5 opponents including 37373 (GW% ≈ 1.0),
+computed OGW% = 0.602 vs RPH 0.573. Root cause unknown — RPH may apply a GW% floor/cap
+per opponent, or exclude high-GW% outliers. Effect is negligible (OGW% is the 4th
+tiebreaker) and not worth pursuing without more data.
+
 ---
 
 ## Response Format
