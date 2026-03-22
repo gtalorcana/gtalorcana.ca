@@ -397,7 +397,33 @@ async function handleAnalyze(request, origin, ctx) {
   };
 
   const gwByPlayer = {};
+  const gamesWon = {};
+  const gamesPlayed = {};
   let hist = null;
+
+  // Helper: apply a single completed non-draw match's game data into gamesWon/gamesPlayed
+  function applyGameData(match) {
+    if (match.match_is_bye || match.match_is_intentional_draw || match.match_is_unintentional_draw) return;
+    const winnerId = match.winning_player;
+    if (winnerId == null) return;
+    const ww = match.games_won_by_winner;
+    const wl = match.games_won_by_loser;
+    if (ww == null || wl == null) return; // no game data (shouldn't happen for non-draw wins)
+    const loserId = (match.players ?? []).find(p => p !== winnerId);
+    gamesWon[winnerId] = (gamesWon[winnerId] ?? 0) + ww;
+    gamesPlayed[winnerId] = (gamesPlayed[winnerId] ?? 0) + ww + wl;
+    if (loserId != null) {
+      gamesWon[loserId] = (gamesWon[loserId] ?? 0) + wl;
+      gamesPlayed[loserId] = (gamesPlayed[loserId] ?? 0) + ww + wl;
+    }
+  }
+
+  function recomputeGwByPlayer() {
+    for (const [pid, played] of Object.entries(gamesPlayed)) {
+      const won = gamesWon[pid] ?? 0;
+      gwByPlayer[pid] = played > 0 ? Math.max(0.33, won / played) : 0.33;
+    }
+  }
 
   if (depth === 'full') {
     let allMatchData;
@@ -413,38 +439,13 @@ async function handleAnalyze(request, origin, ctx) {
       return errResponse(`RPH API error fetching matches: ${e.message}`, 502, origin);
     }
 
-    const gamesWon = {};
-    const gamesPlayed = {};
-
     for (const roundData of allMatchData) {
-      const matches = roundData.matches ?? roundData.results ?? [];
-      for (const match of matches) {
-        // Byes have null game data — exclude from GW%, same as draws
-        if (match.match_is_bye) continue;
-        if (match.match_is_intentional_draw || match.match_is_unintentional_draw) continue;
-
-        const winnerId = match.winning_player;
-        const players = match.players ?? [];
-        const loserId = players.find(p => p !== winnerId);
-        const ww = match.games_won_by_winner ?? 0;
-        const wl = match.games_won_by_loser ?? 0;
-
-        if (winnerId != null) {
-          gamesWon[winnerId] = (gamesWon[winnerId] ?? 0) + ww;
-          gamesPlayed[winnerId] = (gamesPlayed[winnerId] ?? 0) + ww + wl;
-        }
-        if (loserId != null) {
-          gamesWon[loserId] = (gamesWon[loserId] ?? 0) + wl;
-          gamesPlayed[loserId] = (gamesPlayed[loserId] ?? 0) + ww + wl;
-        }
+      for (const match of roundData.matches ?? roundData.results ?? []) {
+        applyGameData(match);
       }
     }
 
-    for (const [pid, played] of Object.entries(gamesPlayed)) {
-      const won = gamesWon[pid] ?? 0;
-      gwByPlayer[pid] = played > 0 ? Math.max(0.33, won / played) : 0.33;
-    }
-
+    recomputeGwByPlayer();
     response.your_tiebreakers.gw_pct = gwByPlayer[player_id] ?? 0.33;
 
     // Build match history (wins/played/opps) for Full+ simulation
@@ -532,6 +533,17 @@ async function handleAnalyze(request, origin, ctx) {
   if (pairingMatches.length === 0) {
     response.pairings_available = false;
     return jsonResponse(response, 200, origin);
+  }
+
+  // Enrich GW% with known current-round match results before simulation.
+  // Unknown matches can't be helped, but completed ones should be included so
+  // GW% tiebreakers are accurate when players are OMW%-tied.
+  if (depth === 'full') {
+    for (const match of pairingMatches) {
+      applyGameData(match);
+    }
+    recomputeGwByPlayer();
+    response.your_tiebreakers.gw_pct = gwByPlayer[player_id] ?? 0.33;
   }
 
   const fullPlusResult = computeFullPlus({
