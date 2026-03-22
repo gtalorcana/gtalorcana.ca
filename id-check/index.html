@@ -823,8 +823,8 @@
     const fpSection = document.getElementById('fullPlusSection');
     if (d.depth === 'full') {
       fpSection.style.display = 'block';
-      if (d.full_plus) {
-        renderFullPlus(d.full_plus, d.top_cut);
+      if (d.simulation) {
+        renderFullPlus(d.simulation, d.top_cut);
       } else {
         document.getElementById('fullPlusBody').innerHTML =
           '<div style="font-size:.8rem; color:var(--text-muted); font-style:italic;">Pairings not yet posted — simulation unavailable. Check back once the organizer generates round pairings.</div>';
@@ -842,7 +842,7 @@
     const verdictColour = pct >= 75 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
 
     const scenarioLabel = isMC
-      ? `Sampled ${fp.total_scenarios.toLocaleString()} of ~2<sup>${fp.bubble_matches}</sup> cases`
+      ? `Sampled ${fp.total_scenarios.toLocaleString()} of ~3<sup>${fp.unknown_results}</sup> cases`
       : `Checked all ${fp.total_scenarios.toLocaleString()} scenarios`;
 
     const cutLine = isMC
@@ -856,14 +856,18 @@
       <div class="sim-stat"><span class="sim-key">Worst case</span><span class="sim-val">Rank ${fp.worst_rank ?? '—'}</span></div>
     `;
 
-    if (isMC && fp.bubble_matches) {
-      html += `<div class="sim-stat"><span class="sim-key" style="color:var(--text-muted);font-style:italic;">${fp.bubble_matches} bubble matches — too many to check exhaustively</span></div>`;
+    if (isMC && fp.unknown_results) {
+      html += `<div class="sim-stat"><span class="sim-key" style="color:var(--text-muted);font-style:italic;">${fp.unknown_results} matches still in play — too many to check exhaustively</span></div>`;
     }
 
     if (fp.best_scenario && fp.best_scenario.length > 0) {
       html += `<div class="root-for"><div class="root-for-label">Root for</div>`;
       for (const s of fp.best_scenario) {
-        html += `<div class="root-for-item">🙏 ${esc(s.winner)} to beat ${esc(s.loser)}</div>`;
+        if (s.type === 'draw') {
+          html += `<div class="root-for-item">🙏 ${esc(s.players[0])} &amp; ${esc(s.players[1])} to draw</div>`;
+        } else {
+          html += `<div class="root-for-item">🙏 ${esc(s.winner)} to beat ${esc(s.loser)}</div>`;
+        }
       }
       html += `</div>`;
     }
