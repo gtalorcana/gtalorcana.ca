@@ -1,5 +1,11 @@
 # ID Check Tool — Caching Follow-up
 
+**Status: ✅ Fully implemented (2026-03-22)**
+- `fetchWithCache` → `fetchWithForceRefresh` with 10s cooldown
+- Skip cache checkbox in UI, auto-enabled on `EVENT_IN_PROGRESS`
+- `event_lifecycle_status` returned from `/event` endpoint
+- Completed round match history always `forceRefresh=false` (immutable)
+
 ## Context
 
 This task adds Cloudflare Cache API to the existing `worker/id-check/index.js`.
@@ -72,26 +78,26 @@ Replace each raw RPH fetch with `fetchWithCache`:
 ```js
 // Event metadata
 const eventData = await fetchWithCache(
-  `event:${event_id}`,
-  () => fetchRphEvent(event_id),
-  60,
-  ctx
+        `event:${event_id}`,
+        () => fetchRphEvent(event_id),
+        60,
+        ctx
 );
 
 // Standings
 const standings = await fetchWithCache(
-  `standings:${round_id}`,
-  () => fetchRphStandings(round_id),
-  60,
-  ctx
+        `standings:${round_id}`,
+        () => fetchRphStandings(round_id),
+        60,
+        ctx
 );
 
 // Match history (Full mode)
 const matches = await fetchWithCache(
-  `matches:${round_id}`,
-  () => fetchRphMatches(round_id),
-  300,
-  ctx
+        `matches:${round_id}`,
+        () => fetchRphMatches(round_id),
+        300,
+        ctx
 );
 ```
 
@@ -103,8 +109,8 @@ Testing mode should always fetch fresh data:
 const useCache = !body.override_round_id;
 
 const standings = useCache
-  ? await fetchWithCache(`standings:${round_id}`, () => fetchRphStandings(round_id), 60, ctx)
-  : await fetchRphStandings(round_id);
+        ? await fetchWithCache(`standings:${round_id}`, () => fetchRphStandings(round_id), 60, ctx)
+        : await fetchRphStandings(round_id);
 ```
 
 ### Pass `ctx` through
@@ -119,6 +125,123 @@ export default {
   }
 };
 ```
+
+---
+
+## Skip Cache — UI Checkbox + Server-Side Cooldown
+
+### UI
+
+Add a **"Skip cache"** checkbox beside the [Fetch] button:
+
+```
+Event ID  [__________] [Fetch]  ☐ Skip cache
+```
+
+Label: `Skip cache` with a tooltip: *"Use during active tournaments to get the
+latest results. Shared with other users — at most one RPH call per 10 seconds."*
+
+**Auto-enable when event is live:**
+When the `/id-check/event` response shows `event_lifecycle_status === "EVENT_IN_PROGRESS"`,
+automatically check the skip cache box. The user can uncheck it if they want.
+
+### Why a checkbox beats `?nocache=1` in the URL
+
+During a tournament on a phone, editing a URL is error-prone. A visible checkbox
+is one tap. It's also self-documenting — users can see they're in "fresh data" mode.
+
+### Server-side force refresh cooldown
+
+If multiple friends all check "Skip cache" simultaneously, each would independently
+hit RPH — defeating the purpose of caching. The worker prevents this with a
+**force refresh cooldown**:
+
+- First user to skip cache → fetches from RPH, stores result with normal TTL,
+  also stores a short-lived "fresh marker" (10 second TTL)
+- Any subsequent skip cache request within 10 seconds → finds the fresh marker,
+  returns that result instead of hitting RPH again
+- After 10 seconds → next skip cache hits RPH and refreshes the marker
+
+This means skip cache = "at most one RPH call per 10 seconds per endpoint"
+regardless of how many concurrent users request it.
+
+```js
+const FORCE_REFRESH_COOLDOWN = 10; // seconds
+
+async function fetchWithForceRefresh(cacheKey, fetchFn, ttl, forceRefresh, ctx) {
+  const cache = caches.default;
+  const cacheRequest = new Request(
+          `https://api.gtalorcana.ca/__cache__/${cacheKey}`
+  );
+  const freshMarker = new Request(
+          `https://api.gtalorcana.ca/__fresh__/${cacheKey}`
+  );
+
+  if (forceRefresh) {
+    // Check if someone already force-refreshed recently
+    const recentFresh = await cache.match(freshMarker);
+    if (recentFresh) {
+      console.log(`[cache] ${cacheKey}: FORCE-HIT (cooldown active)`);
+      return await recentFresh.json();
+    }
+
+    // Nobody refreshed recently — fetch from RPH
+    console.log(`[cache] ${cacheKey}: FORCE-MISS (fetching fresh)`);
+    const data = await fetchFn();
+
+    // Store with normal TTL
+    ctx.waitUntil(cache.put(cacheRequest, new Response(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': `public, max-age=${ttl}`,
+      },
+    })));
+
+    // Store fresh marker with cooldown TTL
+    ctx.waitUntil(cache.put(freshMarker, new Response(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': `public, max-age=${FORCE_REFRESH_COOLDOWN}`,
+      },
+    })));
+
+    return data;
+  }
+
+  // Normal cache path
+  const cached = await cache.match(cacheRequest);
+  if (cached) {
+    console.log(`[cache] ${cacheKey}: HIT`);
+    return await cached.json();
+  }
+
+  console.log(`[cache] ${cacheKey}: MISS`);
+  const data = await fetchFn();
+  ctx.waitUntil(cache.put(cacheRequest, new Response(JSON.stringify(data), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': `public, max-age=${ttl}`,
+    },
+  })));
+  return data;
+}
+```
+
+### Updated cache TTL table
+
+| Data | Cache Key | Normal TTL | Fresh Marker TTL |
+|------|-----------|-----------|-----------------|
+| Event metadata | `event:{event_id}` | 60s | 10s |
+| Round standings | `standings:{round_id}` | 60s | 10s |
+| Completed round matches | `matches:{round_id}` | 300s | 10s |
+| Current round matches | `matches:current:{round_id}` | 30s | 10s |
+
+### Skip cache is NOT applied when
+
+- `override_round_id` or `override_current_pairings_round_id` is set — testing
+  mode always fetches fresh regardless
+- The request is for a completed round's match history — that data is immutable,
+  skip cache has no benefit
 
 ---
 
