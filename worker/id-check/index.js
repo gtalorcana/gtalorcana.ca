@@ -553,6 +553,7 @@ async function handleAnalyze(request, origin, ctx) {
     currentPairings,
     targetPlayerId: player_id,
     topCut: top_cut,
+    currentRound,
     lockedIdRate: locked_id_rate ?? 0.90,
     bubbleIdRate: bubble_id_rate ?? 0.03,
     monteCarloSamples: monte_carlo_samples ?? 1000,
@@ -608,7 +609,7 @@ function buildMatchHistory(allMatchData) {
   return { wins, played, opps };
 }
 
-function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetPlayerId, topCut, lockedIdRate = 0.90, bubbleIdRate = 0.03, monteCarloSamples = 1000 }) {
+function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetPlayerId, topCut, currentRound, lockedIdRate = 0.90, bubbleIdRate = 0.03, monteCarloSamples = 1000 }) {
   const EXHAUSTIVE_THRESHOLD = 12;
   const MONTE_CARLO_SAMPLES = Math.min(Math.max(Math.floor(monteCarloSamples), 100), 10000);
 
@@ -619,6 +620,7 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     if (pid == null) continue;
     standingsMap[pid] = {
       pts: s.points ?? 0,
+      omw: s.opponent_match_win_percentage ?? 0,
       gw: gwByPlayer[pid] ?? 0.33,
       ogw: s.opponent_game_win_percentage ?? 0,
     };
@@ -726,17 +728,12 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   const N = unknownMatches.length;
   const isExhaustive = N <= EXHAUSTIVE_THRESHOLD;
 
-  // allPlayers array for ranking — exclude dropped players (they don't place).
-  // OMW% is taken directly from RPH standings rather than recomputed from match
-  // history because our formula doesn't replicate RPH's exactly (unknown tiebreaker
-  // formula, floor/cap details, draw treatment). Standings OMW% ordering is stable
-  // across rounds so this gives correct relative ranking within scenarios.
+  // allPlayers array for ranking — exclude dropped players (they don't place)
   const allPlayers = standings
     .filter(s => s.player?.id != null && s.user_event_status?.registration_status !== 'DROPPED')
     .map(s => ({
       pid: s.player.id,
       basePoints: s.points ?? 0,
-      omw: s.opponent_match_win_percentage ?? 0,
       gw: gwByPlayer[s.player.id] ?? 0.33,
       ogw: s.opponent_game_win_percentage ?? 0,
     }));
@@ -757,10 +754,26 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       }
     }
 
-    return allPlayers.map(({ pid, basePoints, omw, gw, ogw }) => ({
+    // RPH OMW% formula: average of opponents' match point % = points / (3 × rounds),
+    // floor 0.33. This exactly matches what RPH reports in standings.
+    // Using final simulated points for each opponent so OMW% reflects this scenario.
+    const totalRounds = currentRound + 1;
+    function omwOf(pid) {
+      const pastOpps = hist.opps[pid] ?? [];
+      const currOpp = currentRoundOpps[pid];
+      const allOpps = currOpp != null ? [...pastOpps, currOpp] : pastOpps;
+      if (allOpps.length === 0) return standingsMap[pid]?.omw ?? 0;
+      const sum = allOpps.reduce((acc, opp) => {
+        const finalPts = (standingsMap[opp]?.pts ?? 0) + (ptDelta[opp] ?? 0);
+        return acc + Math.max(0.33, finalPts / (3 * totalRounds));
+      }, 0);
+      return sum / allOpps.length;
+    }
+
+    return allPlayers.map(({ pid, basePoints, gw, ogw }) => ({
       pid,
       pts: basePoints + (ptDelta[pid] ?? 0),
-      omw,
+      omw: omwOf(pid),
       gw,
       ogw,
     })).sort((a, b) => {
