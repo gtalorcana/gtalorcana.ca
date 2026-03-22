@@ -1,4 +1,4 @@
-# ID Check Tool — Full Mode Simulation Spec (Updated)
+# Safe to ID? Tool — Full Mode Simulation Spec (Updated)
 
 ## Overview
 
@@ -417,7 +417,7 @@ matches — allowing simulation testing with historical data.
 **Validated test case — event 199148, round 8→9:**
 
 ```json
-POST /id-check/analyze
+POST /safe-to-id/analyze
 {
   "event_id": 199148,
   "total_swiss_rounds": 9,
@@ -605,7 +605,7 @@ function omwOf(pid) {
 **Second test validation — event 399108, round 4→5 (2026-03-22):**
 
 ```json
-POST /id-check/analyze
+POST /safe-to-id/analyze
 {
   "event_id": 399108,
   "total_swiss_rounds": 5,

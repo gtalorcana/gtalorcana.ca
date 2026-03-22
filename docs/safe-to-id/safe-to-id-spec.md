@@ -1,8 +1,8 @@
-# ID Check Tool — Build Spec
+# Safe to ID? Tool — Build Spec
 
 ## Overview
 
-Build a web tool at `gtalorcana.ca/id-check` that helps competitive Lorcana players determine if they can safely Intentional Draw (ID) during a Swiss tournament.
+Build a web tool at `gtalorcana.ca/safe-to-id` that helps competitive Lorcana players determine if they can safely Intentional Draw (ID) during a Swiss tournament.
 
 A static HTML form page calls a Cloudflare Worker that fetches live data from the Ravensburger Play Hub (RPH) API and runs the math.
 
@@ -32,13 +32,13 @@ RPH does not persist GW% — it must be calculated from raw match data. Only Ful
 
 ## Part 1: Cloudflare Worker
 
-**File:** `worker/id-check/index.js`
-**Config:** `worker/id-check/wrangler.toml`
+**File:** `worker/safe-to-id/index.js`
+**Config:** `worker/safe-to-id/wrangler.toml`
 
 ### wrangler.toml
 
 ```toml
-name = "gta-lorcana-id-check"
+name = "gta-lorcana-safe-to-id"
 main = "index.js"
 compatibility_date = "2025-09-27"
 
@@ -70,7 +70,7 @@ All errors return JSON: `{"error": "...message..."}` with appropriate HTTP statu
 
 ---
 
-### Route 1: `GET /id-check/event?id={event_id}`
+### Route 1: `GET /safe-to-id/event?id={event_id}`
 
 Fetches event metadata from RPH. Used to auto-populate the form.
 
@@ -106,7 +106,7 @@ GET https://api.cloudflare.ravensburgerplay.com/hydraproxy/api/v2/events/?id={ev
 
 ---
 
-### Route 2: `POST /id-check/analyze`
+### Route 2: `POST /safe-to-id/analyze`
 
 Runs the ID safety analysis.
 
@@ -251,7 +251,7 @@ If `player_count <= top_cut`, set `all_players_advance: true` and all verdicts t
 
 ## Part 2: Static HTML Page
 
-**File:** `id-check/index.html`
+**File:** `safe-to-id/index.html`
 
 Single self-contained HTML file with inline CSS and JS. No external dependencies except the Worker API. Mobile-first. Dark theme with gold accents matching the GTA Lorcana site aesthetic.
 
@@ -328,30 +328,30 @@ const WORKER_BASE = isLocal ? 'http://localhost:8787' : 'https://api.gtalorcana.
 
 ```
 gtalorcana.ca/ (single repo)
-  id-check/
+  safe-to-id/
     index.html
   worker/
-    id-check/
+    safe-to-id/
       index.js
       wrangler.toml
   .github/
     workflows/
-      id-check-deploy.yml
+      safe-to-id-deploy.yml
 ```
 
 ---
 
 ## Deployment
 
-### GitHub Actions — `id-check-deploy.yml`
+### GitHub Actions — `safe-to-id-deploy.yml`
 
-Triggers on push to `main` when `worker/id-check/**` files change.
+Triggers on push to `main` when `worker/safe-to-id/**` files change.
 
 ```yaml
 - uses: cloudflare/wrangler-action@v3
   with:
     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-    workingDirectory: worker/id-check
+    workingDirectory: worker/safe-to-id
     environment: production
 ```
 
@@ -366,9 +366,9 @@ Triggers on push to `main` when `worker/id-check/**` files change.
 
 ## Build Order
 
-1. Worker `/id-check/event` route
-2. Worker `/id-check/analyze` — Simple depth
-3. Worker `/id-check/analyze` — Medium depth
-4. Worker `/id-check/analyze` — Full depth
+1. Worker `/safe-to-id/event` route
+2. Worker `/safe-to-id/analyze` — Simple depth
+3. Worker `/safe-to-id/analyze` — Medium depth
+4. Worker `/safe-to-id/analyze` — Full depth
 5. HTML page
 6. Run all test cases from `TEST_CASES.md`

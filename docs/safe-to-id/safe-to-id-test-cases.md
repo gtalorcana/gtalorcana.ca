@@ -1,8 +1,8 @@
-# ID Check Tool — Test Cases
+# Safe to ID? Tool — Test Cases
 
 ## Test Environment
 
-All tests call `POST https://api.gtalorcana.ca/id-check/analyze` directly.
+All tests call `POST https://api.gtalorcana.ca/safe-to-id/analyze` directly.
 No GUI time travel needed — use `override_round_id` to pin a specific round's standings.
 
 ---
@@ -66,7 +66,7 @@ In event `341947`, the standings endpoint for round 5 (`519306`) returns `record
 ### TC-1: Levacryan — Risky to ID (rank 1, 13pts)
 
 ```json
-POST /id-check/analyze
+POST /safe-to-id/analyze
 {
   "event_id": 341947,
   "total_swiss_rounds": 6,
@@ -105,7 +105,7 @@ Wait — Levacryan actually drew round 6 and finished rank 5 with 14pts, making 
 ### TC-2: ETB Kris — Unsafe to ID (rank 6, 12pts)
 
 ```json
-POST /id-check/analyze
+POST /safe-to-id/analyze
 {
   "event_id": 341947,
   "total_swiss_rounds": 6,
@@ -139,7 +139,7 @@ POST /id-check/analyze
 ### TC-3: ryanfan — Unsafe to ID (rank 15, 10pts)
 
 ```json
-POST /id-check/analyze
+POST /safe-to-id/analyze
 {
   "event_id": 341947,
   "total_swiss_rounds": 6,
@@ -172,7 +172,7 @@ POST /id-check/analyze
 ### TC-4: Simple mode — no tiebreakers in response
 
 ```json
-POST /id-check/analyze
+POST /safe-to-id/analyze
 {
   "event_id": 341947,
   "total_swiss_rounds": 6,
@@ -194,7 +194,7 @@ POST /id-check/analyze
 ### TC-5: All players advance edge case (event 213150)
 
 ```json
-POST /id-check/analyze
+POST /safe-to-id/analyze
 {
   "event_id": 213150,
   "total_swiss_rounds": 3,
@@ -223,7 +223,7 @@ Player: Dottie (0-3-0, 0pts)
 ### TC-6: Double ID — only 1 round remaining
 
 ```json
-POST /id-check/analyze
+POST /safe-to-id/analyze
 {
   "event_id": 341947,
   "total_swiss_rounds": 6,
@@ -250,7 +250,7 @@ POST /id-check/analyze
 ### TC-7: Full mode — GW% calculated from match data
 
 ```json
-POST /id-check/analyze
+POST /safe-to-id/analyze
 {
   "event_id": 341947,
   "total_swiss_rounds": 6,

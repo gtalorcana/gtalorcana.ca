@@ -1,4 +1,4 @@
-# ID Check Tool — Caching Follow-up
+# Safe to ID? Tool — Caching Follow-up
 
 **Status: ✅ Fully implemented, then simplified (2026-03-22)**
 - Single `fetchWithCache` with 10s TTL — no checkbox, no force refresh, no fresh marker
@@ -7,7 +7,7 @@
 
 ## Context
 
-This task adds Cloudflare Cache API to the existing `worker/id-check/index.js`.
+This task adds Cloudflare Cache API to the existing `worker/safe-to-id/index.js`.
 Complete and validate all test cases in `TEST_CASES.md` before implementing this.
 
 ---
@@ -141,7 +141,7 @@ Label: `Skip cache` with a tooltip: *"Use during active tournaments to get the
 latest results. Shared with other users — at most one RPH call per 10 seconds."*
 
 **Auto-enable when event is live:**
-When the `/id-check/event` response shows `event_lifecycle_status === "EVENT_IN_PROGRESS"`,
+When the `/safe-to-id/event` response shows `event_lifecycle_status === "EVENT_IN_PROGRESS"`,
 automatically check the skip cache box. The user can uncheck it if they want.
 
 ### Why a checkbox beats `?nocache=1` in the URL
@@ -248,7 +248,7 @@ async function fetchWithForceRefresh(cacheKey, fetchFn, ttl, forceRefresh, ctx) 
 
 After implementing, verify caching is working by:
 
-1. Call `POST /id-check/analyze` (Full mode, event `341947`, no override)
+1. Call `POST /safe-to-id/analyze` (Full mode, event `341947`, no override)
 2. Note response time
 3. Call same request again immediately
 4. Second call should be noticeably faster (cache hit)
