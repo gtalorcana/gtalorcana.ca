@@ -1,10 +1,9 @@
 # ID Check Tool — Caching Follow-up
 
-**Status: ✅ Fully implemented (2026-03-22)**
-- `fetchWithCache` → `fetchWithForceRefresh` with 10s cooldown
-- Skip cache checkbox in UI, auto-enabled on `EVENT_IN_PROGRESS`
-- `event_lifecycle_status` returned from `/event` endpoint
-- Completed round match history always `forceRefresh=false` (immutable)
+**Status: ✅ Fully implemented, then simplified (2026-03-22)**
+- Single `fetchWithCache` with 10s TTL — no checkbox, no force refresh, no fresh marker
+- All RPH endpoints use the same 10s TTL; override_round_id bypasses cache entirely
+- `event_lifecycle_status` still returned from `/event` endpoint (used for UI display, no longer for checkbox auto-enable)
 
 ## Context
 

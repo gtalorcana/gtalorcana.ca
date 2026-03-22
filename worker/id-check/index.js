@@ -43,32 +43,11 @@ async function rphFetch(url) {
   return res.json();
 }
 
-const FORCE_REFRESH_COOLDOWN = 10; // seconds
+const CACHE_TTL = 10; // seconds — short enough to feel fresh after a standings announcement
 
-async function fetchWithForceRefresh(cacheKey, fetchFn, ttl, forceRefresh, ctx) {
+async function fetchWithCache(cacheKey, fetchFn, ctx) {
   const cache = caches.default;
   const cacheRequest = new Request(`https://api.gtalorcana.ca/__cache__/${cacheKey}`);
-  const freshMarker = new Request(`https://api.gtalorcana.ca/__fresh__/${cacheKey}`);
-
-  if (forceRefresh) {
-    const recentFresh = await cache.match(freshMarker);
-    if (recentFresh) {
-      console.log(`[cache] ${cacheKey}: FORCE-HIT (cooldown active)`);
-      return recentFresh.json();
-    }
-
-    console.log(`[cache] ${cacheKey}: FORCE-MISS (fetching fresh)`);
-    const data = await fetchFn();
-
-    ctx.waitUntil(cache.put(cacheRequest, new Response(JSON.stringify(data), {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ttl}` },
-    })));
-    ctx.waitUntil(cache.put(freshMarker, new Response(JSON.stringify(data), {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${FORCE_REFRESH_COOLDOWN}` },
-    })));
-
-    return data;
-  }
 
   const cached = await cache.match(cacheRequest);
   console.log(`[cache] ${cacheKey}: ${cached ? 'HIT' : 'MISS'}`);
@@ -76,7 +55,7 @@ async function fetchWithForceRefresh(cacheKey, fetchFn, ttl, forceRefresh, ctx) 
 
   const data = await fetchFn();
   ctx.waitUntil(cache.put(cacheRequest, new Response(JSON.stringify(data), {
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ttl}` },
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${CACHE_TTL}` },
   })));
   return data;
 }
@@ -112,16 +91,12 @@ async function handleEvent(url, origin, ctx) {
     return errResponse('Missing or invalid event ID', 400, origin);
   }
   const eventId = parseInt(eventIdStr, 10);
-  const forceRefresh = url.searchParams.get('skip_cache') === '1';
-
   // Fetch event from RPH
   let eventData;
   try {
-    eventData = await fetchWithForceRefresh(
+    eventData = await fetchWithCache(
       `event:${eventId}`,
       () => rphFetch(`${RPH_BASE}/events/?id=${eventId}`),
-      60,
-      forceRefresh,
       ctx
     );
   } catch (e) {
@@ -164,11 +139,9 @@ async function handleEvent(url, origin, ctx) {
   // Fetch standings for last completed round (used to build player list)
   let standingsData;
   try {
-    standingsData = await fetchWithForceRefresh(
+    standingsData = await fetchWithCache(
       `standings:${lastCompleted.id}`,
       () => rphFetch(`${RPH_BASE}/tournament-rounds/${lastCompleted.id}/standings`),
-      60,
-      forceRefresh,
       ctx
     );
   } catch (e) {
@@ -212,10 +185,8 @@ async function handleAnalyze(request, origin, ctx) {
     event_id, total_swiss_rounds, top_cut, player_id, depth,
     override_round_id, override_current_pairings_round_id,
     locked_id_rate, bubble_id_rate, monte_carlo_samples,
-    skip_cache,
   } = body;
   const useCache = !override_round_id;
-  const forceRefresh = !!skip_cache && !override_round_id;
 
   if (!event_id || !total_swiss_rounds || !top_cut || !player_id || !depth) {
     return errResponse('Missing required fields: event_id, total_swiss_rounds, top_cut, player_id, depth', 400, origin);
@@ -228,7 +199,7 @@ async function handleAnalyze(request, origin, ctx) {
   let eventData;
   try {
     eventData = useCache
-      ? await fetchWithForceRefresh(`event:${event_id}`, () => rphFetch(`${RPH_BASE}/events/?id=${event_id}`), 60, forceRefresh, ctx)
+      ? await fetchWithCache(`event:${event_id}`, () => rphFetch(`${RPH_BASE}/events/?id=${event_id}`), ctx)
       : await rphFetch(`${RPH_BASE}/events/?id=${event_id}`);
   } catch (e) {
     return errResponse(`RPH API error: ${e.message}`, 502, origin);
@@ -279,7 +250,7 @@ async function handleAnalyze(request, origin, ctx) {
   let standingsData;
   try {
     standingsData = useCache
-      ? await fetchWithForceRefresh(`standings:${standingsRoundId}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`), 60, forceRefresh, ctx)
+      ? await fetchWithCache(`standings:${standingsRoundId}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`), ctx)
       : await rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`);
   } catch (e) {
     return errResponse(`RPH API error fetching standings: ${e.message}`, 502, origin);
@@ -445,7 +416,7 @@ async function handleAnalyze(request, origin, ctx) {
       allMatchData = await Promise.all(
         roundsForMatches.map(r =>
           useCache
-            ? fetchWithForceRefresh(`matches:${r.id}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`), 300, false, ctx)
+            ? fetchWithCache(`matches:${r.id}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`), ctx)
             : rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`)
         )
       );
@@ -532,11 +503,9 @@ async function handleAnalyze(request, origin, ctx) {
   try {
     currentPairings = override_current_pairings_round_id
       ? await rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`)
-      : await fetchWithForceRefresh(
+      : await fetchWithCache(
           `matches:current:${currentPairingsRoundId}`,
           () => rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`),
-          30,
-          forceRefresh,
           ctx
         );
   } catch (e) {

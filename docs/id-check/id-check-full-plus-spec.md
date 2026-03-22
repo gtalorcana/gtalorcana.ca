@@ -598,7 +598,7 @@ function omwOf(pid) {
 9. ✅ Test with event 199148 override — rank 5 predicted, actual rank 5 ✓ (earlier rank 6 result was OMW% formula bug, now fixed)
 14. ✅ Fix GW% to include draw game data — verified via OGW% round-trip against RPH (event 399108 round 4, exact match)
 10. ✅ Filter best_scenario / worst_scenario to bubble matches only before returning
-11. ✅ Implement skip cache checkbox and server-side force refresh cooldown
+11. ✅ Implement caching — simplified to single `fetchWithCache` with 10s TTL, no checkbox
 12. ✅ Handle dropped players and byes correctly per confirmed RPH data
 13. ✅ Implement exact RPH OMW% formula — `points / (3 × rounds)`, floor 0.33
 

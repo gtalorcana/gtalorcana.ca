@@ -416,16 +416,6 @@
       cursor: pointer; letter-spacing: normal; text-transform: none;
     }
 
-    /* ── SKIP CACHE ──────────────────────────────────────── */
-    .skip-cache-wrap {
-      display: flex; align-items: center; gap: .4rem; margin-top: .5rem;
-    }
-    .skip-cache-label {
-      font-family: 'Lora', serif; font-size: .75rem;
-      color: var(--text-muted); cursor: pointer;
-      letter-spacing: normal; text-transform: none; font-weight: normal;
-    }
-
     /* ── PROGRESS BAR ────────────────────────────────────── */
     .sim-progress { margin-bottom: .6rem; }
     .sim-progress-text { font-size: .75rem; color: var(--text-muted); margin-bottom: .3rem; }
@@ -495,13 +485,6 @@
       <div class="input-row">
         <input type="text" id="eventId" autocomplete="off" />
         <button class="btn btn-secondary" id="fetchBtn" onclick="fetchEvent()">Fetch</button>
-      </div>
-      <div class="skip-cache-wrap">
-        <input type="checkbox" id="skipCache" />
-        <label class="skip-cache-label" for="skipCache"
-               title="Use during active tournaments to get the latest results. Shared with other users — at most one RPH call per 10 seconds.">
-          Skip cache
-        </label>
       </div>
     </div>
 
@@ -864,19 +847,12 @@
     clearError('fetchError');
     hideEventInfo();
 
-    const skipCache = document.getElementById('skipCache').checked;
     try {
-      const qs = skipCache ? `?id=${id}&skip_cache=1` : `?id=${id}`;
-      const res = await fetch(`${WORKER}/id-check/event${qs}`);
+      const res = await fetch(`${WORKER}/id-check/event?id=${id}`);
       const data = await res.json();
       if (!res.ok) { showError('fetchError', data.error ?? 'Unknown error.'); return; }
 
       eventData = data;
-
-      // Auto-enable skip cache when event is live
-      if (data.event_lifecycle_status === 'EVENT_IN_PROGRESS') {
-        document.getElementById('skipCache').checked = true;
-      }
 
       // Populate event info strip
       document.getElementById('eventName').textContent = data.event_name;
@@ -932,7 +908,6 @@
           locked_id_rate: lockedIdRate,
           bubble_id_rate: bubbleIdRate,
           monte_carlo_samples: mcSamples,
-          skip_cache: document.getElementById('skipCache').checked || undefined,
         }),
       });
       const data = await res.json();
@@ -1126,7 +1101,6 @@
   function resetForm() {
     stopStalenessTimer();
     lastFetchTime = null;
-    document.getElementById('skipCache').checked = false;
     document.getElementById('result').classList.remove('visible');
     document.getElementById('fullPlusSection').style.display = 'none';
     playerData = [];
