@@ -189,6 +189,7 @@ async function handleAnalyze(request, origin, ctx) {
   const {
     event_id, total_swiss_rounds, top_cut, player_id, depth,
     override_round_id, override_current_pairings_round_id,
+    locked_id_rate, bubble_id_rate, monte_carlo_samples,
   } = body;
   const useCache = !override_round_id;
 
@@ -506,6 +507,9 @@ async function handleAnalyze(request, origin, ctx) {
     currentPairings,
     targetPlayerId: player_id,
     topCut: top_cut,
+    lockedIdRate: locked_id_rate ?? 0.90,
+    bubbleIdRate: bubble_id_rate ?? 0.03,
+    monteCarloSamples: monte_carlo_samples ?? 1000,
   });
 
   response.pairings_available = true;
@@ -546,9 +550,9 @@ function buildMatchHistory(allMatchData) {
   return { wins, played, opps };
 }
 
-function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetPlayerId, topCut }) {
+function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetPlayerId, topCut, lockedIdRate = 0.90, bubbleIdRate = 0.03, monteCarloSamples = 1000 }) {
   const EXHAUSTIVE_THRESHOLD = 12;
-  const MONTE_CARLO_SAMPLES = 1000;
+  const MONTE_CARLO_SAMPLES = Math.min(Math.max(Math.floor(monteCarloSamples), 100), 10000);
 
   // Per-player lookup from standings
   const standingsMap = {};
@@ -581,10 +585,10 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   function getIdProbability(p1, p2) {
     const c1 = classifyPlayer(p1);
     const c2 = classifyPlayer(p2);
-    if (c1 === 'locked' && c2 === 'locked') return 0.90;
-    if (c1 === 'locked' || c2 === 'locked') return 0.10; // one locked, one not
-    if (c1 === 'bubble' && c2 === 'bubble') return 0.03;
-    return 0.02; // neither near cut
+    if (c1 === 'locked' && c2 === 'locked') return lockedIdRate;
+    if (c1 === 'locked' || c2 === 'locked') return 0.10;
+    if (c1 === 'bubble' && c2 === 'bubble') return bubbleIdRate;
+    return 0.02;
   }
 
   // A match result is already known when the status is COMPLETE,

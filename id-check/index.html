@@ -376,6 +376,74 @@
       font-size: .8rem; color: var(--text);
     }
 
+    /* ── ADVANCED SETTINGS ───────────────────────────────── */
+    .advanced-settings { margin-top: .75rem; display: none; }
+    .advanced-settings.visible { display: block; }
+    .advanced-toggle {
+      background: none; border: none; cursor: pointer;
+      font-family: 'Cinzel', serif; font-size: .72rem;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-muted); padding: 0;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .advanced-toggle:hover { color: var(--gold); }
+    .advanced-body {
+      display: none; margin-top: .65rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: .75rem 1rem;
+    }
+    .advanced-body.open { display: block; }
+    .adv-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .5rem; margin-bottom: .55rem; font-size: .8rem;
+    }
+    .adv-row:last-child { margin-bottom: 0; }
+    .adv-label { color: var(--text-muted); flex: 1; }
+    .adv-input-wrap { display: flex; align-items: center; gap: .25rem; }
+    .adv-input {
+      width: 58px; text-align: right;
+      font-family: 'Lora', serif; font-size: .8rem;
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border); border-radius: 5px;
+      padding: .3rem .4rem; outline: none;
+    }
+    .adv-input:focus { border-color: var(--gold); }
+    .adv-input:disabled { opacity: .45; }
+    .adv-unit { font-size: .75rem; color: var(--text-muted); }
+    .adv-check-label {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .78rem; color: var(--text-muted);
+      cursor: pointer; letter-spacing: normal; text-transform: none;
+    }
+
+    /* ── PROGRESS BAR ────────────────────────────────────── */
+    .sim-progress { margin-bottom: .6rem; }
+    .sim-progress-text { font-size: .75rem; color: var(--text-muted); margin-bottom: .3rem; }
+    .sim-progress-bar {
+      height: 5px; background: var(--surface2);
+      border-radius: 3px; overflow: hidden;
+    }
+    .sim-progress-fill {
+      height: 100%; background: var(--gold);
+      border-radius: 3px; transition: width .4s ease;
+    }
+
+    /* ── STALENESS / REFRESH ─────────────────────────────── */
+    .sim-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: .75rem; gap: .5rem;
+    }
+    .staleness { font-size: .72rem; color: var(--text-muted); font-style: italic; }
+    .staleness.warn { color: #f59e0b; }
+    .btn-refresh {
+      font-family: 'Cinzel', serif; font-size: .7rem; letter-spacing: .08em;
+      text-transform: uppercase; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: .3rem .7rem; cursor: pointer; color: var(--text-muted);
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-refresh:hover { border-color: var(--gold); color: var(--gold); }
+
     /* ── ERROR ───────────────────────────────────────────── */
     .error-msg {
       background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
@@ -469,6 +537,41 @@
       <div id="depthNote" style="display:none; font-size:.75rem; color:var(--text-muted); margin-top:.5rem; font-style:italic;"></div>
     </div>
 
+    <div class="advanced-settings" id="advancedSettings">
+      <button class="advanced-toggle" type="button" onclick="toggleAdvanced()">
+        ⚙️ Advanced Settings <span id="advArrow">▶</span>
+      </button>
+      <div class="advanced-body" id="advancedBody">
+        <div class="adv-row">
+          <span class="adv-label">Top table ID rate</span>
+          <div class="adv-input-wrap">
+            <input class="adv-input" type="number" id="advLockedRate" min="0" max="100" value="90" />
+            <span class="adv-unit">%</span>
+          </div>
+        </div>
+        <div class="adv-row">
+          <span class="adv-label">Seeding matters</span>
+          <label class="adv-check-label">
+            <input type="checkbox" id="advSeeding" onchange="handleSeedingChange()" />
+            bracket position affects top cut
+          </label>
+        </div>
+        <div class="adv-row">
+          <span class="adv-label">Bubble ID rate</span>
+          <div class="adv-input-wrap">
+            <input class="adv-input" type="number" id="advBubbleRate" min="0" max="100" value="3" />
+            <span class="adv-unit">%</span>
+          </div>
+        </div>
+        <div class="adv-row">
+          <span class="adv-label">Monte Carlo samples</span>
+          <div class="adv-input-wrap">
+            <input class="adv-input" type="number" id="advMcSamples" min="100" max="10000" value="1000" style="width:70px;" />
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="error-msg" id="analyzeError"></div>
 
     <div style="margin-top: 1rem;">
@@ -520,11 +623,21 @@
     <!-- Caveat -->
     <div class="caveat" id="caveatText" style="display:none;"></div>
 
-    <!-- Full+ simulation result -->
+    <!-- Simulation result -->
     <div id="fullPlusSection" style="display:none; margin-top: 1rem;">
       <hr class="divider" />
-      <div class="section-label">Full+ Simulation</div>
+      <div class="section-label">Simulation</div>
+      <div class="sim-progress" id="simProgress" style="display:none;">
+        <div class="sim-progress-text" id="simProgressText"></div>
+        <div class="sim-progress-bar">
+          <div class="sim-progress-fill" id="simProgressFill" style="width:0%"></div>
+        </div>
+      </div>
       <div id="fullPlusBody"></div>
+      <div class="sim-footer" id="simFooter" style="display:none;">
+        <span class="staleness" id="stalenessEl"></span>
+        <button class="btn-refresh" onclick="refreshAnalysis()">🔄 Refresh</button>
+      </div>
     </div>
 
     <hr class="divider" style="margin-top: 1rem;" />
@@ -641,8 +754,8 @@
 
   // ── Depth note ───────────────────────────────────────────
   const DEPTH_NOTES = {
-    'simple':  'Shows how many players can catch you. No tiebreaker data.',
-    'full':    'Computes OMW% → GW% → OGW% tiebreakers from raw match history, then simulates bubble match outcomes using current pairings (if available). Non-bubble results are estimated.',
+    'simple': 'Shows how many players can catch you. No tiebreaker data.',
+    'full':   'Computes exact tiebreakers from match history. Simulates all current round outcomes when pairings are available. Updates as results come in.',
   };
   function updateDepthNote() {
     const val = document.querySelector('input[name="depth"]:checked')?.value;
@@ -653,11 +766,59 @@
     } else {
       noteEl.style.display = 'none';
     }
+    const advSection = document.getElementById('advancedSettings');
+    if (advSection) advSection.classList.toggle('visible', val === 'full');
   }
   document.querySelectorAll('input[name="depth"]').forEach(radio => {
     radio.addEventListener('change', updateDepthNote);
   });
-  updateDepthNote(); // show Simple note on load
+  updateDepthNote();
+
+  // ── Advanced Settings ────────────────────────────────────
+  function toggleAdvanced() {
+    const body = document.getElementById('advancedBody');
+    const arrow = document.getElementById('advArrow');
+    const isOpen = body.classList.toggle('open');
+    arrow.textContent = isOpen ? '▼' : '▶';
+  }
+  function handleSeedingChange() {
+    const seeding = document.getElementById('advSeeding').checked;
+    const lockedInput = document.getElementById('advLockedRate');
+    lockedInput.value = seeding ? 40 : 90;
+    lockedInput.disabled = seeding;
+  }
+
+  // ── Staleness timer ──────────────────────────────────────
+  let stalenessTimer = null;
+  let lastFetchTime = null;
+
+  function startStalenessTimer() {
+    stopStalenessTimer();
+    lastFetchTime = Date.now();
+    updateStaleness();
+    stalenessTimer = setInterval(updateStaleness, 10000);
+  }
+  function stopStalenessTimer() {
+    if (stalenessTimer) { clearInterval(stalenessTimer); stalenessTimer = null; }
+  }
+  function updateStaleness() {
+    const el = document.getElementById('stalenessEl');
+    if (!el || !lastFetchTime) return;
+    const secs = Math.floor((Date.now() - lastFetchTime) / 1000);
+    if (secs < 30) {
+      el.textContent = '';
+      el.className = 'staleness';
+    } else if (secs < 120) {
+      el.textContent = `⏱ Results from ${secs}s ago`;
+      el.className = 'staleness';
+    } else {
+      el.textContent = `⏱ ${Math.floor(secs / 60)}m ago — consider refreshing`;
+      el.className = 'staleness warn';
+    }
+  }
+
+  // ── Refresh ──────────────────────────────────────────────
+  function refreshAnalysis() { runAnalysis(); }
 
   // ── Enter key on event ID field ──────────────────────────
   document.getElementById('eventId').addEventListener('keydown', e => {
@@ -731,6 +892,10 @@
     document.getElementById('loading').style.display = 'block';
     document.getElementById('analyzeBtn').disabled = true;
 
+    const lockedIdRate = parseFloat(document.getElementById('advLockedRate')?.value ?? 90) / 100;
+    const bubbleIdRate = parseFloat(document.getElementById('advBubbleRate')?.value ?? 3) / 100;
+    const mcSamples = parseInt(document.getElementById('advMcSamples')?.value ?? 1000, 10) || 1000;
+
     try {
       const res = await fetch(`${WORKER}/id-check/analyze`, {
         method: 'POST',
@@ -741,6 +906,9 @@
           top_cut: topCut,
           player_id: playerId,
           depth,
+          locked_id_rate: lockedIdRate,
+          bubble_id_rate: bubbleIdRate,
+          monte_carlo_samples: mcSamples,
         }),
       });
       const data = await res.json();
@@ -826,8 +994,10 @@
       if (d.simulation) {
         renderFullPlus(d.simulation, d.top_cut);
       } else {
+        document.getElementById('simProgress').style.display = 'none';
+        document.getElementById('simFooter').style.display = 'none';
         document.getElementById('fullPlusBody').innerHTML =
-          '<div style="font-size:.8rem; color:var(--text-muted); font-style:italic;">Pairings not yet posted — simulation unavailable. Check back once the organizer generates round pairings.</div>';
+          '<div style="font-size:.8rem; color:var(--text-muted); font-style:italic;">Pairings not yet posted — check back once the organizer generates round pairings.</div>';
       }
     } else {
       fpSection.style.display = 'none';
@@ -837,6 +1007,23 @@
   }
 
   function renderFullPlus(fp, topCut) {
+    // Progress bar
+    const totalMatches = (fp.known_results ?? 0) + (fp.unknown_results ?? 0);
+    const simProgress = document.getElementById('simProgress');
+    if (totalMatches > 0) {
+      const fillPct = Math.round((fp.known_results / totalMatches) * 100);
+      document.getElementById('simProgressText').textContent =
+        `${fp.known_results} of ${totalMatches} matches complete`;
+      document.getElementById('simProgressFill').style.width = `${fillPct}%`;
+      simProgress.style.display = 'block';
+    } else {
+      simProgress.style.display = 'none';
+    }
+
+    // Staleness + refresh footer
+    document.getElementById('simFooter').style.display = 'flex';
+    startStalenessTimer();
+
     const isMC = fp.simulation_mode === 'monte_carlo';
     const pct = fp.makes_cut_pct;
     const verdictColour = pct >= 75 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
@@ -913,6 +1100,8 @@
 
   // ── Reset ────────────────────────────────────────────────
   function resetForm() {
+    stopStalenessTimer();
+    lastFetchTime = null;
     document.getElementById('result').classList.remove('visible');
     document.getElementById('fullPlusSection').style.display = 'none';
     playerData = [];
