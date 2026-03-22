@@ -510,4 +510,4 @@ hidden — this is correct behaviour.
 7. ✅ Update result card to show known/unknown match counts and progress bar
 8. ✅ Add staleness indicator and manual Refresh button
 9. ✅ Test with event 199148 override — rank 6 predicted, actual rank 5, GW% staleness artifact confirmed
-10. Filter best_scenario / worst_scenario to bubble matches only before returning
+10. ✅ Filter best_scenario / worst_scenario to bubble matches only before returning
