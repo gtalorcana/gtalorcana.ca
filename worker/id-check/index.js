@@ -766,8 +766,11 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       if (rank < bestRank) { bestRank = rank; bestScenario = outcomes; }
       if (rank > worstRank) { worstRank = rank; worstScenario = outcomes; }
     }
-    bestScenario = bestScenario ? scenarioToNames(bestScenario) : null;
-    worstScenario = worstScenario ? scenarioToNames(worstScenario) : null;
+    const bubbleOnly = outcomes => outcomes.filter(({ p1, p2 }) =>
+      classifyPlayer(p1) === 'bubble' || classifyPlayer(p2) === 'bubble'
+    );
+    bestScenario = bestScenario ? scenarioToNames(bubbleOnly(bestScenario)) : null;
+    worstScenario = worstScenario ? scenarioToNames(bubbleOnly(worstScenario)) : null;
   } else {
     for (let i = 0; i < MONTE_CARLO_SAMPLES; i++) {
       const outcomes = unknownMatches.map(m => {
