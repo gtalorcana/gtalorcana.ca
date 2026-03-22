@@ -590,7 +590,8 @@ function omwOf(pid) {
 6. ✅ Add Advanced Settings to UI (ID rate sliders, seeding checkbox)
 7. ✅ Update result card to show known/unknown match counts and progress bar
 8. ✅ Add staleness indicator and manual Refresh button
-9. ✅ Test with event 199148 override — rank 6 predicted, actual rank 5, GW% staleness artifact confirmed
+9. ✅ Test with event 199148 override — rank 5 predicted, actual rank 5 ✓ (earlier rank 6 result was OMW% formula bug, now fixed)
+14. ✅ Fix GW% to include draw game data — verified via OGW% round-trip against RPH (event 399108 round 4, exact match)
 10. ✅ Filter best_scenario / worst_scenario to bubble matches only before returning
 11. ✅ Implement skip cache checkbox and server-side force refresh cooldown
 12. ✅ Handle dropped players and byes correctly per confirmed RPH data
