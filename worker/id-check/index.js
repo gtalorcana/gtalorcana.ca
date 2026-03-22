@@ -726,12 +726,17 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   const N = unknownMatches.length;
   const isExhaustive = N <= EXHAUSTIVE_THRESHOLD;
 
-  // allPlayers array for ranking — exclude dropped players (they don't place)
+  // allPlayers array for ranking — exclude dropped players (they don't place).
+  // OMW% is taken directly from RPH standings rather than recomputed from match
+  // history because our formula doesn't replicate RPH's exactly (unknown tiebreaker
+  // formula, floor/cap details, draw treatment). Standings OMW% ordering is stable
+  // across rounds so this gives correct relative ranking within scenarios.
   const allPlayers = standings
     .filter(s => s.player?.id != null && s.user_event_status?.registration_status !== 'DROPPED')
     .map(s => ({
       pid: s.player.id,
       basePoints: s.points ?? 0,
+      omw: s.opponent_match_win_percentage ?? 0,
       gw: gwByPlayer[s.player.id] ?? 0.33,
       ogw: s.opponent_game_win_percentage ?? 0,
     }));
@@ -739,42 +744,23 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   // Simulate one combination of unknown match outcomes and return the target's rank.
   // outcomes: [{ p1, p2, outcome }]  outcome: 0=draw, 1=p1 wins, 2=p2 wins
   function simulateScenario(outcomes) {
-    const addWins = { ...knownAddWins };
-    const addPlayed = { ...knownAddPlayed };
     const ptDelta = { ...knownPtDelta };
 
     for (const { p1, p2, outcome } of outcomes) {
-      addPlayed[p1] = (addPlayed[p1] ?? 0) + 1;
-      addPlayed[p2] = (addPlayed[p2] ?? 0) + 1;
       if (outcome === 0) {
         ptDelta[p1] = (ptDelta[p1] ?? 0) + 1;
         ptDelta[p2] = (ptDelta[p2] ?? 0) + 1;
       } else if (outcome === 1) {
-        addWins[p1] = (addWins[p1] ?? 0) + 1;
         ptDelta[p1] = (ptDelta[p1] ?? 0) + 3;
       } else {
-        addWins[p2] = (addWins[p2] ?? 0) + 1;
         ptDelta[p2] = (ptDelta[p2] ?? 0) + 3;
       }
     }
 
-    function omwOf(pid) {
-      const pastOpps = hist.opps[pid] ?? [];
-      const currOpp = currentRoundOpps[pid];
-      const allOpps = currOpp != null ? [...pastOpps, currOpp] : pastOpps;
-      if (allOpps.length === 0) return 0.33;
-      const total = allOpps.reduce((sum, opp) => {
-        const w = (hist.wins[opp] ?? 0) + (addWins[opp] ?? 0);
-        const p = (hist.played[opp] ?? 0) + (addPlayed[opp] ?? 0);
-        return sum + Math.max(0.33, p > 0 ? w / p : 0.33);
-      }, 0);
-      return total / allOpps.length;
-    }
-
-    return allPlayers.map(({ pid, basePoints, gw, ogw }) => ({
+    return allPlayers.map(({ pid, basePoints, omw, gw, ogw }) => ({
       pid,
       pts: basePoints + (ptDelta[pid] ?? 0),
-      omw: omwOf(pid),
+      omw,
       gw,
       ogw,
     })).sort((a, b) => {
