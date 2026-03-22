@@ -295,6 +295,16 @@ async function handleAnalyze(request, origin, ctx) {
   const currentPoints = myStanding.points ?? 0;
   const record = myStanding.record ?? '0-0-0';
 
+  // Dropped players cannot play future rounds — exclude from danger counts and simulation.
+  // Historical results still count for OMW% calculations.
+  const droppedPlayerIds = new Set(
+    standings
+      .filter(s => s.user_event_status?.registration_status === 'DROPPED')
+      .map(s => s.player?.id)
+      .filter(id => id != null)
+  );
+  const isDropped = s => droppedPlayerIds.has(s.player?.id);
+
   const roundsRemaining = Math.max(0, total_swiss_rounds - currentRound);
   const pointsIfIdOne = currentPoints + 1;
   const pointsIfIdTwo = currentPoints + 2;
@@ -324,11 +334,14 @@ async function handleAnalyze(request, origin, ctx) {
   const otherStandings = standings.filter(s => s.player?.id !== player_id);
 
   function computeScenario(pointsIfId) {
-    const alreadyAbove = otherStandings.filter(s => (s.points ?? 0) > pointsIfId).length;
+    // canCatch includes dropped players so they still appear in the danger list
+    // (with dropped: true), but danger_count only counts active players.
     const canCatch = otherStandings.filter(s =>
       (s.points ?? 0) + roundsRemaining * 3 >= pointsIfId
     );
-    const dangerCount = canCatch.length - alreadyAbove;
+    const activeCanCatch = canCatch.filter(s => !isDropped(s));
+    const alreadyAbove = activeCanCatch.filter(s => (s.points ?? 0) > pointsIfId).length;
+    const dangerCount = activeCanCatch.length - alreadyAbove;
     let verdict;
     if (dangerCount < top_cut) verdict = 'safe';
     else if (dangerCount === top_cut) verdict = 'risky';
@@ -368,6 +381,7 @@ async function handleAnalyze(request, origin, ctx) {
       current_points: s.points ?? 0,
       max_possible_points: (s.points ?? 0) + roundsRemaining * 3,
       tiebreaker_vs_you: 'unknown',
+      dropped: isDropped(s) || undefined,
     })).sort((a, b) => b.max_possible_points - a.max_possible_points);
     return jsonResponse(response, 200, origin);
   }
@@ -405,14 +419,8 @@ async function handleAnalyze(request, origin, ctx) {
     for (const roundData of allMatchData) {
       const matches = roundData.matches ?? roundData.results ?? [];
       for (const match of matches) {
-        if (match.match_is_bye) {
-          const pid = match.players?.[0];
-          if (pid != null) {
-            gamesWon[pid] = (gamesWon[pid] ?? 0) + 2;
-            gamesPlayed[pid] = (gamesPlayed[pid] ?? 0) + 2;
-          }
-          continue;
-        }
+        // Byes have null game data — exclude from GW%, same as draws
+        if (match.match_is_bye) continue;
         if (match.match_is_intentional_draw || match.match_is_unintentional_draw) continue;
 
         const winnerId = match.winning_player;
@@ -472,6 +480,7 @@ async function handleAnalyze(request, origin, ctx) {
         gw_pct: gwByPlayer[pid] ?? 0.33,
         ogw_pct: theirOgw,
         tiebreaker_vs_you: tiebreakerVsYou,
+        dropped: isDropped(s) || undefined,
       };
       return entry;
     })
@@ -554,7 +563,19 @@ function buildMatchHistory(allMatchData) {
     const matches = roundData.matches ?? roundData.results ?? [];
     for (const match of matches) {
       const players = match.players ?? [];
-      if (match.match_is_bye || players.length < 2) continue;
+
+      // Byes count as +1 win and +1 played for the recipient's own match record
+      // (which affects OMW% of anyone who later plays them). No opponent to track.
+      if (match.match_is_bye) {
+        const pid = players[0];
+        if (pid != null) {
+          wins[pid] = (wins[pid] ?? 0) + 1;
+          played[pid] = (played[pid] ?? 0) + 1;
+        }
+        continue;
+      }
+
+      if (players.length < 2) continue;
       const [p1, p2] = players;
 
       opps[p1] = opps[p1] ?? [];
@@ -643,10 +664,14 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   for (const m of pairingMatches) {
     const players = m.players ?? [];
 
-    // Bye — always a known result
+    // Bye — always a known result; counts as a match win for OMW% purposes
     if (m.match_is_bye) {
       const pid = players[0];
-      if (pid != null) knownPtDelta[pid] = (knownPtDelta[pid] ?? 0) + 3;
+      if (pid != null) {
+        knownPtDelta[pid] = (knownPtDelta[pid] ?? 0) + 3;
+        knownAddWins[pid] = (knownAddWins[pid] ?? 0) + 1;
+        knownAddPlayed[pid] = (knownAddPlayed[pid] ?? 0) + 1;
+      }
       knownResultsCount++;
       continue;
     }
@@ -689,9 +714,9 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   const N = unknownMatches.length;
   const isExhaustive = N <= EXHAUSTIVE_THRESHOLD;
 
-  // allPlayers array for ranking
+  // allPlayers array for ranking — exclude dropped players (they don't place)
   const allPlayers = standings
-    .filter(s => s.player?.id != null)
+    .filter(s => s.player?.id != null && s.user_event_status?.registration_status !== 'DROPPED')
     .map(s => ({
       pid: s.player.id,
       basePoints: s.points ?? 0,
