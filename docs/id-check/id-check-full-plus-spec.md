@@ -71,9 +71,7 @@ tiebreaker calculations:
 **GW%:** Both draw types are excluded — no game wins attributed to either player.
 `games_won_by_winner` and `games_won_by_loser` are null for draws.
 
-**OMW%:** A draw gives +1 match played, +0 wins. This slightly lowers the drawing
-player's match win rate compared to a win, which slightly lowers the OMW% of
-everyone who played them. Same effect regardless of intentional vs unintentional.
+**OMW%:** RPH uses a points-based formula: each opponent's MW% = `opponent_points / (3 × rounds_played)`, floored at 0.33. A draw gives 1pt out of 3 possible, so it counts as 1/3 of a win — distinct from the MTG approach (0 wins) and the 0.5-win approach. See "OMW% Formula" section below for the derivation and verification.
 
 **OGW%:** Same indirect effect as OMW%.
 
@@ -197,10 +195,11 @@ For each combination of unknown match outcomes:
     - Target player's own match: treated as ID (+1 point each)
     - Bye: player gets +3 points
 
-2. Recompute OMW% for every player:
-    - Use updated win/match records including this round
-    - Floor at 0.33
-    - Only OMW% changes meaningfully within a single round
+2. Recompute OMW% for every player using the RPH formula:
+    - `omw(pid) = avg over all opponents of max(0.33, opp_final_pts / (3 × totalRounds))`
+    - `totalRounds = standingsRound + 1` (one round has just been played)
+    - `opp_final_pts` = opponent's standings points + their point delta in this scenario
+    - This exactly matches RPH's formula — verified round-by-round (see "OMW% Formula" section)
 
 3. GW% and OGW% are not recalculated per scenario — too expensive and
    the within-round shift is small. Use values computed in Step 1.
@@ -499,6 +498,99 @@ hidden — this is correct behaviour.
 
 ---
 
+---
+
+## OMW% Formula — RPH Derivation
+
+**Status: ✅ Confirmed (2026-03-22) from event 399108 (ryanfan, player 37381)**
+
+### Formula
+
+```
+OMW%(player) = average over all opponents Y of:
+  max(0.33, Y.points / (3 × rounds_played))
+```
+
+Where `rounds_played` is the total number of Swiss rounds completed so far
+(same for all active players). This is **match points as a fraction of the
+maximum possible match points** (3 pts/round × rounds).
+
+### Key insight — draws count as 1/3 of a win
+
+| Result | Points | MW% contribution |
+|--------|--------|-----------------|
+| Win    | 3 pts  | 3/(3×1) = 1.0   |
+| Draw   | 1 pt   | 1/(3×1) = 0.333 |
+| Loss   | 0 pts  | 0/(3×1) = 0 → floor 0.33 |
+
+A draw gives 1/3 of a win for the purpose of computing another player's OMW%.
+This differs from the MTG approach (draws = 0 wins) and the 0.5-win approach.
+
+### Round-by-round verification (event 399108, ryanfan after each round)
+
+**After round 1** (ryanfan lost to 36004, 0 pts):
+- 36004: 3 pts, 1 rd → 3/(3×1) = **1.0**
+- OMW% = 1.0 / 1 = **1.0** ✓ (RPH: 1.0)
+
+**After round 2** (ryanfan beat 14967, 3 pts):
+- 36004: 3 pts, 2 rds → 3/6 = **0.5**
+- 14967: 1 pt, 2 rds → 1/6 = 0.167 → floor **0.33**
+- OMW% = (0.5 + 0.33) / 2 = **0.415** ✓ (RPH: 0.415)
+
+**After round 3** (ryanfan beat 127221, 6 pts):
+- 36004: 6 pts, 3 rds → 6/9 = **0.667**
+- 14967: 4 pts, 3 rds → 4/9 = **0.444** ← draw in R1 gives 1pt, pushes above floor
+- 127221: 6 pts, 3 rds → 6/9 = **0.667**
+- OMW% = (6+4+6)/(9×3) = 16/27 = **0.59259** ✓ (RPH: 0.59259259)
+
+**After round 4** (ryanfan beat 16274, 9 pts):
+- 36004: 6 pts → 6/12 = 0.5
+- 14967: 5 pts → 5/12 = 0.4167
+- 127221: 9 pts → 9/12 = 0.75
+- 16274: 6 pts → 6/12 = 0.5
+- OMW% = (6+5+9+6)/(12×4) = 26/48 = 13/24 = **0.54166667** ✓ (RPH: 0.54166667)
+
+**After round 5** (ryanfan IDed 37373, all matches were IDs or byes):
+- 36004: 6+1=7 pts → 7/15 = 0.4667
+- 14967: 5+1=6 pts → 6/15 = 0.4
+- 127221: 9+1=10 pts → 10/15 = 0.6667
+- 16274: 6+1=7 pts → 7/15 = 0.4667
+- 37373: 10+1=11 pts → 11/15 = 0.7333
+- OMW% = (7+6+10+7+11)/(15×5) = 41/75 = **0.54666667** ✓ (RPH: 0.54666667)
+
+With correct OMW%, simulation now predicts ryanfan at **rank 4** (actual: rank 4). ✓
+Previously predicted rank 5 due to wrong OMW% formula.
+
+### Implementation
+
+```js
+const totalRounds = currentRound + 1; // currentRound = standings round number
+
+function omwOf(pid) {
+  const allOpps = [...(hist.opps[pid] ?? []), currentRoundOpps[pid]].filter(Boolean);
+  if (allOpps.length === 0) return standingsMap[pid]?.omw ?? 0;
+  const sum = allOpps.reduce((acc, opp) => {
+    const finalPts = (standingsMap[opp]?.pts ?? 0) + (ptDelta[opp] ?? 0);
+    return acc + Math.max(0.33, finalPts / (3 * totalRounds));
+  }, 0);
+  return sum / allOpps.length;
+}
+```
+
+`hist.opps[pid]` = list of past opponents (from completed rounds match history).
+`ptDelta[opp]` = simulated point change for opponent in current round.
+
+### Edge cases
+
+- **Dropped opponents**: their points are from standings (as of their last round).
+  Using `totalRounds` in denominator may slightly understate their MW% since they
+  played fewer rounds, but this is a minor approximation for rare cases.
+- **Byes**: bye recipients are not added to `hist.opps` — only real opponents count.
+  A bye gives +3 pts to the recipient which correctly raises their MW% for others.
+- **No opponents**: fallback to standings OMW% (players in round 1 with no prior opponents).
+
+---
+
 ## Build Order
 
 1. ✅ Update match classification to use confirmed RPH status values
@@ -511,3 +603,25 @@ hidden — this is correct behaviour.
 8. ✅ Add staleness indicator and manual Refresh button
 9. ✅ Test with event 199148 override — rank 6 predicted, actual rank 5, GW% staleness artifact confirmed
 10. ✅ Filter best_scenario / worst_scenario to bubble matches only before returning
+11. ✅ Implement skip cache checkbox and server-side force refresh cooldown
+12. ✅ Handle dropped players and byes correctly per confirmed RPH data
+13. ✅ Implement exact RPH OMW% formula — `points / (3 × rounds)`, floor 0.33
+
+**Second test validation — event 399108, round 4→5 (2026-03-22):**
+
+```json
+POST /id-check/analyze
+{
+  "event_id": 399108,
+  "total_swiss_rounds": 5,
+  "top_cut": 8,
+  "player_id": 37381,
+  "depth": "full",
+  "override_round_id": 492132,
+  "override_current_pairings_round_id": 492133
+}
+```
+
+Actual result: ryanfan finished **rank 4** (top 8 cut). Simulation now predicts
+`best_rank: 4, worst_rank: 4` (deterministic since all round 5 results were known).
+This was the bug that prompted the OMW% investigation — previously predicted rank 5.
