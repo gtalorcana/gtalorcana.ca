@@ -2,8 +2,8 @@
  * GTA Lorcana — ID Check Worker
  *
  * Routes:
- *   GET  /id-check/event?id={event_id}  — fetch event metadata from RPH
- *   POST /id-check/analyze              — run ID safety analysis
+ *   GET  /safe-to-id/event?id={event_id}  — fetch event metadata from RPH
+ *   POST /safe-to-id/analyze              — run ID safety analysis
  */
 
 const RPH_BASE = 'https://api.cloudflare.ravensburgerplay.com/hydraproxy/api/v2';
@@ -71,11 +71,11 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
-    if (url.pathname === '/id-check/event' && request.method === 'GET') {
+    if (url.pathname === '/safe-to-id/event' && request.method === 'GET') {
       return handleEvent(url, origin, ctx);
     }
 
-    if (url.pathname === '/id-check/analyze' && request.method === 'POST') {
+    if (url.pathname === '/safe-to-id/analyze' && request.method === 'POST') {
       return handleAnalyze(request, origin, ctx);
     }
 
@@ -83,7 +83,7 @@ export default {
   },
 };
 
-// ── GET /id-check/event?id={event_id} ────────────────────────────────────────
+// ── GET /safe-to-id/event?id={event_id} ────────────────────────────────────────
 
 async function handleEvent(url, origin, ctx) {
   const eventIdStr = url.searchParams.get('id');
@@ -171,7 +171,7 @@ async function handleEvent(url, origin, ctx) {
   }, 200, origin);
 }
 
-// ── POST /id-check/analyze ────────────────────────────────────────────────────
+// ── POST /safe-to-id/analyze ────────────────────────────────────────────────────
 
 async function handleAnalyze(request, origin, ctx) {
   let body;

@@ -1,4 +1,4 @@
-name = "gta-lorcana-id-check"
+name = "gta-lorcana-safe-to-id"
 main = "index.js"
 compatibility_date = "2025-09-27"
 
@@ -9,5 +9,5 @@ invocation_logs = true
 
 [env.production]
 routes = [
-  { pattern = "api.gtalorcana.ca/*", zone_name = "gtalorcana.ca" },
+  { pattern = "api.gtalorcana.ca/safe-to-id/*", zone_name = "gtalorcana.ca" },
 ]

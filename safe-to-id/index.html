@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta property="og:title" content="ID Check — GTA Lorcana" />
+  <meta property="og:title" content="Safe to ID? — GTA Lorcana" />
   <meta property="og:description" content="Should you take the Intentional Draw? Find out instantly." />
   <meta property="og:image" content="https://www.gtalorcana.ca/gtalorcana-logo.svg" />
-  <title>ID Check — GTA Lorcana</title>
+  <title>Safe to ID? — GTA Lorcana</title>
   <link rel="icon" type="image/svg+xml" href="/gtalorcana-logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -472,7 +472,7 @@
 
 <main>
   <div class="page-header">
-    <h1>🤝 ID Check</h1>
+    <h1>🤝 Safe to ID?</h1>
     <p>Can you safely take the Intentional Draw?</p>
   </div>
 
@@ -848,7 +848,7 @@
     hideEventInfo();
 
     try {
-      const res = await fetch(`${WORKER}/id-check/event?id=${id}`);
+      const res = await fetch(`${WORKER}/safe-to-id/event?id=${id}`);
       const data = await res.json();
       if (!res.ok) { showError('fetchError', data.error ?? 'Unknown error.'); return; }
 
@@ -896,7 +896,7 @@
     const mcSamples = parseInt(document.getElementById('advMcSamples')?.value ?? 1000, 10) || 1000;
 
     try {
-      const res = await fetch(`${WORKER}/id-check/analyze`, {
+      const res = await fetch(`${WORKER}/safe-to-id/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
