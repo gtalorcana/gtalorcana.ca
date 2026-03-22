@@ -43,25 +43,41 @@ async function rphFetch(url) {
   return res.json();
 }
 
-async function fetchWithCache(cacheKey, fetchFn, ttl, ctx) {
+const FORCE_REFRESH_COOLDOWN = 10; // seconds
+
+async function fetchWithForceRefresh(cacheKey, fetchFn, ttl, forceRefresh, ctx) {
   const cache = caches.default;
-  const cacheUrl = new URL(`https://api.gtalorcana.ca/__cache__/${cacheKey}`);
-  const cacheRequest = new Request(cacheUrl.toString());
+  const cacheRequest = new Request(`https://api.gtalorcana.ca/__cache__/${cacheKey}`);
+  const freshMarker = new Request(`https://api.gtalorcana.ca/__fresh__/${cacheKey}`);
+
+  if (forceRefresh) {
+    const recentFresh = await cache.match(freshMarker);
+    if (recentFresh) {
+      console.log(`[cache] ${cacheKey}: FORCE-HIT (cooldown active)`);
+      return recentFresh.json();
+    }
+
+    console.log(`[cache] ${cacheKey}: FORCE-MISS (fetching fresh)`);
+    const data = await fetchFn();
+
+    ctx.waitUntil(cache.put(cacheRequest, new Response(JSON.stringify(data), {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ttl}` },
+    })));
+    ctx.waitUntil(cache.put(freshMarker, new Response(JSON.stringify(data), {
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${FORCE_REFRESH_COOLDOWN}` },
+    })));
+
+    return data;
+  }
 
   const cached = await cache.match(cacheRequest);
   console.log(`[cache] ${cacheKey}: ${cached ? 'HIT' : 'MISS'}`);
   if (cached) return cached.json();
 
   const data = await fetchFn();
-
-  const cacheResponse = new Response(JSON.stringify(data), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': `public, max-age=${ttl}`,
-    },
-  });
-  ctx.waitUntil(cache.put(cacheRequest, cacheResponse));
-
+  ctx.waitUntil(cache.put(cacheRequest, new Response(JSON.stringify(data), {
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': `public, max-age=${ttl}` },
+  })));
   return data;
 }
 
@@ -96,14 +112,16 @@ async function handleEvent(url, origin, ctx) {
     return errResponse('Missing or invalid event ID', 400, origin);
   }
   const eventId = parseInt(eventIdStr, 10);
+  const forceRefresh = url.searchParams.get('skip_cache') === '1';
 
   // Fetch event from RPH
   let eventData;
   try {
-    eventData = await fetchWithCache(
+    eventData = await fetchWithForceRefresh(
       `event:${eventId}`,
       () => rphFetch(`${RPH_BASE}/events/?id=${eventId}`),
       60,
+      forceRefresh,
       ctx
     );
   } catch (e) {
@@ -146,10 +164,11 @@ async function handleEvent(url, origin, ctx) {
   // Fetch standings for last completed round (used to build player list)
   let standingsData;
   try {
-    standingsData = await fetchWithCache(
+    standingsData = await fetchWithForceRefresh(
       `standings:${lastCompleted.id}`,
       () => rphFetch(`${RPH_BASE}/tournament-rounds/${lastCompleted.id}/standings`),
       60,
+      forceRefresh,
       ctx
     );
   } catch (e) {
@@ -165,12 +184,15 @@ async function handleEvent(url, origin, ctx) {
     .filter(p => p.id != null)
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const eventLifecycleStatus = inProgress ? 'EVENT_IN_PROGRESS' : 'EVENT_COMPLETE';
+
   return jsonResponse({
     event_id: eventId,
     event_name: event.name,
     player_count: event.starting_player_count,
     total_swiss_rounds: totalSwissRounds,
     current_round: currentRound,
+    event_lifecycle_status: eventLifecycleStatus,
     rounds,
     players,
   }, 200, origin);
@@ -190,8 +212,10 @@ async function handleAnalyze(request, origin, ctx) {
     event_id, total_swiss_rounds, top_cut, player_id, depth,
     override_round_id, override_current_pairings_round_id,
     locked_id_rate, bubble_id_rate, monte_carlo_samples,
+    skip_cache,
   } = body;
   const useCache = !override_round_id;
+  const forceRefresh = !!skip_cache && !override_round_id;
 
   if (!event_id || !total_swiss_rounds || !top_cut || !player_id || !depth) {
     return errResponse('Missing required fields: event_id, total_swiss_rounds, top_cut, player_id, depth', 400, origin);
@@ -204,7 +228,7 @@ async function handleAnalyze(request, origin, ctx) {
   let eventData;
   try {
     eventData = useCache
-      ? await fetchWithCache(`event:${event_id}`, () => rphFetch(`${RPH_BASE}/events/?id=${event_id}`), 60, ctx)
+      ? await fetchWithForceRefresh(`event:${event_id}`, () => rphFetch(`${RPH_BASE}/events/?id=${event_id}`), 60, forceRefresh, ctx)
       : await rphFetch(`${RPH_BASE}/events/?id=${event_id}`);
   } catch (e) {
     return errResponse(`RPH API error: ${e.message}`, 502, origin);
@@ -255,7 +279,7 @@ async function handleAnalyze(request, origin, ctx) {
   let standingsData;
   try {
     standingsData = useCache
-      ? await fetchWithCache(`standings:${standingsRoundId}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`), 60, ctx)
+      ? await fetchWithForceRefresh(`standings:${standingsRoundId}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`), 60, forceRefresh, ctx)
       : await rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`);
   } catch (e) {
     return errResponse(`RPH API error fetching standings: ${e.message}`, 502, origin);
@@ -367,7 +391,7 @@ async function handleAnalyze(request, origin, ctx) {
       allMatchData = await Promise.all(
         roundsForMatches.map(r =>
           useCache
-            ? fetchWithCache(`matches:${r.id}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`), 300, ctx)
+            ? fetchWithForceRefresh(`matches:${r.id}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`), 300, false, ctx)
             : rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`)
         )
       );
@@ -484,10 +508,11 @@ async function handleAnalyze(request, origin, ctx) {
   try {
     currentPairings = override_current_pairings_round_id
       ? await rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`)
-      : await fetchWithCache(
+      : await fetchWithForceRefresh(
           `matches:current:${currentPairingsRoundId}`,
           () => rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`),
           30,
+          forceRefresh,
           ctx
         );
   } catch (e) {
