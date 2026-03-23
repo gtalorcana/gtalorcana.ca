@@ -10,117 +10,9 @@
   <link rel="icon" type="image/svg+xml" href="/gtalorcana-logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/shared.css" />
   <style>
-    /* ── TOKENS ──────────────────────────────────────────── */
-    :root {
-      --gold:       #d4a843;
-      --gold-light: #f0cc74;
-      --gold-dark:  #9a7520;
-      --transition: 0.3s cubic-bezier(.4,0,.2,1);
-    }
-    [data-theme="dark"] {
-      --bg:         #0d0b14;
-      --bg2:        #13101e;
-      --surface:    #1e1a2e;
-      --surface2:   #262040;
-      --border:     rgba(212,168,67,0.18);
-      --text:       #e8dfc8;
-      --text-muted: #9488b0;
-      --heading:    #f0cc74;
-      --glow:       rgba(212,168,67,0.22);
-      --star:       rgba(212,168,67,0.55);
-    }
-    [data-theme="light"] {
-      --bg:         #fdf6e3;
-      --bg2:        #f5ead2;
-      --surface:    #fff9ef;
-      --surface2:   #fdf0d5;
-      --border:     rgba(122,92,16,0.3);
-      --text:       #3b2d1a;
-      --text-muted: #5c4a2a;
-      --heading:    #7a5c10;
-      --glow:       rgba(122,92,16,0.12);
-      --star:       rgba(122,92,16,0.45);
-    }
-
-    /* ── RESET ───────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Lora', Georgia, serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
-      min-height: 100vh;
-      transition: background var(--transition), color var(--transition);
-    }
-
-    /* ── STARFIELD ───────────────────────────────────────── */
-    #stars {
-      position: fixed; inset: 0;
-      pointer-events: none; z-index: 0; overflow: hidden;
-    }
-    .star {
-      position: absolute; border-radius: 50%;
-      background: var(--star);
-      animation: twinkle var(--dur, 3s) ease-in-out infinite;
-      animation-delay: var(--delay, 0s);
-    }
-    @keyframes twinkle {
-      0%,100% { opacity: .1; transform: scale(1); }
-      50%      { opacity: .85; transform: scale(1.4); }
-    }
-    [data-theme="light"] #stars { opacity: 0.35; }
-
-    /* ── NOISE ───────────────────────────────────────────── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 1; pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-      background-size: 180px; opacity: .6;
-    }
-
-    /* ── NAV ─────────────────────────────────────────────── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: .85rem 1.5rem;
-      background: rgba(13,11,20,0.75);
-      backdrop-filter: blur(18px) saturate(1.4);
-      border-bottom: 1px solid var(--border);
-      transition: background var(--transition);
-    }
-    [data-theme="light"] nav { background: rgba(253,246,227,0.85); }
-
-    .nav-logo {
-      display: flex; align-items: center; gap: .65rem;
-      text-decoration: none;
-    }
-    .nav-logo img {
-      height: 38px; width: 38px; border-radius: 50%;
-      border: 2px solid var(--gold); padding: 2px; object-fit: contain;
-    }
-    .nav-title {
-      font-family: 'Cinzel', serif; font-size: .88rem; font-weight: 600;
-      color: var(--gold); letter-spacing: .08em;
-    }
-    .nav-right { display: flex; align-items: center; gap: 1rem; }
-    .nav-back {
-      font-family: 'Cinzel', serif; font-size: .72rem; letter-spacing: .1em;
-      text-decoration: none; color: var(--text-muted);
-      text-transform: uppercase; transition: color .2s;
-    }
-    .nav-back:hover { color: var(--gold); }
-    .theme-toggle {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 999px; padding: .3rem .8rem; cursor: pointer;
-      font-size: .75rem; color: var(--text-muted);
-      transition: all .2s; display: flex; align-items: center; gap: .35rem;
-    }
-    .theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
-
     /* ── PAGE LAYOUT ─────────────────────────────────────── */
     main {
       position: relative; z-index: 2;
@@ -455,6 +347,8 @@
 </head>
 <body>
 
+<a href="#main-content" class="skip-nav">Skip to content</a>
+
 <!-- Starfield -->
 <div id="stars"></div>
 
@@ -466,11 +360,14 @@
   </a>
   <div class="nav-right">
     <a class="nav-back" href="/">← Home</a>
-    <button class="theme-toggle" id="themeToggle">☀️ Light</button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-label">Light</span>
+    </button>
   </div>
 </nav>
 
-<main>
+<main id="main-content">
   <div class="page-header">
     <h1>🤝 Safe to ID?</h1>
     <p>Can you safely take the Intentional Draw?</p>
@@ -646,6 +543,18 @@
   </div>
 </main>
 
+<footer>
+  <div class="footer-logo">GTA Lorcana</div>
+  <p>Greater Toronto Area's Disney Lorcana Community</p>
+  <p style="margin-top:.5rem">
+    <a href="https://discord.gg/sNyzVMnTs6" target="_blank">Discord</a>
+    &nbsp;·&nbsp;
+    <a href="https://www.disneylorcana.com" target="_blank">Disney Lorcana Official</a>
+  </p>
+  <p style="margin-top:1rem;">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger's Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
+</footer>
+
+<script src="/shared.js"></script>
 <script>
   // ── Config ──────────────────────────────────────────────
   const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -653,32 +562,6 @@
 
   // ── State ───────────────────────────────────────────────
   let eventData = null;
-
-  // ── Starfield ───────────────────────────────────────────
-  (function () {
-    const container = document.getElementById('stars');
-    for (let i = 0; i < 60; i++) {
-      const s = document.createElement('div');
-      s.className = 'star';
-      const size = Math.random() * 2.5 + 1;
-      s.style.cssText = `
-        width:${size}px; height:${size}px;
-        top:${Math.random()*100}%; left:${Math.random()*100}%;
-        --dur:${(Math.random()*4+2).toFixed(1)}s;
-        --delay:-${(Math.random()*5).toFixed(1)}s;
-      `;
-      container.appendChild(s);
-    }
-  })();
-
-  // ── Theme toggle ─────────────────────────────────────────
-  const html = document.documentElement;
-  const themeBtn = document.getElementById('themeToggle');
-  themeBtn.addEventListener('click', () => {
-    const isDark = html.dataset.theme === 'dark';
-    html.dataset.theme = isDark ? 'light' : 'dark';
-    themeBtn.textContent = isDark ? '🌙 Dark' : '☀️ Light';
-  });
 
   // ── Player autocomplete ──────────────────────────────────
   let playerData = []; // [{ id, name }]

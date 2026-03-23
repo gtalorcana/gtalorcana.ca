@@ -10,161 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/shared.css" />
   <style>
-    /* ── TOKENS ─────────────────────────────────────────── */
-    :root {
-      --gold:        #d4a843;
-      --gold-light:  #f0cc74;
-      --gold-dark:   #9a7520;
-      --ink:         #1a1228;
-      --parchment:   #fdf6e3;
-      --cream:       #f5ead2;
-      --mist:        #e8dfc8;
-      --scroll:      #c9b99a;
-
-      --transition: 0.4s cubic-bezier(.4,0,.2,1);
-    }
-
-    [data-theme="dark"] {
-      --bg:          #0d0b14;
-      --bg2:         #13101e;
-      --bg3:         #1c1730;
-      --surface:     #1e1a2e;
-      --surface2:    #262040;
-      --border:      rgba(212,168,67,0.18);
-      --text:        #e8dfc8;
-      --text-muted:  #9488b0;
-      --heading:     #f0cc74;
-      --glow:        rgba(212,168,67,0.25);
-      --star:        rgba(212,168,67,0.6);
-    }
-
-    [data-theme="light"] {
-      --bg:          #fdf6e3;
-      --bg2:         #f5ead2;
-      --bg3:         #ede0c0;
-      --surface:     #fff9ef;
-      --surface2:    #fdf0d5;
-      --gold-dark:   #7a5c10;
-      --border:      rgba(122,92,16,0.3);
-      --text:        #3b2d1a;
-      --text-muted:  #5c4a2a;
-      --heading:     #7a5c10;
-      --glow:        rgba(122,92,16,0.15);
-      --star:        rgba(122,92,16,0.5);
-    }
-
-    /* ── RESET & BASE ────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Lora', Georgia, serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-      overflow-x: hidden;
-      transition: background var(--transition), color var(--transition);
-    }
-
-    /* ── STARFIELD ───────────────────────────────────────── */
-    #stars {
-      position: fixed; inset: 0;
-      pointer-events: none; z-index: 0;
-      overflow: hidden;
-    }
-    .star {
-      position: absolute;
-      border-radius: 50%;
-      background: var(--star);
-      animation: twinkle var(--dur, 3s) ease-in-out infinite;
-      animation-delay: var(--delay, 0s);
-    }
-    @keyframes twinkle {
-      0%,100% { opacity: .1; transform: scale(1); }
-      50%      { opacity: .9; transform: scale(1.4); }
-    }
-    [data-theme="light"] #stars { opacity: 0.4; }
-
-    /* ── NOISE OVERLAY ───────────────────────────────────── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 1; pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-      background-size: 180px;
-      opacity: .6;
-    }
-
-    /* ── NAV ─────────────────────────────────────────────── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1rem 2.5rem;
-      background: rgba(13,11,20,0.72);
-      backdrop-filter: blur(18px) saturate(1.4);
-      border-bottom: 1px solid var(--border);
-      transition: background var(--transition);
-    }
-    [data-theme="light"] nav {
-      background: rgba(253,246,227,0.82);
-    }
-
-    .nav-logo {
-      display: flex; align-items: center; gap: .75rem;
-      text-decoration: none;
-    }
-    .nav-logo img {
-      height: 42px; width: 42px;
-      border-radius: 50%;
-      object-fit: contain;
-      border: 2px solid var(--gold);
-      padding: 2px;
-    }
-    .logo-placeholder {
-      height: 42px; width: 42px;
-      border-radius: 50%;
-      border: 2px solid var(--gold);
-      background: var(--surface2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem;
-    }
-    .nav-title {
-      font-family: 'Cinzel', serif;
-      font-size: .95rem;
-      font-weight: 600;
-      color: var(--gold);
-      letter-spacing: .08em;
-    }
-
-    .nav-links {
-      display: flex; align-items: center; gap: 2rem;
-      list-style: none;
-    }
-    .nav-links a {
-      font-family: 'Cinzel', serif;
-      font-size: .78rem;
-      letter-spacing: .1em;
-      text-decoration: none;
-      color: var(--text-muted);
-      transition: color .25s;
-      text-transform: uppercase;
-    }
-    .nav-links a:hover { color: var(--gold); }
-
-    .theme-toggle {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: .35rem .9rem;
-      cursor: pointer;
-      font-size: .8rem;
-      color: var(--text-muted);
-      transition: all .25s;
-      display: flex; align-items: center; gap: .4rem;
-    }
-    .theme-toggle:hover { border-color: var(--gold); color: var(--gold); }
-
     /* ── HERO ────────────────────────────────────────────── */
     #hero {
       position: relative; z-index: 2;
@@ -640,23 +487,6 @@
       text-align: center;
     }
 
-    /* ── FOOTER ──────────────────────────────────────────── */
-    footer {
-      position: relative; z-index: 2;
-      text-align: center;
-      padding: 3rem 2rem;
-      border-top: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: .82rem;
-    }
-    footer a { color: var(--gold); text-decoration: none; }
-    footer .footer-logo {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: 1rem;
-      color: var(--gold);
-      margin-bottom: .5rem;
-    }
-
     /* ── LOADING DOTS ────────────────────────────────────── */
     .announce-loading {
       display: flex; gap: .5rem; justify-content: center; padding: 2rem;
@@ -685,10 +515,7 @@
       transform: none;
     }
 
-    /* ── LIGHT THEME TEXT COLOUR OVERRIDES ─────────────── */
-    [data-theme="light"] .nav-title,
-    [data-theme="light"] .nav-links a:hover,
-    [data-theme="light"] .theme-toggle:hover,
+    /* ── LIGHT THEME TEXT COLOUR OVERRIDES (page-specific) ── */
     [data-theme="light"] .hero-eyebrow,
     [data-theme="light"] .btn-secondary,
     [data-theme="light"] .divider,
@@ -698,8 +525,6 @@
     [data-theme="light"] .badge-tournament,
     [data-theme="light"] .step-num,
     [data-theme="light"] .step-arrow,
-    [data-theme="light"] footer a,
-    [data-theme="light"] .footer-logo,
     [data-theme="light"] .announce-date {
       color: var(--gold-dark) !important;
       opacity: 1 !important;
@@ -708,28 +533,9 @@
       color: var(--heading) !important;
     }
     [data-theme="light"] .btn-secondary,
-    [data-theme="light"] .badge-tournament,
-    [data-theme="light"] .theme-toggle:hover {
+    [data-theme="light"] .badge-tournament {
       border-color: var(--gold-dark) !important;
     }
-
-    /* ── SKIP NAV ────────────────────────────────────────── */
-    .skip-nav {
-      position: absolute;
-      top: -100%;
-      left: 1rem;
-      background: var(--gold);
-      color: var(--ink);
-      padding: .5rem 1rem;
-      border-radius: 4px;
-      font-family: 'Cinzel', serif;
-      font-size: .85rem;
-      font-weight: 600;
-      z-index: 9999;
-      text-decoration: none;
-      transition: top .2s;
-    }
-    .skip-nav:focus { top: 1rem; }
 
     /* ── RESPONSIVE ──────────────────────────────────────── */
 
@@ -743,8 +549,6 @@
 
     /* Tablets ≤ 768px */
     @media (max-width: 768px) {
-      nav { padding: 1rem 1.25rem; }
-      .nav-links { display: none; }
       #about .about-grid { grid-template-columns: 1fr; }
       .join-inner { padding: 2.5rem 1.5rem; }
       .join-steps { gap: 1.25rem; }
@@ -805,7 +609,7 @@
     <li><a href="#partners">Partners</a></li>
     <li><a href="#join">Join</a></li>
   </ul>
-  <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
     <span id="theme-icon">☀️</span>
     <span id="theme-label">Light</span>
   </button>
@@ -1077,40 +881,6 @@
   // loadAnnouncements();
   loadEvents();
 
-  /* ── STARFIELD ─── */
-  const container = document.getElementById('stars');
-  for (let i = 0; i < 120; i++) {
-    const s = document.createElement('div');
-    const size = Math.random() * 2.5 + 0.5;
-    s.className = 'star';
-    s.style.cssText = `
-      width:${size}px; height:${size}px;
-      top:${Math.random()*100}%;
-      left:${Math.random()*100}%;
-      --dur:${2+Math.random()*5}s;
-      --delay:-${Math.random()*6}s;
-    `;
-    container.appendChild(s);
-  }
-
-  /* ── THEME TOGGLE ─── */
-  function toggleTheme() {
-    const html = document.documentElement;
-    const isDark = html.getAttribute('data-theme') === 'dark';
-    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-    document.getElementById('theme-icon').textContent  = isDark ? '🌙' : '☀️';
-    document.getElementById('theme-label').textContent = isDark ? 'Dark' : 'Light';
-    localStorage.setItem('gta-lorcana-theme', isDark ? 'light' : 'dark');
-  }
-
-  // Restore saved theme
-  const saved = localStorage.getItem('gta-lorcana-theme');
-  if (saved === 'light') {
-    document.documentElement.setAttribute('data-theme','light');
-    document.getElementById('theme-icon').textContent = '🌙';
-    document.getElementById('theme-label').textContent = 'Dark';
-  }
-
   /* ── SCROLL REVEAL ─── */
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => {
@@ -1122,5 +892,6 @@
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 </script>
+<script src="/shared.js"></script>
 </body>
 </html>

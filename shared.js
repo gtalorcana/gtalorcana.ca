@@ -1,0 +1,38 @@
+/* ── STARFIELD ─── */
+(function () {
+  var container = document.getElementById('stars');
+  for (var i = 0; i < 80; i++) {
+    var s = document.createElement('div');
+    s.className = 'star';
+    var size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = 'width:' + size + 'px;height:' + size + 'px;' +
+      'top:' + (Math.random() * 100).toFixed(2) + '%;' +
+      'left:' + (Math.random() * 100).toFixed(2) + '%;' +
+      '--dur:' + (2 + Math.random() * 5).toFixed(1) + 's;' +
+      '--delay:-' + (Math.random() * 6).toFixed(1) + 's;';
+    container.appendChild(s);
+  }
+})();
+
+/* ── THEME TOGGLE ─── */
+(function () {
+  var html  = document.documentElement;
+  var btn   = document.getElementById('themeToggle');
+  var icon  = document.getElementById('theme-icon');
+  var label = document.getElementById('theme-label');
+
+  function applyTheme(dark) {
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    if (icon)  icon.textContent  = dark ? '☀️' : '🌙';
+    if (label) label.textContent = dark ? 'Light' : 'Dark';
+  }
+
+  btn.addEventListener('click', function () {
+    var isDark = html.getAttribute('data-theme') === 'dark';
+    applyTheme(!isDark);
+    localStorage.setItem('gta-lorcana-theme', isDark ? 'light' : 'dark');
+  });
+
+  var saved = localStorage.getItem('gta-lorcana-theme');
+  if (saved) applyTheme(saved === 'dark');
+})();
