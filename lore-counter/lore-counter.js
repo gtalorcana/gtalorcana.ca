@@ -167,7 +167,7 @@ function renderGame() {
     gameContainer.appendChild(panel);
   });
 
-  renderHistory();
+  renderHistory(false);
 }
 
 // ── Match strip ────────────────────────────────────────────
@@ -225,7 +225,7 @@ function commitBatch() {
   });
   if (state.history.length > MAX_HISTORY) state.history.pop();
 
-  renderHistory();
+  renderHistory(true);
   saveState();
 }
 
@@ -284,16 +284,36 @@ function commitNameEdit(index) {
 }
 
 // ── History rendering (per-panel) ─────────────────────────
-function renderHistory() {
+// animate=false on initial render (game load/restore) to avoid mass slide-in
+function renderHistory(animate) {
   state.players.forEach(function(_, i) {
     var el = gameContainer.querySelector('.panel-history[data-index="' + i + '"]');
     if (!el) return;
+
     var entries = state.history.filter(function(e) { return e.playerIndex === i; }).reverse();
-    el.innerHTML = entries.map(function(e, idx) {
+
+    // Remove DOM nodes no longer in history (pruned entries)
+    Array.prototype.forEach.call(el.querySelectorAll('.ph-entry[data-seq]'), function(span) {
+      var seq = parseInt(span.dataset.seq, 10);
+      if (!entries.some(function(e) { return e.seq === seq; })) el.removeChild(span);
+    });
+
+    entries.forEach(function(e, idx) {
       var isLatest = idx === entries.length - 1;
       var cls = 'ph-entry' + (e.delta < 0 ? ' ph-neg' : '') + (isLatest ? '' : ' ph-old');
-      return '<span class="' + cls + '">' + e.result + '</span>';
-    }).join('');
+      var span = el.querySelector('.ph-entry[data-seq="' + e.seq + '"]');
+      if (span) {
+        // Update class in-place so opacity transition fires for newly-old entries
+        span.className = cls;
+      } else {
+        span = document.createElement('span');
+        span.className = cls + (animate ? ' ph-new' : '');
+        span.dataset.seq = e.seq;
+        span.textContent = e.result;
+        el.appendChild(span);
+      }
+    });
+
     el.scrollTop = el.scrollHeight;
   });
 }
