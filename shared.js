@@ -27,18 +27,22 @@ if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)
 
 /* ── STARFIELD ─── */
 (function () {
-  var container = document.getElementById('stars');
-  for (var i = 0; i < 80; i++) {
-    var s = document.createElement('div');
-    s.className = 'star';
-    var size = Math.random() * 2.5 + 0.5;
-    s.style.cssText = 'width:' + size + 'px;height:' + size + 'px;' +
-      'top:' + (Math.random() * 100).toFixed(2) + '%;' +
-      'left:' + (Math.random() * 100).toFixed(2) + '%;' +
-      '--dur:' + (2 + Math.random() * 5).toFixed(1) + 's;' +
-      '--delay:-' + (Math.random() * 6).toFixed(1) + 's;';
-    container.appendChild(s);
+  function makeStars(container, count) {
+    for (var i = 0; i < count; i++) {
+      var s = document.createElement('div');
+      s.className = 'star';
+      var size = Math.random() * 2.5 + 0.5;
+      s.style.cssText = 'width:' + size + 'px;height:' + size + 'px;' +
+        'top:' + (Math.random() * 100).toFixed(2) + '%;' +
+        'left:' + (Math.random() * 100).toFixed(2) + '%;' +
+        '--dur:' + (2 + Math.random() * 5).toFixed(1) + 's;' +
+        '--delay:-' + (Math.random() * 6).toFixed(1) + 's;';
+      container.appendChild(s);
+    }
   }
+  makeStars(document.getElementById('stars'), 80);
+  var gameStars = document.getElementById('game-stars');
+  if (gameStars) makeStars(gameStars, 80);
 })();
 
 /* ── THEME TOGGLE ─── */

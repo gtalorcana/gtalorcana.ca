@@ -34,6 +34,15 @@ body.game-active #game-screen {
   display: block;
 }
 
+/* ── GAME STARS ──────────────────────────────────────────── */
+#game-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
 /* ── GAME CONTAINER ──────────────────────────────────────── */
 .game-container {
   width: 100%;
@@ -42,6 +51,8 @@ body.game-active #game-screen {
   /* 1px gap + container background = divider line */
   gap: 1px;
   background: var(--border);
+  position: relative;
+  z-index: 1;
 }
 
 /* 2-player portrait (default) */
