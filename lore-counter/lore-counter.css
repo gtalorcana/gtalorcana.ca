@@ -22,6 +22,8 @@ body.game-active {
   height: 100vh;
   height: 100svh;
   z-index: 10;
+  user-select: none;
+  -webkit-user-select: none;
   /* Respect notch/safe areas */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
