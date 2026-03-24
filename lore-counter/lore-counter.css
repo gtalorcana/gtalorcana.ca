@@ -513,9 +513,9 @@ body.game-active .match-strip.active { display: block; }
 
 /* ── WIN PROMPT (Bo3) ────────────────────────────────────── */
 .win-prompt {
+  display: none;
   position: fixed; inset: 0;
   z-index: 70;
-  display: none;
   align-items: center; justify-content: center;
   padding: 1.5rem;
   background: rgba(0,0,0,.6);
@@ -551,12 +551,7 @@ body.game-active .match-strip.active { display: block; }
   color: var(--text-muted);
 }
 
-.win-prompt-next { margin-top: .25rem; }
-
-.win-prompt-dismiss {
-  width: 100%;
-  display: flex; align-items: center; justify-content: center;
-}
+.win-prompt-dismiss { width: 100%; }
 
 /* ── INSTALL BANNER ──────────────────────────────────────── */
 .install-banner {
