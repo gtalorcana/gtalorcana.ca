@@ -9,7 +9,6 @@
   --mist:        #e8dfc8;
   --scroll:      #c9b99a;
   --transition: 0.4s cubic-bezier(.4,0,.2,1);
-  --nav-top-inset: 0px; /* overridden in standalone mode */
 }
 
 [data-theme="dark"] {
@@ -87,7 +86,7 @@ body::before {
 nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
-  padding-top: calc(1rem + var(--nav-top-inset));
+  padding-top: 1rem;
   padding-right: 2.5rem;
   padding-bottom: 1rem;
   padding-left: 2.5rem;
@@ -97,8 +96,9 @@ nav {
   transition: background var(--transition);
 }
 
-.standalone { --nav-top-inset: 2.5rem; }
 .standalone .nav-back { display: none; }
+.standalone nav { padding-top: 3.5rem; }
+.standalone main { padding-top: 8.5rem; }
 [data-theme="light"] nav {
   background: rgba(253,246,227,0.82);
 }
