@@ -2,56 +2,55 @@
 
 ## Overview
 
-Build a **Lore Counter** Progressive Web App (PWA) as a new tool on this GTA Lorcana website. It should feel like a native part of the site — matching the existing design system, color palette, fonts, and component patterns already in use.
+A **Lore Counter** Progressive Web App (PWA) built as a tool on the GTA Lorcana website. Matches the existing design system, color palette, fonts, and component patterns.
 
-The tool lets 2–4 players track their lore score during a game of Disney Lorcana, with player name editing, undo support, and a history log of score changes.
+The tool lets 2–4 players track their lore score during a game of Disney Lorcana, with player name editing, undo support, a history log, and Bo1/Bo3 match tracking.
 
 ---
 
 ## CSS/JS Architecture (multi-tool strategy)
 
-This tool establishes a sustainable pattern for future tools on the site:
-
 ```
 shared.css          ← existing: nav, footer, theme, starfield (global)
-tools.css           ← NEW: .card, .btn, .field, label, input patterns
-                           shared across all tool pages
+tools.css           ← shared tool styles: .card, .btn, .field, label, input patterns
 lore-counter/
   index.html
-  lore-counter.js   ← all app logic (separate file — will be substantial)
-  lore-counter.css  ← only truly unique styles (player panels, score display, layout)
+  lore-counter.js   ← all app logic
+  lore-counter.css  ← unique styles: player panels, score display, layout
 safe-to-id/
   index.html        ← future: refactor to use tools.css; no changes needed now
 ```
 
 Each tool page links: `shared.css` → `tools.css` → `tool-name.css`
 
-`tools.css` is created for this feature. Safe-to-id is left as-is for now (refactor later).
-
 ---
 
-## Requirements
+## PWA Setup
 
-### PWA Setup
-
-- Add a `manifest.json` at the repo root with:
+- `manifest.json` at repo root:
   - `name`: "GTA Lorcana — Lore Counter"
   - `short_name`: "Lore Counter"
-  - `theme_color`: `#d4a843` (matches `--gold`)
+  - `theme_color`: `#d4a843`
   - `display`: `standalone`
+  - `orientation`: `portrait` — locks the installed PWA to portrait so the OS won't rotate the display when the phone is flat on a table
   - `start_url`: `/lore-counter/`
-  - `scope`: `/lore-counter/` (isolated — only this tool goes offline)
-- Register a service worker (`sw.js`) scoped to `/lore-counter/` — offline support for this tool only
-- Add the correct `<meta>` tags and manifest link to `lore-counter/index.html` only
-- Include PWA install prompt handling: show an "Add to Home Screen" banner when `beforeinstallprompt` fires
-- Icons: use existing `gtalorcana-logo.svg` and `gtalorcana.ca.png` already at the repo root — no new icon files needed
+  - `scope`: `/lore-counter/`
+- Service worker (`sw.js`) scoped to `/lore-counter/` — offline support for this tool only
+  - Cache name auto-stamped with a timestamp by a pre-commit git hook (`sw.js` is updated and re-staged automatically)
+  - Registered with `updateViaCache: 'none'` so the browser always fetches `sw.js` fresh from the network
+  - Cache-first strategy; activates immediately via `skipWaiting` + `clients.claim`
+- Icons: existing `gtalorcana-logo.svg` and `gtalorcana.ca.png` at repo root — no new icon files
+- Install prompt: "Add to Home Screen" banner shown when `beforeinstallprompt` fires
+  - Suppressed during gameplay; shown on setup screen only
+  - 7-day dismissal via `localStorage` key `gta-lorcana-install-dismissed`
 
 ---
 
-### Player Setup Screen
+## Player Setup Screen
 
 - On first load (no saved state), show a setup screen:
   - Choose number of players: **2, 3, or 4**
+  - Choose match format: **Bo1 or Bo3** (2-player only; hidden for 3–4 players)
   - Enter a name for each player (default: "Player 1", "Player 2", etc.)
   - "Start Game" button
 - Player names are editable **during the game** (tap name → inline edit)
@@ -59,96 +58,107 @@ Each tool page links: `shared.css` → `tools.css` → `tool-name.css`
 
 ---
 
-### Layout & Orientation
+## Layout
 
-#### 2-player layout (priority)
+### 2-player (portrait — primary use case)
 
-**Portrait (default):** Phone sits flat on the table between two players. Top panel is rotated 180° so each player reads their own score from their side.
+Phone sits flat on the table between two players. Top panel rotated 180° so each player reads their own score from their side. No manual orientation controls — this is always the layout on a portrait-oriented device.
 
 ```
 ┌─────────────────┐
 │  ▲ Player 2  ▲  │  ← rotated 180°
 │     [−] 12 [+]  │
-│   [+2] [+3] [+4]│
-├─────────────────┤
+├────── pills ────┤  ← New Game · History (centred at divider)
 │  Player 1       │
 │     [−]  8 [+]  │
-│   [+2] [+3] [+4]│
 └─────────────────┘
 ```
 
-**Landscape:** Side-by-side, no rotation needed.
+### 2-player (landscape — desktop/tablet)
+
+`@media (orientation: landscape)` switches automatically to side-by-side columns, no rotation.
 
 ```
 ┌──────────┬──────────┐
 │ Player 1 │ Player 2 │
 │    8     │    12    │
-│[−][+][+2]│[−][+][+2]│
+│  [−] [+] │  [−] [+] │
 └──────────┴──────────┘
 ```
 
-**Auto-switching:** `@media (orientation: landscape)` handles the switch automatically.
+There is no manual orientation override. The installed PWA is locked to portrait via the manifest; in-browser, users should lock their device rotation if needed.
 
-**Rotate button:** A small toggle in the UI (e.g. top-right corner) lets users manually override the orientation — sets `data-orientation="portrait|landscape"` on the container, which takes precedence over the media query. Useful if the device is lying flat or gyroscope is locked.
+### 3–4 player layout
 
-#### 3–4 player layout (nice-to-have)
-
-- Portrait: stacked panels or 2×2 grid (no per-panel rotation — too complex)
-- Landscape: 3-across or 2×2 grid (recommended; show a subtle "Rotate for best experience" hint in portrait)
-- Not a priority for v1 — implement if time allows; spec the 2-player experience first
+- Portrait: stacked panels (3-row or 2×2 grid); no per-panel rotation
+- Landscape: 3-across or 2×2 grid
+- Not polished for v1 — functional but not a priority
 
 ---
 
-### Main Counter Screen
+## Main Counter Screen
 
 Each player panel includes:
 - **Player name** — tappable to edit inline
-- **Lore score** — large, prominent font
-- **[−1]** button — cannot go below 0
-- **[+1]** button — primary action, largest tap target
-- No quick-add buttons — rapid tapping `+` is sufficient; simpler UI preferred
+- **Lore score** — large display (`Cinzel Decorative`), animates on change
+- **[−1]** button — disabled at 0
+- **[+1]** button — equal size to [−1]; rapid tapping logs separate increments
 - **Win state** — when a player reaches 20 lore:
   - Panel gets a gold highlight
-  - Small "🏆 Player X wins!" banner appears (non-blocking — no modal)
-  - Game is **not locked** — intentional, to handle fat-finger double-taps
-  - Players can continue adjusting scores freely after the win indicator appears
+  - `✦ Player X wins! ✦` banner appears (non-blocking)
+  - Game is **not locked** — players can continue adjusting scores
+  - In Bo3: win prompt appears (see below)
 
-All tap targets: minimum **48×48px**
+All tap targets: minimum **48×48px** (72×72px on mobile, 96×96px on desktop)
 
----
+### Game pills (fixed overlay)
 
-### History / Change Log
+Two pill buttons centred at the panel divider in portrait, bottom-centre in landscape:
 
-- Every lore change logged: player name, Δ amount, resulting score (entries are in order — no timestamp needed)
-- Accessible via a **slide-up drawer** (tap a "History" pill/button at the bottom of the screen)
-- Shows last ~50 entries; oldest are pruned automatically
-- **Reset button** inside the drawer uses a two-step confirm:
-  - Tap "New Game" → button transforms into `[Confirm Reset]` + `[Cancel]`
-  - Auto-cancels back to normal after ~4 seconds if untouched
-  - This prevents accidental resets; no modal or alert needed
-- "Clear History" (separate from reset) can also live here with the same two-step pattern
+- **New Game** — two-step confirm (tap → "Confirm?" → tap again within 4s); returns to setup screen
+- **History** — opens the history drawer
 
 ---
 
-### Undo
+## Bo1 / Bo3 Match Format
 
-- **Undo last action** — reverts the most recent lore change (single level)
-- Small, accessible button (not prominent — shouldn't compete with scoring buttons)
+- Selector on setup screen (2-player only)
+- **Bo1**: single game, no match tracking
+- **Bo3**:
+  - Match score strip shown at top of game screen: `Game 2 · 1–0`
+  - When a player first crosses 20 lore, a win prompt appears:
+    - Shows game winner and current match score
+    - **"Start Game N"** — increments match score, resets lore to 0, carries player names
+    - **"Not yet"** — dismisses prompt without advancing (handles fat-finger double-taps); undo still works
+    - If match is decided (2 wins), prompt shows "Match complete" with no next-game button
+  - Non-blocking win banner still shows on the panel regardless
+
+---
+
+## History / Change Log
+
+- Every lore change logged: sequence number, player name, Δ amount, resulting score
+- Slide-up drawer opened via "History" pill
+- Shows last 50 entries; oldest pruned automatically
+- Inside the drawer:
+  - **Undo** — reverts the most recent lore change (single level); disabled when nothing to undo
+  - **Clear History** — two-step confirm (4s auto-revert); clears log only, game continues
+  - **New Game** — two-step confirm (4s auto-revert); resets everything and returns to setup
 
 ---
 
 ## Design & Styling
 
-- Link `shared.css` → `tools.css` → `lore-counter.css` in that order
-- Fonts (same Google Fonts `<link>` tags as all other pages):
-  - `Cinzel Decorative` — page title
-  - `Cinzel` — labels, button text, history entries
+- Load order: `shared.css` → `tools.css` → `lore-counter.css`
+- Fonts:
+  - `Cinzel Decorative` — score display
+  - `Cinzel` — labels, button text, history entries, pill buttons
   - `Lora` — player name inputs, body text
-- CSS variables to use: `--gold`, `--surface`, `--surface2`, `--border`, `--text`, `--text-muted`, `--heading`, `--glow`, `--bg`, `--transition`
-- Include starfield `<div id="stars"></div>` and pull in `shared.js`
+- CSS variables: `--gold`, `--surface`, `--surface2`, `--border`, `--text`, `--text-muted`, `--heading`, `--bg`, `--bg2`, `--transition`
+- Starfield `<div id="stars"></div>` + `shared.js` included
 - Theme toggle follows existing pattern (`data-theme` on `<html>`, `gta-lorcana-theme` in localStorage)
-- Score number transitions: fade or subtle scale on change
-- Responsive: mobile portrait first, usable on tablet/desktop
+- Game mode hides nav and footer (`body.game-active`)
+- Responsive: mobile portrait first; desktop breakpoint at 768px (larger buttons, score, pills)
 
 ---
 
@@ -156,8 +166,8 @@ All tap targets: minimum **48×48px**
 
 - **Plain HTML/CSS/JS only** — no framework, no build step, no TypeScript
 - `localStorage` key: `gta-lorcana-counter-state`
-- Service worker scoped to `/lore-counter/` — caches HTML, CSS, JS, fonts if feasible
-- Place tool at `/lore-counter/index.html` (consistent with `safe-to-id/index.html`)
+- Pre-commit hook auto-stamps `sw.js` cache name with a timestamp on every commit
+- Place tool at `/lore-counter/index.html`
 
 ---
 
@@ -172,14 +182,18 @@ All tap targets: minimum **48×48px**
 manifest.json         ← repo root
 sw.js                 ← repo root, scoped to /lore-counter/
 tools.css             ← repo root, shared tool styles
+.git/hooks/pre-commit ← auto-bumps sw.js cache version on commit
 ```
 
 ---
 
-## Out of Scope (v1)
+## Out of Scope
 
+- Manual orientation override / rotate button (removed — overengineering)
+- Turn tracker (Lorcana turns aren't sequential like chess)
+- Quick-add buttons (+2/+3/+4) — rapid tapping + is sufficient
 - Multiplayer sync across devices
 - User accounts or cloud save
 - Sound effects
 - Card lookup or deck building
-- 3–4 player layout polish (nice-to-have, not required for launch)
+- 3–4 player layout polish
