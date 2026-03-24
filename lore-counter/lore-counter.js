@@ -87,6 +87,14 @@ function showSetup() {
   setupScreen.style.display = '';
   saveState();
   renderSetup();
+  // Show install banner if prompt is queued and eligible
+  if (deferredInstall) {
+    var dismissed = localStorage.getItem('gta-lorcana-install-dismissed');
+    var week = 7 * 24 * 60 * 60 * 1000;
+    if (!dismissed || Date.now() - parseInt(dismissed, 10) > week) {
+      installBanner.classList.add('visible');
+    }
+  }
 }
 
 function showGame() {
@@ -557,7 +565,14 @@ var deferredInstall = null;
 window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
   deferredInstall = e;
-  installBanner.classList.add('visible');
+  var dismissed = localStorage.getItem('gta-lorcana-install-dismissed');
+  var week = 7 * 24 * 60 * 60 * 1000;
+  if (!dismissed || Date.now() - parseInt(dismissed, 10) > week) {
+    // Only show on setup screen; if game is active, queue and show on next setup visit
+    if (state.screen !== 'game') {
+      installBanner.classList.add('visible');
+    }
+  }
 });
 
 installBtn.addEventListener('click', function() {
@@ -571,6 +586,7 @@ installBtn.addEventListener('click', function() {
 
 installDismiss.addEventListener('click', function() {
   installBanner.classList.remove('visible');
+  localStorage.setItem('gta-lorcana-install-dismissed', Date.now());
 });
 
 // ── Service worker ─────────────────────────────────────────

@@ -515,14 +515,13 @@ body.game-active .match-strip.active { display: block; }
 .win-prompt {
   position: fixed; inset: 0;
   z-index: 70;
-  display: flex; align-items: center; justify-content: center;
+  display: none;
+  align-items: center; justify-content: center;
   padding: 1.5rem;
   background: rgba(0,0,0,.6);
   backdrop-filter: blur(6px);
-  opacity: 0; pointer-events: none;
-  transition: opacity .25s;
 }
-.win-prompt.open { opacity: 1; pointer-events: auto; }
+.win-prompt.open { display: flex; }
 
 .win-prompt-box {
   background: var(--surface);
