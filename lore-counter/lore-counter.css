@@ -52,11 +52,9 @@ body.game-active #game-screen {
   }
 }
 
-/* 2-player manual overrides */
-.game-container[data-players="2"][data-orientation="landscape"] {
-  grid-template-rows: 1fr !important;
-  grid-template-columns: 1fr 1fr !important;
-}
+/* 2-player manual overrides — both keep the stacked 2-row layout;
+   "landscape" just removes the top-panel flip so both panels face the same way */
+.game-container[data-players="2"][data-orientation="landscape"],
 .game-container[data-players="2"][data-orientation="portrait"] {
   grid-template-rows: 1fr 1fr !important;
   grid-template-columns: 1fr !important;
@@ -270,13 +268,14 @@ body.game-active #game-pills { display: flex; }
     transform: translateX(-50%);
   }
 }
-/* Manual overrides */
-#game-pills[data-orientation="landscape"] {
-  top: auto !important;
-  bottom: calc(env(safe-area-inset-bottom) + .75rem) !important;
-  transform: translateX(-50%) !important;
-}
+/* Manual portrait override keeps pills at centre divider */
 #game-pills[data-orientation="portrait"] {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+/* Manual landscape = still 2-row stacked, so pills also stay at centre */
+#game-pills[data-orientation="landscape"] {
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
