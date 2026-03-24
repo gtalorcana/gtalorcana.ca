@@ -246,29 +246,9 @@ input.name-input {
 }
 body.game-active #game-pills { display: flex; }
 
-/* Landscape: dissolve wrapper, pin each pill equidistant from the divider */
-@media (orientation: landscape) {
-  body.game-active #game-pills { display: contents; }
 
-  body.game-active #new-game-quick {
-    display: flex;
-    position: fixed;
-    bottom: calc(env(safe-area-inset-bottom) + .75rem);
-    right: calc(50% + 1rem);
-    top: auto; left: auto; transform: none;
-  }
-  body.game-active #undo-pill {
-    display: flex;
-    position: fixed;
-    bottom: calc(env(safe-area-inset-bottom) + .75rem);
-    left: calc(50% + 1rem);
-    top: auto; right: auto; transform: none;
-  }
-}
-
-/* ── PILL BUTTON (shared appearance) ────────────────────── */
-#new-game-quick,
-#undo-pill {
+/* ── PILL BUTTON ─────────────────────────────────────────── */
+#new-game-quick {
   font-family: 'Cinzel', serif;
   font-size: .72rem;
   font-weight: 600;
@@ -288,8 +268,6 @@ body.game-active #game-pills { display: flex; }
   -webkit-tap-highlight-color: transparent;
 }
 #new-game-quick:hover { border-color: var(--gold); color: var(--gold); }
-#undo-pill:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
-#undo-pill:disabled { opacity: .3; cursor: not-allowed; }
 
 #new-game-quick.confirm { color: var(--gold); border-color: var(--gold); }
 
@@ -436,7 +414,6 @@ body.game-active .match-strip.active { display: block; }
 
 @media (min-width: 768px) {
   /* Desktop: larger controls */
-  #game-pills #undo-pill,
   #game-pills #new-game-quick {
     font-size: .82rem;
     padding: .6rem 1.25rem;

@@ -15,7 +15,6 @@ let state = {
   matchScore:      [],     // game wins per player index
   players:         [],     // [{ name, lore }]
   history:         [],     // newest first: [{ playerIndex, name, delta, result, seq }]
-  undo:            null,   // { playerIndex, prevLore } | null
   winPromptPlayer: null,   // playerIndex who triggered the win prompt | null
   seq:             0,
 };
@@ -42,7 +41,6 @@ function loadState() {
 const setupScreen      = document.getElementById('setup-screen');
 const gameScreen       = document.getElementById('game-screen');
 const gameContainer    = document.getElementById('game-container');
-const undoPill         = document.getElementById('undo-pill');
 const matchStrip       = document.getElementById('match-strip');
 const winPrompt        = document.getElementById('win-prompt');
 const winPromptTitle   = document.getElementById('win-prompt-title');
@@ -141,7 +139,6 @@ function startGame() {
     });
   });
   state.history         = [];
-  state.undo            = null;
   state.seq             = 0;
   state.gameNumber      = 1;
   state.matchScore      = state.players.map(function() { return 0; });
@@ -176,7 +173,6 @@ function renderGame() {
     gameContainer.appendChild(panel);
   });
 
-  syncUndoBtn();
   renderHistory();
 }
 
@@ -215,7 +211,6 @@ function applyDelta(playerIndex, delta) {
     if (pendingBatch) commitBatch(); // flush a different player's pending batch
     pendingBatch = { playerIndex: playerIndex, prevLore: prev, delta: next - prev };
   }
-  syncUndoBtn();
   clearTimeout(batchTimer);
   batchTimer = setTimeout(commitBatch, BATCH_MS);
 }
@@ -227,7 +222,6 @@ function commitBatch() {
   pendingBatch = null;
 
   var player = state.players[b.playerIndex];
-  state.undo = { playerIndex: b.playerIndex, prevLore: b.prevLore };
   state.history.unshift({
     playerIndex: b.playerIndex,
     name:        player.name,
@@ -238,7 +232,6 @@ function commitBatch() {
   if (state.history.length > MAX_HISTORY) state.history.pop();
 
   renderHistory();
-  syncUndoBtn();
   saveState();
 }
 
@@ -264,43 +257,6 @@ function updatePanel(index) {
   if (banner) banner.textContent = '\u2726 ' + player.name + ' wins! \u2726';
 
   panel.querySelector('.score-btn-minus').disabled = player.lore === 0;
-
-  syncUndoBtn();
-}
-
-// ── Undo ───────────────────────────────────────────────────
-function doUndo() {
-  // Cancel in-progress batch and revert its score
-  if (pendingBatch) {
-    var b = pendingBatch;
-    cancelBatch();
-    state.players[b.playerIndex].lore = b.prevLore;
-    if (state.winPromptPlayer === b.playerIndex && b.prevLore < WIN_LORE) {
-      hideWinPrompt();
-    }
-    updatePanel(b.playerIndex);
-    renderHistory();
-    saveState();
-    return;
-  }
-  if (!state.undo) return;
-  var playerIndex = state.undo.playerIndex;
-  var prevLore    = state.undo.prevLore;
-  state.players[playerIndex].lore = prevLore;
-  state.history.shift();
-  state.undo = null;
-
-  if (state.winPromptPlayer === playerIndex && prevLore < WIN_LORE) {
-    hideWinPrompt();
-  }
-
-  updatePanel(playerIndex);
-  renderHistory();
-  saveState();
-}
-
-function syncUndoBtn() {
-  undoPill.disabled = !pendingBatch && !state.undo;
 }
 
 // ── Name editing ───────────────────────────────────────────
@@ -384,7 +340,6 @@ function startNextGame() {
   state.gameNumber++;
   state.players.forEach(function(p) { p.lore = 0; });
   state.history = [];
-  state.undo    = null;
   hideWinPrompt();
   renderGame();
   saveState();
@@ -443,8 +398,6 @@ document.getElementById('setup-screen').addEventListener('keydown', function(e) 
 });
 
 // ── Game control listeners ─────────────────────────────────
-undoPill.addEventListener('click', doUndo);
-
 winPromptNext.addEventListener('click', startNextGame);
 
 newGameQuick.addEventListener('click', function() {
@@ -456,7 +409,6 @@ newGameQuick.addEventListener('click', function() {
     cancelBatch();
     hideWinPrompt();
     state.history    = [];
-    state.undo       = null;
     state.seq        = 0;
     state.gameNumber = 1;
     state.matchScore = state.players.map(function() { return 0; });
@@ -475,9 +427,6 @@ newGameQuick.addEventListener('click', function() {
 });
 winPromptDismiss.addEventListener('click', function() {
   winPrompt.classList.remove('open');
-  // Don't clear winPromptPlayer here — keep it set so undo can clear the prompt
-  // but DO prevent the prompt from auto-showing again for this crossing
-  // (it will only show again if score drops below 20 and crosses back up)
 });
 
 document.addEventListener('keydown', function(e) {
