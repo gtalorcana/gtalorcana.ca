@@ -20,7 +20,6 @@
       align-items: center; justify-content: center;
       text-align: center;
       padding: 7rem 2rem 5rem;
-      overflow: hidden;
     }
 
     .hero-glow {
@@ -32,7 +31,7 @@
     .hero-glow-1 {
       width: 600px; height: 600px;
       background: radial-gradient(circle, rgba(212,168,67,.18) 0%, transparent 70%);
-      top: -100px; left: 50%; transform: translateX(-50%);
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
       animation: pulse 6s ease-in-out infinite;
     }
     .hero-glow-2 {
@@ -42,8 +41,8 @@
       animation: pulse 8s ease-in-out infinite reverse;
     }
     @keyframes pulse {
-      0%,100% { opacity: .7; transform: translateX(-50%) scale(1); }
-      50%      { opacity: 1;  transform: translateX(-50%) scale(1.15); }
+      0%,100% { opacity: .7; transform: translate(-50%, -50%) scale(1); }
+      50%      { opacity: 1;  transform: translate(-50%, -50%) scale(1.15); }
     }
     .hero-glow-2 { animation: pulse2 8s ease-in-out infinite reverse; }
     @keyframes pulse2 {
