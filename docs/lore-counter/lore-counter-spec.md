@@ -41,6 +41,7 @@ Each tool page links: `shared.css` → `tools.css` → `tool-name.css`
   - **Navigation requests (HTML): network-first**, falls back to cache when offline — prevents broken mixed-version loads during SW updates
   - **Static assets (CSS/JS): cache-first** for speed and offline support
   - Activates immediately via `skipWaiting` + `clients.claim`
+  - **Auto-update on resume**: `shared.js` calls `reg.update()` on every `visibilitychange` (visible) so the installed PWA checks for a new SW when brought back from background. On `controllerchange`, the page reloads automatically — but only if `body.game-active` is not set, to avoid disrupting an active game.
 - Icons: existing `gtalorcana-logo.svg` and `gtalorcana.ca.png` at repo root — no new icon files
 - Install banner shown when `beforeinstallprompt` fires, on setup screen only:
   - Permanent — no dismiss button, no localStorage tracking
@@ -111,7 +112,7 @@ All tap targets: minimum **48×48px** (72×72px on mobile, 96×96px on desktop)
 
 ### Game screen viewport
 
-`#game-screen` uses `height: 100svh` (falls back to `100vh`) so the game fills only the visible area on mobile browsers, below the address bar and above the navigation bar.
+`#game-screen` is `position: fixed` with `top/left/right/bottom: 0` — pinned to all four edges, guaranteed full-screen coverage regardless of iOS viewport unit quirks. Safe area insets (`env(safe-area-inset-*)`) are applied as padding so content clears the notch/Dynamic Island.
 
 ### Game pills (fixed overlay)
 
@@ -173,6 +174,12 @@ Non-blocking win banner still shows on the panel regardless of prompt state.
 - Starfield `<div id="stars"></div>` + `shared.js` included
 - Theme toggle follows existing pattern (`data-theme` on `<html>`, `gta-lorcana-theme` in localStorage)
 - Game mode hides nav and footer (`body.game-active`)
+- Text selection disabled on `#game-screen` (`user-select: none`) to prevent accidental highlight on long-press
+- **Installed PWA (standalone) adjustments** — detected via `window.navigator.standalone` in `shared.js`, which adds a `.standalone` class to `<html>`:
+  - Nav `padding-top` increased to `3.5rem` to clear the notch/Dynamic Island (`env(safe-area-inset-top)` is unreliable on older iOS)
+  - Page `main` `padding-top` increased to `8.5rem` to match the taller nav
+  - `← Home` back link hidden (no browser back in standalone)
+  - Nav logo pointer disabled (navigating away has no way back)
 - Responsive: mobile portrait first; desktop breakpoint at 768px (larger buttons, score, pills)
 
 ---
