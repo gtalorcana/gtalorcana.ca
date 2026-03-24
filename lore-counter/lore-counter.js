@@ -297,8 +297,10 @@ function renderHistory() {
     var el = gameContainer.querySelector('.panel-history[data-index="' + i + '"]');
     if (!el) return;
     var entries = state.history.filter(function(e) { return e.playerIndex === i; }).reverse();
-    el.innerHTML = entries.map(function(e) {
-      return '<span class="ph-entry' + (e.delta < 0 ? ' ph-neg' : '') + '">' + e.result + '</span>';
+    el.innerHTML = entries.map(function(e, idx) {
+      var isLatest = idx === entries.length - 1;
+      var cls = 'ph-entry' + (e.delta < 0 ? ' ph-neg' : '') + (isLatest ? '' : ' ph-old');
+      return '<span class="' + cls + '">' + e.result + '</span>';
     }).join('');
     el.scrollTop = el.scrollHeight;
   });
