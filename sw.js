@@ -1,4 +1,4 @@
-const CACHE = 'lore-counter-20260324013027';
+const CACHE = 'lore-counter-20260324013209';
 
 const PRECACHE = [
   '/lore-counter/',
@@ -31,8 +31,13 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Only handle same-origin requests
   if (!e.request.url.startsWith(self.location.origin)) return;
+  // Navigation (HTML): network-first so page is never stale; cache fallback for offline
+  if (e.request.mode === 'navigate') {
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    return;
+  }
+  // Static assets: cache-first for speed and offline support
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
