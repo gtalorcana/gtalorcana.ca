@@ -555,29 +555,21 @@ body.game-active .match-strip.active { display: block; }
 
 /* ── INSTALL BANNER ──────────────────────────────────────── */
 .install-banner {
-  position: fixed;
-  top: 5rem; /* below nav, avoids mobile browser bottom bar entirely */
-  left: 1rem; right: 1rem;
-  z-index: 55;
+  position: relative;
+  z-index: 2;
+  margin: 0 auto 2rem;
+  width: 100%; max-width: 480px;
   background: var(--surface);
   border: 1px solid var(--gold);
   border-radius: 12px;
   padding: .9rem 1.1rem;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   gap: .75rem;
   box-shadow: 0 4px 24px rgba(212,168,67,0.2);
-  opacity: 0;
-  transform: translateY(-.5rem);
-  pointer-events: none;
-  transition: opacity .3s ease, transform .3s ease;
 }
-.install-banner.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
+.install-banner.visible { display: flex; }
 .install-text {
   font-family: 'Lora', serif;
   font-size: .82rem;
