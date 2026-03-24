@@ -497,7 +497,8 @@ function showInstallBanner() {
   if (isStandalone) return;
   if (isIOS) {
     installBanner.querySelector('.install-text strong').textContent = 'Add to Home Screen';
-    installBanner.querySelector('.install-text span').textContent   = 'Saves like a regular app — no App Store needed. Opens full screen and works offline.';
+    installBanner.querySelector('.install-text span').textContent   = 'Tap the share icon (⬆) in your browser, then "Add to Home Screen". Works offline, no App Store needed.';
+    installBtn.style.display = 'none';
     installBanner.classList.add('visible');
   }
 }
@@ -509,10 +510,6 @@ window.addEventListener('beforeinstallprompt', function(e) {
 });
 
 installBtn.addEventListener('click', function() {
-  if (isIOS) {
-    navigator.share({ url: window.location.href }).catch(function() {});
-    return;
-  }
   if (!deferredInstall) return;
   deferredInstall.prompt();
   deferredInstall.userChoice.then(function() {
