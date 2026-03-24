@@ -247,18 +247,50 @@ input.name-input {
 .score-btn-plus:hover { box-shadow: 0 5px 28px rgba(212,168,67,0.6); transform: scale(1.05); }
 .score-btn-plus:active { transform: scale(.94); box-shadow: 0 2px 12px rgba(212,168,67,0.3); }
 
-/* ── ROTATE BUTTON ───────────────────────────────────────── */
-#rotate-btn {
+/* ── GAME PILLS WRAPPER ──────────────────────────────────── */
+/* Portrait (default): float at the centre divider between panels */
+#game-pills {
   display: none;
   position: fixed;
   z-index: 20;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  flex-direction: row;
+  gap: .5rem;
+  align-items: center;
+}
+body.game-active #game-pills { display: flex; }
+
+/* Landscape auto: drop to bottom centre */
+@media (orientation: landscape) {
+  #game-pills:not([data-orientation="portrait"]) {
+    top: auto;
+    bottom: calc(env(safe-area-inset-bottom) + .75rem);
+    transform: translateX(-50%);
+  }
+}
+/* Manual overrides */
+#game-pills[data-orientation="landscape"] {
+  top: auto !important;
+  bottom: calc(env(safe-area-inset-bottom) + .75rem) !important;
+  transform: translateX(-50%) !important;
+}
+#game-pills[data-orientation="portrait"] {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* ── PILL BUTTON (shared appearance) ────────────────────── */
+#rotate-btn,
+#new-game-quick,
+#history-toggle {
   font-family: 'Cinzel', serif;
   font-size: .72rem;
   font-weight: 600;
   letter-spacing: .1em;
+  text-transform: uppercase;
   border-radius: 999px;
   padding: .5rem 1rem;
   min-height: 36px;
@@ -266,82 +298,17 @@ input.name-input {
   border: 1px solid var(--border);
   color: var(--text-muted);
   cursor: pointer;
-  align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   transition: border-color .2s, color .2s;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-body.game-active #rotate-btn {
-  display: flex;
-}
-#rotate-btn:hover { border-color: var(--gold); color: var(--gold); }
-#rotate-btn:active { transform: translate(-50%, -50%) scale(.93); }
-
-/* In landscape: move rotate btn to bottom center */
-@media (orientation: landscape) {
-  #rotate-btn {
-    top: auto;
-    bottom: calc(env(safe-area-inset-bottom) + .75rem);
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  #rotate-btn:active { transform: translateX(-50%) scale(.93); }
-}
-
-/* ── NEW GAME QUICK BUTTON ───────────────────────────────── */
-#new-game-quick {
-  display: none;
-  position: fixed;
-  bottom: calc(env(safe-area-inset-bottom) + 1rem);
-  left: calc(env(safe-area-inset-left) + 1rem);
-  z-index: 20;
-  font-family: 'Cinzel', serif;
-  font-size: .72rem;
-  font-weight: 600;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: .5rem 1rem;
-  min-height: 36px;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: border-color .2s, color .2s;
-  touch-action: manipulation;
-  align-items: center; justify-content: center;
-}
-body.game-active #new-game-quick { display: flex; }
-#new-game-quick:hover { border-color: var(--gold); color: var(--gold); }
-#new-game-quick.confirm { color: var(--gold); border-color: var(--gold); background: rgba(212,168,67,.08); }
-
-/* ── HISTORY TOGGLE ──────────────────────────────────────── */
-#history-toggle {
-  display: none;
-  position: fixed;
-  bottom: calc(env(safe-area-inset-bottom) + 1rem);
-  right: calc(env(safe-area-inset-right) + 1rem);
-  z-index: 20;
-  font-family: 'Cinzel', serif;
-  font-size: .72rem;
-  font-weight: 600;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: .5rem 1rem;
-  min-height: 36px;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: border-color .2s, color .2s;
-  touch-action: manipulation;
-  align-items: center; justify-content: center;
-}
-body.game-active #history-toggle {
-  display: flex;
-}
+#rotate-btn:hover,
+#new-game-quick:hover,
 #history-toggle:hover { border-color: var(--gold); color: var(--gold); }
+#rotate-btn:active { transform: scale(.93); }
+
+#new-game-quick.confirm { color: var(--gold); border-color: var(--gold); background: rgba(212,168,67,.08); }
 
 /* ── HISTORY OVERLAY ─────────────────────────────────────── */
 .history-overlay {
@@ -588,7 +555,9 @@ body.game-active .match-strip.active { display: block; }
 
 @media (min-width: 768px) {
   /* Desktop: larger controls */
-  #rotate-btn, #history-toggle, #new-game-quick {
+  #game-pills #rotate-btn,
+  #game-pills #history-toggle,
+  #game-pills #new-game-quick {
     font-size: .82rem;
     padding: .6rem 1.25rem;
     min-height: 42px;

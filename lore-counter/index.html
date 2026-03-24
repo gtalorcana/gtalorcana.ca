@@ -111,8 +111,11 @@
 </div>
 
 <!-- ── Game UI Controls (fixed overlays) ────────────────── -->
-<button id="new-game-quick" aria-label="New Game">New Game</button>
-<button id="rotate-btn" aria-label="Toggle orientation">AUTO</button>
+<div id="game-pills">
+  <button id="new-game-quick" aria-label="New Game">New Game</button>
+  <button id="rotate-btn" aria-label="Toggle orientation">AUTO</button>
+  <button id="history-toggle" aria-haspopup="dialog">History</button>
+</div>
 
 <!-- ── Match Strip (Bo3 only) ───────────────────────────── -->
 <div class="match-strip" id="match-strip"></div>
@@ -126,7 +129,6 @@
     <button class="drawer-btn win-prompt-dismiss" id="win-prompt-dismiss">Not yet</button>
   </div>
 </div>
-<button id="history-toggle" aria-haspopup="dialog">History</button>
 
 <!-- ── History Drawer ───────────────────────────────────── -->
 <div class="history-overlay" id="history-overlay" aria-hidden="true"></div>

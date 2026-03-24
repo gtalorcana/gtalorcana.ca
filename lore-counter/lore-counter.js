@@ -42,6 +42,7 @@ function loadState() {
 const setupScreen      = document.getElementById('setup-screen');
 const gameScreen       = document.getElementById('game-screen');
 const gameContainer    = document.getElementById('game-container');
+const gamePills        = document.getElementById('game-pills');
 const rotateBtn        = document.getElementById('rotate-btn');
 const historyToggle    = document.getElementById('history-toggle');
 const historyOverlay   = document.getElementById('history-overlay');
@@ -158,6 +159,7 @@ function startGame() {
 function renderGame() {
   gameContainer.setAttribute('data-players', state.playerCount);
   gameContainer.setAttribute('data-orientation', state.orientation);
+  gamePills.setAttribute('data-orientation', state.orientation);
 
   rotateBtn.style.visibility = state.playerCount === 2 ? '' : 'hidden';
   updateRotateBtn();
@@ -452,6 +454,7 @@ function toggleOrientation() {
   var next = cur === 'auto' ? 'landscape' : cur === 'landscape' ? 'portrait' : 'auto';
   state.orientation = next;
   gameContainer.setAttribute('data-orientation', next);
+  gamePills.setAttribute('data-orientation', next);
   updateRotateBtn();
   saveState();
 }
