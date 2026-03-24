@@ -1,0 +1,13 @@
+# sw.js must never be cached — stale SW = stale CSS/JS served to users
+/sw.js
+  Cache-Control: no-store
+
+# HTML pages should always revalidate
+/*.html
+  Cache-Control: no-cache
+
+/
+  Cache-Control: no-cache
+
+/lore-counter/
+  Cache-Control: no-cache
