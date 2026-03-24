@@ -24,6 +24,7 @@ body.game-active {
   background: var(--bg);
   user-select: none;
   -webkit-user-select: none;
+  touch-action: manipulation;
   /* Respect notch/safe areas */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);

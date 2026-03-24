@@ -109,8 +109,11 @@ function renderSetup() {
     playerNamesEl.appendChild(field);
   }
 
-  const first = playerNamesEl.querySelector('input');
-  if (first) first.focus();
+  // Only auto-focus on first visit — returning from a game shouldn't pop the keyboard
+  if (state.screen === 'setup' && state.history.length === 0) {
+    const first = playerNamesEl.querySelector('input');
+    if (first) first.focus();
+  }
 }
 
 function startGame() {
