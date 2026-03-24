@@ -113,7 +113,7 @@
 <!-- ── Game UI Controls (fixed overlays) ────────────────── -->
 <div id="game-pills">
   <button id="new-game-quick" aria-label="New Game">New Game</button>
-  <button id="history-toggle" aria-haspopup="dialog">History</button>
+  <button id="undo-pill" disabled>Undo</button>
 </div>
 
 <!-- ── Match Strip (Bo3 only) ───────────────────────────── -->
@@ -129,20 +129,6 @@
   </div>
 </div>
 
-<!-- ── History Drawer ───────────────────────────────────── -->
-<div class="history-overlay" id="history-overlay" aria-hidden="true"></div>
-<div class="history-drawer" id="history-drawer" role="dialog" aria-modal="true" aria-label="Game history">
-  <div class="drawer-handle"></div>
-  <div class="drawer-header">
-    <span class="drawer-title">History</span>
-    <div class="drawer-actions">
-      <button class="drawer-btn" id="undo-btn" disabled>Undo</button>
-      <button class="drawer-btn" id="clear-btn" data-step="0">Clear History</button>
-      <button class="drawer-btn" id="new-game-btn" data-step="0">New Game</button>
-    </div>
-  </div>
-  <div class="history-list" id="history-list" aria-live="polite"></div>
-</div>
 
 <footer>
   <div class="footer-logo">GTA Lorcana</div>

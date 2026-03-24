@@ -257,7 +257,7 @@ body.game-active #game-pills { display: flex; }
 
 /* ── PILL BUTTON (shared appearance) ────────────────────── */
 #new-game-quick,
-#history-toggle {
+#undo-pill {
   font-family: 'Cinzel', serif;
   font-size: .72rem;
   font-weight: 600;
@@ -276,73 +276,13 @@ body.game-active #game-pills { display: flex; }
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-#new-game-quick:hover,
-#history-toggle:hover { border-color: var(--gold); color: var(--gold); }
+#new-game-quick:hover { border-color: var(--gold); color: var(--gold); }
+#undo-pill:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+#undo-pill:disabled { opacity: .3; cursor: not-allowed; }
 
 #new-game-quick.confirm { color: var(--gold); border-color: var(--gold); background: rgba(212,168,67,.08); }
 
-/* ── HISTORY OVERLAY ─────────────────────────────────────── */
-.history-overlay {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.55);
-  z-index: 40;
-  backdrop-filter: blur(2px);
-}
-.history-overlay.open { display: block; }
-
-/* ── HISTORY DRAWER ──────────────────────────────────────── */
-.history-drawer {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 50;
-  background: var(--bg2);
-  border-top: 1px solid var(--border);
-  border-radius: 18px 18px 0 0;
-  padding: 0 1.25rem;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem);
-  transform: translateY(100%);
-  transition: transform .3s cubic-bezier(.4,0,.2,1);
-  max-height: 72vh;
-  display: flex;
-  flex-direction: column;
-}
-.history-drawer.open { transform: translateY(0); }
-
-.drawer-handle {
-  width: 36px; height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  margin: .85rem auto .4rem;
-  flex-shrink: 0;
-}
-
-.drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: .5rem 0 .75rem;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  gap: .5rem;
-  flex-wrap: wrap;
-}
-
-.drawer-title {
-  font-family: 'Cinzel', serif;
-  font-size: .8rem; font-weight: 600;
-  letter-spacing: .12em; text-transform: uppercase;
-  color: var(--gold);
-}
-
-.drawer-actions {
-  display: flex;
-  gap: .4rem;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-/* ── DRAWER BUTTONS ──────────────────────────────────────── */
+/* ── DRAWER BUTTONS (used in win prompt) ─────────────────── */
 .drawer-btn {
   font-family: 'Cinzel', serif;
   font-size: .65rem; font-weight: 600;
@@ -359,71 +299,29 @@ body.game-active #game-pills { display: flex; }
   display: inline-flex; align-items: center; justify-content: center;
 }
 .drawer-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
-.drawer-btn:disabled { opacity: .35; cursor: not-allowed; }
-.drawer-btn.danger { color: #ef4444; border-color: rgba(239,68,68,.3); }
-.drawer-btn.danger:hover { border-color: #ef4444; background: rgba(239,68,68,.08); }
 .drawer-btn.confirm { color: var(--gold); border-color: var(--gold); background: rgba(212,168,67,.08); }
 
-/* ── HISTORY LIST ────────────────────────────────────────── */
-.history-list {
-  overflow-y: auto;
-  flex: 1;
-  padding: .35rem 0;
-  -webkit-overflow-scrolling: touch;
-}
-
-.history-entry {
+/* ── PANEL HISTORY ───────────────────────────────────────── */
+.panel-history {
   display: flex;
-  align-items: center;
+  flex-direction: row;
   gap: .5rem;
-  padding: .45rem .1rem;
-  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 1.4rem;
+  padding: .2rem .5rem 0;
 }
-.history-entry:last-child { border-bottom: none; }
 
-.he-seq {
+.ph-entry {
   font-family: 'Cinzel', serif;
-  font-size: .65rem;
-  color: var(--text-muted);
-  opacity: .5;
-  min-width: 1.5rem;
-  flex-shrink: 0;
-}
-.he-player {
-  font-family: 'Cinzel', serif;
-  font-size: .75rem;
-  color: var(--text-muted);
-  letter-spacing: .05em;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.he-delta {
-  font-family: 'Lora', serif;
-  font-size: .88rem;
-  font-weight: 500;
+  font-size: .6rem;
+  font-weight: 600;
+  letter-spacing: .06em;
   color: var(--gold);
+  opacity: .7;
   white-space: nowrap;
-  flex-shrink: 0;
 }
-.he-delta.neg { color: var(--text-muted); }
-.he-result {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: .9rem;
-  color: var(--heading);
-  min-width: 2ch;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.history-empty {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: .85rem;
-  padding: 2.5rem 0;
-  font-style: italic;
-}
+.ph-entry.ph-neg { color: var(--text-muted); }
 
 /* ── MATCH STRIP (Bo3) ───────────────────────────────────── */
 .match-strip {
@@ -526,7 +424,7 @@ body.game-active .match-strip.active { display: block; }
 
 @media (min-width: 768px) {
   /* Desktop: larger controls */
-  #game-pills #history-toggle,
+  #game-pills #undo-pill,
   #game-pills #new-game-quick {
     font-size: .82rem;
     padding: .6rem 1.25rem;

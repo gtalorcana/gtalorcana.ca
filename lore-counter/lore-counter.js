@@ -41,13 +41,7 @@ function loadState() {
 const setupScreen      = document.getElementById('setup-screen');
 const gameScreen       = document.getElementById('game-screen');
 const gameContainer    = document.getElementById('game-container');
-const historyToggle    = document.getElementById('history-toggle');
-const historyOverlay   = document.getElementById('history-overlay');
-const historyDrawer    = document.getElementById('history-drawer');
-const historyList      = document.getElementById('history-list');
-const undoBtn          = document.getElementById('undo-btn');
-const clearBtn         = document.getElementById('clear-btn');
-const newGameBtn       = document.getElementById('new-game-btn');
+const undoPill         = document.getElementById('undo-pill');
 const matchStrip       = document.getElementById('match-strip');
 const winPrompt        = document.getElementById('win-prompt');
 const winPromptTitle   = document.getElementById('win-prompt-title');
@@ -62,8 +56,6 @@ const installDismiss   = document.getElementById('install-dismiss');
 const playerNamesEl    = document.getElementById('player-names');
 
 // ── Two-step confirm timers ────────────────────────────────
-let newGameTimer      = null;
-let clearTimer        = null;
 let newGameQuickTimer = null;
 
 // ── Utilities ──────────────────────────────────────────────
@@ -173,7 +165,8 @@ function renderGame() {
       '<div class="score-btns">' +
         '<button class="score-btn score-btn-minus" data-index="' + i + '" data-delta="-1" aria-label="Minus 1"' + (player.lore === 0 ? ' disabled' : '') + '>−</button>' +
         '<button class="score-btn score-btn-plus"  data-index="' + i + '" data-delta="1"  aria-label="Plus 1">+</button>' +
-      '</div>';
+      '</div>' +
+      '<div class="panel-history" data-index="' + i + '"></div>';
 
     gameContainer.appendChild(panel);
   });
@@ -266,7 +259,7 @@ function doUndo() {
 }
 
 function syncUndoBtn() {
-  undoBtn.disabled = !state.undo;
+  undoPill.disabled = !state.undo;
 }
 
 // ── Name editing ───────────────────────────────────────────
@@ -299,96 +292,17 @@ function commitNameEdit(index) {
   saveState();
 }
 
-// ── History rendering ──────────────────────────────────────
+// ── History rendering (per-panel) ─────────────────────────
 function renderHistory() {
-  if (!historyList) return;
-  if (state.history.length === 0) {
-    historyList.innerHTML = '<div class="history-empty">No moves yet</div>';
-    return;
-  }
-  historyList.innerHTML = state.history.map(function(e) {
-    var deltaStr = (e.delta > 0 ? '+' : '') + e.delta;
-    return '<div class="history-entry">' +
-      '<span class="he-seq">' + e.seq + '</span>' +
-      '<span class="he-player">' + escHtml(e.name) + '</span>' +
-      '<span class="he-delta' + (e.delta < 0 ? ' neg' : '') + '">' + deltaStr + '</span>' +
-      '<span class="he-result">' + e.result + '</span>' +
-    '</div>';
-  }).join('');
-}
-
-// ── History drawer ─────────────────────────────────────────
-function openHistory() {
-  historyOverlay.classList.add('open');
-  historyDrawer.classList.add('open');
-  renderHistory();
-}
-
-function closeHistory() {
-  historyOverlay.classList.remove('open');
-  historyDrawer.classList.remove('open');
-  resetConfirmBtns();
-}
-
-// ── Two-step confirms ──────────────────────────────────────
-function resetConfirmBtns() {
-  clearTimeout(newGameTimer);
-  clearTimeout(clearTimer);
-
-  newGameBtn.textContent  = 'New Game';
-  newGameBtn.className    = 'drawer-btn';
-  newGameBtn.dataset.step = '0';
-
-  clearBtn.textContent   = 'Clear History';
-  clearBtn.className     = 'drawer-btn';
-  clearBtn.dataset.step  = '0';
-}
-
-function handleNewGame() {
-  if (newGameBtn.dataset.step === '1') {
-    clearTimeout(newGameTimer);
-    closeHistory();
-    hideWinPrompt();
-    state.history    = [];
-    state.undo       = null;
-    state.seq        = 0;
-    state.gameNumber = 1;
-    state.matchScore = state.players.map(function() { return 0; });
-    state.players.forEach(function(p) { p.lore = 0; });
-    showSetup();
-    return;
-  }
-  resetConfirmBtns();
-  newGameBtn.textContent  = 'Confirm Reset';
-  newGameBtn.className    = 'drawer-btn confirm';
-  newGameBtn.dataset.step = '1';
-  newGameTimer = setTimeout(function() {
-    newGameBtn.textContent  = 'New Game';
-    newGameBtn.className    = 'drawer-btn';
-    newGameBtn.dataset.step = '0';
-  }, 4000);
-}
-
-function handleClearHistory() {
-  if (clearBtn.dataset.step === '1') {
-    clearTimeout(clearTimer);
-    state.history = [];
-    state.undo    = null;
-    syncUndoBtn();
-    renderHistory();
-    saveState();
-    resetConfirmBtns();
-    return;
-  }
-  resetConfirmBtns();
-  clearBtn.textContent  = 'Confirm Clear';
-  clearBtn.className    = 'drawer-btn danger';
-  clearBtn.dataset.step = '1';
-  clearTimer = setTimeout(function() {
-    clearBtn.textContent  = 'Clear History';
-    clearBtn.className    = 'drawer-btn';
-    clearBtn.dataset.step = '0';
-  }, 4000);
+  state.players.forEach(function(_, i) {
+    var el = gameContainer.querySelector('.panel-history[data-index="' + i + '"]');
+    if (!el) return;
+    var entries = state.history.filter(function(e) { return e.playerIndex === i; }).slice(0, 5);
+    el.innerHTML = entries.map(function(e) {
+      var d = (e.delta > 0 ? '+' : '') + e.delta;
+      return '<span class="ph-entry' + (e.delta < 0 ? ' ph-neg' : '') + '">' + d + ' \u2192 ' + e.result + '</span>';
+    }).join('');
+  });
 }
 
 // ── Win prompt (Bo3) ───────────────────────────────────────
@@ -487,11 +401,7 @@ document.getElementById('setup-screen').addEventListener('keydown', function(e) 
 });
 
 // ── Game control listeners ─────────────────────────────────
-historyToggle.addEventListener('click', openHistory);
-historyOverlay.addEventListener('click', closeHistory);
-undoBtn.addEventListener('click', doUndo);
-newGameBtn.addEventListener('click', handleNewGame);
-clearBtn.addEventListener('click', handleClearHistory);
+undoPill.addEventListener('click', doUndo);
 
 winPromptNext.addEventListener('click', startNextGame);
 
@@ -528,11 +438,8 @@ winPromptDismiss.addEventListener('click', function() {
 });
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    closeHistory();
-    if (winPrompt.classList.contains('open')) {
-      winPrompt.classList.remove('open');
-    }
+  if (e.key === 'Escape' && winPrompt.classList.contains('open')) {
+    winPrompt.classList.remove('open');
   }
 });
 
