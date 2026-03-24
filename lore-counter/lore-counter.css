@@ -248,7 +248,7 @@ body.game-active #game-pills { display: flex; }
 
 /* Landscape: dissolve wrapper, pin each pill equidistant from the divider */
 @media (orientation: landscape) {
-  #game-pills { display: contents; }
+  body.game-active #game-pills { display: contents; }
 
   body.game-active #new-game-quick {
     display: flex;
