@@ -153,7 +153,7 @@ function renderGame() {
 
   gameContainer.innerHTML = '';
   state.players.forEach(function(player, i) {
-    const isTop = (i === 0 && state.playerCount === 2);
+    const isTop = (i === 1 && state.playerCount === 2);
     const panel = document.createElement('div');
     panel.className = 'player-panel' + (player.lore >= WIN_LORE ? ' winner' : '');
     panel.setAttribute('data-index', i);
