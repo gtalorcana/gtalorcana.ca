@@ -18,6 +18,13 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+/* ── STANDALONE DETECTION ─── */
+// window.navigator.standalone is the reliable iOS-specific flag;
+// matchMedia is for Android/desktop Chrome PWAs
+if (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches) {
+  document.documentElement.classList.add('standalone');
+}
+
 /* ── STARFIELD ─── */
 (function () {
   var container = document.getElementById('stars');

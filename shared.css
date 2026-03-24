@@ -96,10 +96,8 @@ nav {
   transition: background var(--transition);
 }
 
-@media (display-mode: standalone) {
-  .nav-back { display: none; }
-  nav { padding-top: 3.5rem; }
-}
+.standalone .nav-back { display: none; }
+.standalone nav { padding-top: 3.5rem; }
 [data-theme="light"] nav {
   background: rgba(253,246,227,0.82);
 }
