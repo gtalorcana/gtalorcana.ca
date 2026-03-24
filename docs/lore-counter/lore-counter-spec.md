@@ -4,7 +4,7 @@
 
 A **Lore Counter** Progressive Web App (PWA) built as a tool on the GTA Lorcana website. Matches the existing design system, color palette, fonts, and component patterns.
 
-The tool lets 2–4 players track their lore score during a game of Disney Lorcana, with player name editing, undo support, a history log, and Bo1/Bo3 match tracking.
+The tool lets 2 players track their lore score during a game of Disney Lorcana, with player name editing, a per-panel history log, and Bo1/Bo3 match tracking.
 
 ---
 
@@ -37,22 +37,25 @@ Each tool page links: `shared.css` → `tools.css` → `tool-name.css`
   - `scope`: `/lore-counter/`
 - Service worker (`sw.js`) scoped to `/lore-counter/` — offline support for this tool only
   - Cache name auto-stamped with a timestamp by a pre-commit git hook (`sw.js` is updated and re-staged automatically)
-  - Registered with `updateViaCache: 'none'` so the browser always fetches `sw.js` fresh from the network
-  - Cache-first strategy; activates immediately via `skipWaiting` + `clients.claim`
+  - Registered with `updateViaCache: 'none'` so the browser always fetches `sw.js` fresh
+  - **Navigation requests (HTML): network-first**, falls back to cache when offline — prevents broken mixed-version loads during SW updates
+  - **Static assets (CSS/JS): cache-first** for speed and offline support
+  - Activates immediately via `skipWaiting` + `clients.claim`
 - Icons: existing `gtalorcana-logo.svg` and `gtalorcana.ca.png` at repo root — no new icon files
-- Install prompt: "Add to Home Screen" banner shown when `beforeinstallprompt` fires
-  - Suppressed during gameplay; shown on setup screen only
-  - 7-day dismissal via `localStorage` key `gta-lorcana-install-dismissed`
+- Install banner shown when `beforeinstallprompt` fires, on setup screen only:
+  - Permanent — no dismiss button, no localStorage tracking
+  - Copy: **"Add to Home Screen"** / "Saves like a regular app — no App Store needed. Opens full screen and works offline."
+  - Disappears naturally once the app is installed (browser stops firing `beforeinstallprompt`)
 
 ---
 
 ## Player Setup Screen
 
 - On first load (no saved state), show a setup screen:
-  - Choose number of players: **2, 3, or 4**
-  - Choose match format: **Bo1 or Bo3** (2-player only; hidden for 3–4 players)
-  - Enter a name for each player (default: "Player 1", "Player 2", etc.)
+  - Choose match format: **Bo1 or Bo3**
+  - Enter a name for each player (default: "Player 1", "Player 2")
   - "Start Game" button
+- Always 2 players — 3/4 player option removed (not polished)
 - Player names are editable **during the game** (tap name → inline edit)
 - Saved state in `localStorage` key `gta-lorcana-counter-state` restores the last game on reload
 
@@ -60,21 +63,21 @@ Each tool page links: `shared.css` → `tools.css` → `tool-name.css`
 
 ## Layout
 
-### 2-player (portrait — primary use case)
+### 2-player portrait (primary use case)
 
-Phone sits flat on the table between two players. Top panel rotated 180° so each player reads their own score from their side. No manual orientation controls — this is always the layout on a portrait-oriented device.
+Phone sits flat on the table between two players. Player 2 renders in the top cell, rotated 180° so each player reads their own score from their side.
 
 ```
 ┌─────────────────┐
-│  ▲ Player 2  ▲  │  ← rotated 180°
+│  ▲ Player 2  ▲  │  ← rotated 180°, history above score
 │     [−] 12 [+]  │
-├────── pills ────┤  ← New Game · History (centred at divider)
+├────── pills ────┤  ← match strip + New Game pill centred at divider
 │  Player 1       │
 │     [−]  8 [+]  │
 └─────────────────┘
 ```
 
-### 2-player (landscape — desktop/tablet)
+### 2-player landscape (desktop/tablet)
 
 `@media (orientation: landscape)` switches automatically to side-by-side columns, no rotation.
 
@@ -86,64 +89,76 @@ Phone sits flat on the table between two players. Top panel rotated 180° so eac
 └──────────┴──────────┘
 ```
 
-There is no manual orientation override. The installed PWA is locked to portrait via the manifest; in-browser, users should lock their device rotation if needed.
-
-### 3–4 player layout
-
-- Portrait: stacked panels (3-row or 2×2 grid); no per-panel rotation
-- Landscape: 3-across or 2×2 grid
-- Not polished for v1 — functional but not a priority
+No manual orientation override. The installed PWA is locked to portrait via the manifest.
 
 ---
 
 ## Main Counter Screen
 
 Each player panel includes:
+- **Per-panel history** — scrollable list of past lore totals (see History section)
 - **Player name** — tappable to edit inline
 - **Lore score** — large display (`Cinzel Decorative`), animates on change
 - **[−1]** button — disabled at 0
-- **[+1]** button — equal size to [−1]; rapid tapping logs separate increments
+- **[+1]** button — equal size to [−1]; rapid taps within 600ms are batched into one history entry
 - **Win state** — when a player reaches 20 lore:
   - Panel gets a gold highlight
   - `✦ Player X wins! ✦` banner appears (non-blocking)
   - Game is **not locked** — players can continue adjusting scores
-  - In Bo3: win prompt appears (see below)
+  - Win prompt appears for both Bo1 and Bo3 (see Match Format section)
 
 All tap targets: minimum **48×48px** (72×72px on mobile, 96×96px on desktop)
 
+### Game screen viewport
+
+`#game-screen` uses `height: 100svh` (falls back to `100vh`) so the game fills only the visible area on mobile browsers, below the address bar and above the navigation bar.
+
 ### Game pills (fixed overlay)
 
-Two pill buttons centred at the panel divider in portrait, bottom-centre in landscape:
+Centred at the panel divider in portrait:
 
-- **New Game** — two-step confirm (tap → "Confirm?" → tap again within 4s); returns to setup screen
-- **History** — opens the history drawer
+- **Match strip** (Bo3 only) — `Game 2 · 1–0` shown above the pill button
+- **New Game** pill — two-step confirm (tap → "Confirm?" → tap again within 4s); returns to setup screen
+- **Next Game** pill (Bo3 mid-match, after "Not yet") — re-opens the win prompt
+- **New Match** pill (Bo1 or Bo3 match decided, after "Close"/"Not yet") — two-step confirm, resets match and returns to setup
 
 ---
 
 ## Bo1 / Bo3 Match Format
 
-- Selector on setup screen (2-player only)
-- **Bo1**: single game, no match tracking
-- **Bo3**:
-  - Match score strip shown at top of game screen: `Game 2 · 1–0`
-  - When a player first crosses 20 lore, a win prompt appears:
-    - Shows game winner and current match score
-    - **"Start Game N"** — increments match score, resets lore to 0, carries player names
-    - **"Not yet"** — dismisses prompt without advancing (handles fat-finger double-taps); undo still works
-    - If match is decided (2 wins), prompt shows "Match complete" with no next-game button
-  - Non-blocking win banner still shows on the panel regardless
+- Selector on setup screen
+- Both formats trigger a win prompt when a player first crosses 20 lore:
+
+### Bo1
+- Prompt: `✦ Player X wins! ✦` / `Match complete · 1–0`
+- **Close** — dismisses prompt; pill becomes **New Match** (two-step confirm → setup)
+
+### Bo3
+- Match score strip at centre divider: `Game 2 · 1–0`
+- Prompt shows game winner and current match score
+- **Start Game N** — increments match score, resets lore to 0, carries player names
+- **Not yet** — dismisses prompt without advancing (handles fat-finger); pill becomes **Next Game** (re-opens prompt)
+- When match is decided (2 wins): prompt shows `Match complete · 2–0` with **Close** only; pill becomes **New Match**
+
+Non-blocking win banner still shows on the panel regardless of prompt state.
 
 ---
 
-## History / Change Log
+## History
 
-- Every lore change logged: sequence number, player name, Δ amount, resulting score
-- Slide-up drawer opened via "History" pill
-- Shows last 50 entries; oldest pruned automatically
-- Inside the drawer:
-  - **Undo** — reverts the most recent lore change (single level); disabled when nothing to undo
-  - **Clear History** — two-step confirm (4s auto-revert); clears log only, game continues
-  - **New Game** — two-step confirm (4s auto-revert); resets everything and returns to setup
+- Rapid taps within 600ms are batched — score updates immediately, history commits after inactivity
+- Every committed change logged: `{ playerIndex, name, delta, result, seq }`
+- Up to 50 entries retained; oldest pruned automatically
+- Displayed **per-panel**, inline below the score buttons — no drawer
+
+### Visual style (paper-and-pencil metaphor)
+- Entries listed oldest-to-bottom, newest at the bottom
+- **New entry**: slides up from below with a fade-in animation
+- **Old entries**: gain `text-decoration: line-through` + fade to `opacity: .5` via CSS transition (like pencil strikethrough)
+- Container uses a `::before` flex spacer so early entries anchor to the bottom; once entries overflow, normal upward scroll works
+- Top edge has a gradient fade (`transparent → opaque over 12%`) hinting at scrollable history above
+- Height: `15svh` (falls back to `6.5rem`); font: `clamp(.75rem, 2svh, 1rem)` — scales with screen size for consistent row count (~5 rows)
+- Scrollbar hidden
 
 ---
 
@@ -153,7 +168,7 @@ Two pill buttons centred at the panel divider in portrait, bottom-centre in land
 - Fonts:
   - `Cinzel Decorative` — score display
   - `Cinzel` — labels, button text, history entries, pill buttons
-  - `Lora` — player name inputs, body text
+  - `Lora` — player name inputs, body text, install banner description
 - CSS variables: `--gold`, `--surface`, `--surface2`, `--border`, `--text`, `--text-muted`, `--heading`, `--bg`, `--bg2`, `--transition`
 - Starfield `<div id="stars"></div>` + `shared.js` included
 - Theme toggle follows existing pattern (`data-theme` on `<html>`, `gta-lorcana-theme` in localStorage)
@@ -189,7 +204,9 @@ tools.css             ← repo root, shared tool styles
 
 ## Out of Scope
 
-- Manual orientation override / rotate button (removed — overengineering)
+- Manual orientation override / rotate button
+- Undo (just tap minus)
+- History drawer (replaced by per-panel inline history)
 - Turn tracker (Lorcana turns aren't sequential like chess)
 - Quick-add buttons (+2/+3/+4) — rapid tapping + is sufficient
 - Multiplayer sync across devices
