@@ -334,8 +334,7 @@ function hideWinPrompt() {
   state.winPromptPlayer = null;
   winPromptNext.style.display  = '';
   winPromptDismiss.textContent = 'Not yet';
-  // Reset pill if it was showing "Next Game"
-  if (newGameQuick.dataset.mode === 'nextgame') {
+  if (newGameQuick.dataset.mode) {
     newGameQuick.textContent  = 'New Game';
     newGameQuick.className    = '';
     newGameQuick.dataset.step = '0';
@@ -411,9 +410,19 @@ document.getElementById('setup-screen').addEventListener('keydown', function(e) 
 winPromptNext.addEventListener('click', startNextGame);
 
 newGameQuick.addEventListener('click', function() {
-  // Re-open the win prompt instead of resetting the match
   if (newGameQuick.dataset.mode === 'nextgame') {
     showWinPrompt(state.winPromptPlayer);
+    return;
+  }
+  if (newGameQuick.dataset.mode === 'newmatch') {
+    cancelBatch();
+    hideWinPrompt();
+    state.history    = [];
+    state.seq        = 0;
+    state.gameNumber = 1;
+    state.matchScore = state.players.map(function() { return 0; });
+    state.players.forEach(function(p) { p.lore = 0; });
+    showSetup();
     return;
   }
   if (newGameQuick.dataset.step === '1') {
@@ -442,13 +451,20 @@ newGameQuick.addEventListener('click', function() {
 });
 winPromptDismiss.addEventListener('click', function() {
   winPrompt.classList.remove('open');
-  // Swap pill to "Next Game" so user can re-open prompt without risking a full reset
   if (state.winPromptPlayer !== null) {
     clearTimeout(newGameQuickTimer);
-    newGameQuick.textContent  = 'Next Game';
-    newGameQuick.className    = 'next-game';
     newGameQuick.dataset.step = '0';
-    newGameQuick.dataset.mode = 'nextgame';
+    // Match over → offer return to menu; mid-match → offer re-open prompt
+    var isMatchOver = state.matchScore[state.winPromptPlayer] + 1 >= 2;
+    if (isMatchOver) {
+      newGameQuick.textContent = 'New Match';
+      newGameQuick.className   = 'next-game';
+      newGameQuick.dataset.mode = 'newmatch';
+    } else {
+      newGameQuick.textContent = 'Next Game';
+      newGameQuick.className   = 'next-game';
+      newGameQuick.dataset.mode = 'nextgame';
+    }
   }
 });
 
