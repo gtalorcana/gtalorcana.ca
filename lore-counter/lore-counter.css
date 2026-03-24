@@ -306,6 +306,7 @@ body.game-active #game-pills { display: flex; }
   height: 6.5rem;
   height: 15svh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: .2rem 0 0;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
