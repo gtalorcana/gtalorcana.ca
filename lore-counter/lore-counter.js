@@ -16,7 +16,6 @@ let state = {
   history:         [],     // newest first: [{ playerIndex, name, delta, result, seq }]
   undo:            null,   // { playerIndex, prevLore } | null
   winPromptPlayer: null,   // playerIndex who triggered the win prompt | null
-  orientation:     'auto',
   seq:             0,
 };
 
@@ -42,8 +41,6 @@ function loadState() {
 const setupScreen      = document.getElementById('setup-screen');
 const gameScreen       = document.getElementById('game-screen');
 const gameContainer    = document.getElementById('game-container');
-const gamePills        = document.getElementById('game-pills');
-const rotateBtn        = document.getElementById('rotate-btn');
 const historyToggle    = document.getElementById('history-toggle');
 const historyOverlay   = document.getElementById('history-overlay');
 const historyDrawer    = document.getElementById('history-drawer');
@@ -158,11 +155,6 @@ function startGame() {
 // ── Game screen ────────────────────────────────────────────
 function renderGame() {
   gameContainer.setAttribute('data-players', state.playerCount);
-  gameContainer.setAttribute('data-orientation', state.orientation);
-  gamePills.setAttribute('data-orientation', state.orientation);
-
-  rotateBtn.style.visibility = state.playerCount === 2 ? '' : 'hidden';
-  updateRotateBtn();
   updateMatchStrip();
 
   gameContainer.innerHTML = '';
@@ -188,12 +180,6 @@ function renderGame() {
 
   syncUndoBtn();
   renderHistory();
-}
-
-// ── Rotate button label ────────────────────────────────────
-function updateRotateBtn() {
-  var labels = { auto: 'Auto', landscape: 'Landscape', portrait: 'Portrait' };
-  rotateBtn.textContent = labels[state.orientation] || 'AUTO';
 }
 
 // ── Match strip ────────────────────────────────────────────
@@ -448,17 +434,6 @@ function startNextGame() {
   saveState();
 }
 
-// ── Orientation toggle ─────────────────────────────────────
-function toggleOrientation() {
-  var cur  = state.orientation;
-  var next = cur === 'auto' ? 'landscape' : cur === 'landscape' ? 'portrait' : 'auto';
-  state.orientation = next;
-  gameContainer.setAttribute('data-orientation', next);
-  gamePills.setAttribute('data-orientation', next);
-  updateRotateBtn();
-  saveState();
-}
-
 // ── Event delegation: game container ──────────────────────
 gameContainer.addEventListener('click', function(e) {
   var btn = e.target.closest('[data-delta]');
@@ -512,7 +487,6 @@ document.getElementById('setup-screen').addEventListener('keydown', function(e) 
 });
 
 // ── Game control listeners ─────────────────────────────────
-rotateBtn.addEventListener('click', toggleOrientation);
 historyToggle.addEventListener('click', openHistory);
 historyOverlay.addEventListener('click', closeHistory);
 undoBtn.addEventListener('click', doUndo);

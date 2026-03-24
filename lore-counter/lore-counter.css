@@ -52,13 +52,6 @@ body.game-active #game-screen {
   }
 }
 
-/* 2-player manual overrides — both keep the stacked 2-row layout;
-   "landscape" just removes the top-panel flip so both panels face the same way */
-.game-container[data-players="2"][data-orientation="landscape"],
-.game-container[data-players="2"][data-orientation="portrait"] {
-  grid-template-rows: 1fr 1fr !important;
-  grid-template-columns: 1fr !important;
-}
 
 /* 3-player */
 .game-container[data-players="3"] {
@@ -91,13 +84,6 @@ body.game-active #game-screen {
   }
 }
 
-/* Manual overrides */
-.game-container[data-orientation="landscape"] .player-panel[data-pos="top"] {
-  transform: none !important;
-}
-.game-container[data-orientation="portrait"] .player-panel[data-pos="top"] {
-  transform: rotate(180deg) !important;
-}
 
 /* ── PLAYER PANEL ─────────────────────────────────────────── */
 .player-panel {
@@ -260,29 +246,16 @@ input.name-input {
 }
 body.game-active #game-pills { display: flex; }
 
-/* Landscape auto: drop to bottom centre */
+/* Landscape: drop to bottom centre */
 @media (orientation: landscape) {
-  #game-pills:not([data-orientation="portrait"]) {
+  #game-pills {
     top: auto;
     bottom: calc(env(safe-area-inset-bottom) + .75rem);
     transform: translateX(-50%);
   }
 }
-/* Manual portrait override keeps pills at centre divider */
-#game-pills[data-orientation="portrait"] {
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
-/* Manual landscape = still 2-row stacked, so pills also stay at centre */
-#game-pills[data-orientation="landscape"] {
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
 
 /* ── PILL BUTTON (shared appearance) ────────────────────── */
-#rotate-btn,
 #new-game-quick,
 #history-toggle {
   font-family: 'Cinzel', serif;
@@ -303,10 +276,8 @@ body.game-active #game-pills { display: flex; }
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-#rotate-btn:hover,
 #new-game-quick:hover,
 #history-toggle:hover { border-color: var(--gold); color: var(--gold); }
-#rotate-btn:active { transform: scale(.93); }
 
 #new-game-quick.confirm { color: var(--gold); border-color: var(--gold); background: rgba(212,168,67,.08); }
 
@@ -555,7 +526,6 @@ body.game-active .match-strip.active { display: block; }
 
 @media (min-width: 768px) {
   /* Desktop: larger controls */
-  #game-pills #rotate-btn,
   #game-pills #history-toggle,
   #game-pills #new-game-quick {
     font-size: .82rem;
