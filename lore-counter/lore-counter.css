@@ -19,8 +19,7 @@ body.game-active {
   top: 0;
   left: 0;
   right: 0;
-  height: 100vh;
-  height: 100svh;
+  bottom: 0;
   z-index: 10;
   user-select: none;
   -webkit-user-select: none;
