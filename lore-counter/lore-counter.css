@@ -280,7 +280,7 @@ body.game-active #game-pills { display: flex; }
 #undo-pill:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
 #undo-pill:disabled { opacity: .3; cursor: not-allowed; }
 
-#new-game-quick.confirm { color: var(--gold); border-color: var(--gold); background: rgba(212,168,67,.08); }
+#new-game-quick.confirm { color: var(--gold); border-color: var(--gold); }
 
 /* ── DRAWER BUTTONS (used in win prompt) ─────────────────── */
 .drawer-btn {
