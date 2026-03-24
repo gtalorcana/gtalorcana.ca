@@ -39,6 +39,7 @@ function loadState() {
 
 // ── DOM refs ───────────────────────────────────────────────
 const setupScreen      = document.getElementById('setup-screen');
+const gameScreen       = document.getElementById('game-screen');
 const gameContainer    = document.getElementById('game-container');
 const matchStrip       = document.getElementById('match-strip');
 const winPrompt        = document.getElementById('win-prompt');
@@ -50,6 +51,14 @@ const newGameQuick     = document.getElementById('new-game-quick');
 const installBanner    = document.getElementById('install-banner');
 const installBtn       = document.getElementById('install-btn');
 const playerNamesEl    = document.getElementById('player-names');
+
+// ── Prevent pinch/double-tap zoom on game screen ───────────
+// iOS Safari ignores viewport maximum-scale, so we block at the event level
+gameScreen.addEventListener('gesturestart',  function(e) { e.preventDefault(); }, { passive: false });
+gameScreen.addEventListener('gesturechange', function(e) { e.preventDefault(); }, { passive: false });
+gameScreen.addEventListener('touchmove', function(e) {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
 
 // ── Two-step confirm timers ────────────────────────────────
 let newGameQuickTimer = null;
@@ -109,11 +118,6 @@ function renderSetup() {
     playerNamesEl.appendChild(field);
   }
 
-  // Only auto-focus on first visit — returning from a game shouldn't pop the keyboard
-  if (state.screen === 'setup' && state.history.length === 0) {
-    const first = playerNamesEl.querySelector('input');
-    if (first) first.focus();
-  }
 }
 
 function startGame() {
