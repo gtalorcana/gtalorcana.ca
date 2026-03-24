@@ -98,6 +98,7 @@ nav {
 
 @media (display-mode: standalone) {
   .nav-back { display: none; }
+  nav { padding-top: 3.5rem; }
 }
 [data-theme="light"] nav {
   background: rgba(253,246,227,0.82);
