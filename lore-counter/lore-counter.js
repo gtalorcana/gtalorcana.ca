@@ -237,7 +237,9 @@ function updatePanel(index) {
   void scoreEl.offsetWidth;
   scoreEl.classList.add('bump');
 
-  panel.classList.toggle('winner', player.lore >= WIN_LORE);
+  var isWinner = player.lore >= WIN_LORE &&
+    (state.winPromptPlayer === null || state.winPromptPlayer === index);
+  panel.classList.toggle('winner', isWinner);
 
   var banner = panel.querySelector('.win-banner');
   if (banner) banner.textContent = '\u2726 ' + player.name + ' wins! \u2726';
