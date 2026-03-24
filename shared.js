@@ -1,3 +1,23 @@
+/* ── SERVICE WORKER AUTO-UPDATE ─── */
+if ('serviceWorker' in navigator) {
+  // When a new SW takes over, reload so the fresh assets are used
+  // but only if not mid-game to avoid a jarring flash
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (!document.body.classList.contains('game-active')) {
+      window.location.reload();
+    }
+  });
+  // Check for a new SW whenever the app comes back into view
+  // (covers iOS PWA resuming from background without a navigation)
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+      navigator.serviceWorker.getRegistration().then(function (reg) {
+        if (reg) reg.update();
+      });
+    }
+  });
+}
+
 /* ── STARFIELD ─── */
 (function () {
   var container = document.getElementById('stars');
