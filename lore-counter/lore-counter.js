@@ -47,7 +47,6 @@ const winPromptTitle   = document.getElementById('win-prompt-title');
 const winPromptScore   = document.getElementById('win-prompt-score');
 const winPromptNext    = document.getElementById('win-prompt-next');
 const winPromptDismiss = document.getElementById('win-prompt-dismiss');
-const matchFormatField = document.getElementById('match-format-field');
 const newGameQuick     = document.getElementById('new-game-quick');
 const installBanner    = document.getElementById('install-banner');
 const installBtn       = document.getElementById('install-btn');
@@ -100,14 +99,7 @@ function showGame() {
 
 // ── Setup screen ───────────────────────────────────────────
 function renderSetup() {
-  // Sync player count radios
-  document.querySelectorAll('input[name="player-count"]').forEach(function(r) {
-    r.checked = parseInt(r.value) === state.playerCount;
-  });
-
-  // Match format: only available for 2 players
-  matchFormatField.style.display = state.playerCount === 2 ? '' : 'none';
-  if (state.playerCount !== 2) state.matchFormat = 'bo1';
+  // Sync match format radios
   document.querySelectorAll('input[name="match-format"]').forEach(function(r) {
     r.checked = r.value === state.matchFormat;
   });
@@ -200,8 +192,8 @@ function applyDelta(playerIndex, delta) {
   player.lore = next;
   updatePanel(playerIndex);
 
-  // Bo3 win detection fires immediately on crossing threshold
-  if (state.matchFormat === 'bo3' && next >= WIN_LORE && prev < WIN_LORE && state.winPromptPlayer === null) {
+  // Win detection fires immediately on crossing threshold
+  if (next >= WIN_LORE && prev < WIN_LORE && state.winPromptPlayer === null) {
     state.winPromptPlayer = playerIndex;
     showWinPrompt(playerIndex);
   }
@@ -308,12 +300,13 @@ function renderHistory() {
 
 // ── Win prompt (Bo3) ───────────────────────────────────────
 function showWinPrompt(playerIndex) {
-  var player       = state.players[playerIndex];
-  var newScore     = state.matchScore.slice();
-  newScore[playerIndex]++;
-  var isMatchOver  = newScore[playerIndex] >= 2;
+  var player = state.players[playerIndex];
 
-  winPromptTitle.textContent = '\u2726 ' + player.name + ' wins Game ' + state.gameNumber + '! \u2726';
+  var newScore    = state.matchScore.slice();
+  newScore[playerIndex]++;
+  var isMatchOver = state.matchFormat === 'bo1' || newScore[playerIndex] >= 2;
+
+  winPromptTitle.textContent = '\u2726 ' + player.name + ' wins' + (state.matchFormat === 'bo3' ? ' Game ' + state.gameNumber : '') + '! \u2726';
 
   if (isMatchOver) {
     winPromptScore.textContent    = 'Match complete \u00b7 ' + newScore[0] + '\u2013' + newScore[1];
@@ -387,13 +380,6 @@ gameContainer.addEventListener('focusout', function(e) {
 });
 
 // ── Setup listeners ────────────────────────────────────────
-document.querySelectorAll('input[name="player-count"]').forEach(function(radio) {
-  radio.addEventListener('change', function() {
-    state.playerCount = parseInt(this.value, 10);
-    renderSetup();
-  });
-});
-
 document.querySelectorAll('input[name="match-format"]').forEach(function(radio) {
   radio.addEventListener('change', function() {
     state.matchFormat = this.value;
@@ -415,14 +401,28 @@ newGameQuick.addEventListener('click', function() {
     return;
   }
   if (newGameQuick.dataset.mode === 'newmatch') {
-    cancelBatch();
-    hideWinPrompt();
-    state.history    = [];
-    state.seq        = 0;
-    state.gameNumber = 1;
-    state.matchScore = state.players.map(function() { return 0; });
-    state.players.forEach(function(p) { p.lore = 0; });
-    showSetup();
+    if (newGameQuick.dataset.step === '1') {
+      clearTimeout(newGameQuickTimer);
+      cancelBatch();
+      state.winPromptPlayer     = null;
+      delete newGameQuick.dataset.mode;
+      newGameQuick.dataset.step = '0';
+      newGameQuick.textContent  = 'New Game';
+      newGameQuick.className    = '';
+      state.history    = [];
+      state.seq        = 0;
+      state.gameNumber = 1;
+      state.matchScore = state.players.map(function() { return 0; });
+      state.players.forEach(function(p) { p.lore = 0; });
+      showSetup();
+      return;
+    }
+    newGameQuick.textContent  = 'Confirm?';
+    newGameQuick.dataset.step = '1';
+    newGameQuickTimer = setTimeout(function() {
+      newGameQuick.textContent  = 'New Match';
+      newGameQuick.dataset.step = '0';
+    }, 4000);
     return;
   }
   if (newGameQuick.dataset.step === '1') {
@@ -454,15 +454,15 @@ winPromptDismiss.addEventListener('click', function() {
   if (state.winPromptPlayer !== null) {
     clearTimeout(newGameQuickTimer);
     newGameQuick.dataset.step = '0';
-    // Match over → offer return to menu; mid-match → offer re-open prompt
-    var isMatchOver = state.matchScore[state.winPromptPlayer] + 1 >= 2;
+    // Bo1 always match-over; Bo3: check if deciding game
+    var isMatchOver = state.matchFormat === 'bo1' || state.matchScore[state.winPromptPlayer] + 1 >= 2;
     if (isMatchOver) {
-      newGameQuick.textContent = 'New Match';
-      newGameQuick.className   = 'next-game';
+      newGameQuick.textContent  = 'New Match';
+      newGameQuick.className    = 'next-game';
       newGameQuick.dataset.mode = 'newmatch';
     } else {
-      newGameQuick.textContent = 'Next Game';
-      newGameQuick.className   = 'next-game';
+      newGameQuick.textContent  = 'Next Game';
+      newGameQuick.className    = 'next-game';
       newGameQuick.dataset.mode = 'nextgame';
     }
   }
