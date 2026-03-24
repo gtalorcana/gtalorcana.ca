@@ -96,16 +96,16 @@ No manual orientation override. The installed PWA is locked to portrait via the 
 
 ## Main Counter Screen
 
-Each player panel includes:
-- **Per-panel history** — scrollable list of past lore totals (see History section)
-- **Player name** — tappable to edit inline
-- **Lore score** — large display (`Cinzel Decorative`), animates on change
-- **[−1]** button — disabled at 0
-- **[+1]** button — equal size to [−1]; rapid taps within 600ms are batched into one history entry
+Panel layout from divider edge → outer edge:
+1. **Per-panel history** — scrollable list of past lore totals (see History section)
+2. **Lore score** — large display (`Cinzel Decorative`), animates on change
+3. **[−1] / [+1] buttons** — [−1] disabled at 0; rapid taps within 600ms are batched into one history entry
+4. **Player label** — tappable to edit name inline; doubles as win banner at the outer edge (away from divider/pills)
+
 - **Win state** — when a player reaches 20 lore:
   - Panel gets a gold highlight
-  - `✦ Player X wins! ✦` banner appears at the **outer edge** of the panel (away from the divider/pills)
-  - Game is **not locked** — players can continue adjusting scores (minus still works for fat-finger correction)
+  - Player label toggles to `✦ Player X wins! ✦` in gold (stars and "wins!" added in-place, name unchanged)
+  - Game is **not locked** — players can continue adjusting scores (minus still works for fat-finger correction); tapping the label still opens name edit
   - Win prompt appears for both Bo1 and Bo3 (see Match Format section)
   - Once a winner is set, the other player reaching 20 does **not** trigger a second win state or prompt
 
@@ -146,7 +146,7 @@ Centred at the panel divider in portrait:
 - **Not yet** — dismisses prompt without advancing (handles fat-finger); pill becomes **Next Game** (re-opens prompt)
 - When match is decided (2 wins): prompt shows `Match complete · 2–0` with **Close** only; pill becomes **New Match**
 
-Non-blocking win banner still shows on the panel regardless of prompt state.
+Non-blocking win label still shows on the panel regardless of prompt state.
 
 ---
 
@@ -155,12 +155,13 @@ Non-blocking win banner still shows on the panel regardless of prompt state.
 - Rapid taps within 600ms are batched — score updates immediately, history commits after inactivity
 - Every committed change logged: `{ playerIndex, name, delta, result, seq }`
 - Up to 50 entries retained; oldest pruned automatically
-- Displayed **per-panel**, inline below the score buttons — no drawer
+- Displayed **per-panel**, inline above the score display — no drawer
+- The **newest entry is not shown** — it's already the current big score number; all visible entries are past scores
 
 ### Visual style (paper-and-pencil metaphor)
 - Entries listed oldest-to-bottom, newest at the bottom
-- **New entry**: slides up from below with a fade-in animation
-- **Old entries**: gain `text-decoration: line-through` + fade to `opacity: .5` via CSS transition (like pencil strikethrough)
+- All visible entries are struck through (`text-decoration: line-through`, `opacity: .5`) — they are past values
+- **New entry**: slides up from below with a fade-in animation, immediately styled as old/struck-through
 - Container uses a `::before` flex spacer so early entries anchor to the bottom; once entries overflow, normal upward scroll works
 - Top edge has a gradient fade (`transparent → opaque over 12%`) hinting at scrollable history above
 - Height: `15svh` (falls back to `6.5rem`); font: `clamp(.75rem, 2svh, 1rem)` — scales with screen size for consistent row count (~5 rows)
