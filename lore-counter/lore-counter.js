@@ -39,7 +39,6 @@ function loadState() {
 
 // ── DOM refs ───────────────────────────────────────────────
 const setupScreen      = document.getElementById('setup-screen');
-const gameScreen       = document.getElementById('game-screen');
 const gameContainer    = document.getElementById('game-container');
 const matchStrip       = document.getElementById('match-strip');
 const winPrompt        = document.getElementById('win-prompt');
