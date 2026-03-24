@@ -141,20 +141,25 @@ function renderGame() {
     var player = state.players[i];
     const isTop = (i === 1 && state.playerCount === 2);
     const panel = document.createElement('div');
-    panel.className = 'player-panel' + (player.lore >= WIN_LORE ? ' winner' : '');
+    var isWinner = player.lore >= WIN_LORE &&
+      (state.winPromptPlayer === null || state.winPromptPlayer === i);
+    panel.className = 'player-panel' + (isWinner ? ' winner' : '');
     panel.setAttribute('data-index', i);
     if (isTop) panel.setAttribute('data-pos', 'top');
 
+    var labelText = isWinner
+      ? '\u2726 ' + escHtml(player.name) + ' wins! \u2726'
+      : escHtml(player.name);
+
     panel.innerHTML =
-      '<span class="player-name" data-index="' + i + '" tabindex="0" role="button" aria-label="Edit name">' + escHtml(player.name) + '</span>' +
-      '<input class="name-input" data-index="' + i + '" type="text" value="' + escAttr(player.name) + '" maxlength="20" autocomplete="off" aria-label="Player name" />' +
+      '<div class="panel-history" data-index="' + i + '"></div>' +
       '<div class="score-display" id="score-' + i + '">' + player.lore + '</div>' +
       '<div class="score-btns">' +
         '<button class="score-btn score-btn-minus" data-index="' + i + '" data-delta="-1" aria-label="Minus 1"' + (player.lore === 0 ? ' disabled' : '') + '>−</button>' +
         '<button class="score-btn score-btn-plus"  data-index="' + i + '" data-delta="1"  aria-label="Plus 1">+</button>' +
       '</div>' +
-      '<div class="panel-history" data-index="' + i + '"></div>' +
-      '<div class="win-banner">✦ ' + escHtml(player.name) + ' wins! ✦</div>';
+      '<span class="player-label' + (isWinner ? ' winner' : '') + '" data-index="' + i + '" tabindex="0" role="button" aria-label="Edit name">' + labelText + '</span>' +
+      '<input class="name-input" data-index="' + i + '" type="text" value="' + escAttr(player.name) + '" maxlength="20" autocomplete="off" aria-label="Player name" />';
 
     gameContainer.appendChild(panel);
   });
@@ -241,8 +246,13 @@ function updatePanel(index) {
     (state.winPromptPlayer === null || state.winPromptPlayer === index);
   panel.classList.toggle('winner', isWinner);
 
-  var banner = panel.querySelector('.win-banner');
-  if (banner) banner.textContent = '\u2726 ' + player.name + ' wins! \u2726';
+  var labelEl = panel.querySelector('.player-label');
+  if (labelEl) {
+    labelEl.classList.toggle('winner', isWinner);
+    labelEl.textContent = isWinner
+      ? '\u2726 ' + player.name + ' wins! \u2726'
+      : player.name;
+  }
 
   panel.querySelector('.score-btn-minus').disabled = player.lore === 0;
 }
@@ -251,9 +261,9 @@ function updatePanel(index) {
 function startNameEdit(index) {
   var panel   = gameContainer.querySelector('.player-panel[data-index="' + index + '"]');
   if (!panel) return;
-  var nameEl  = panel.querySelector('.player-name');
+  var labelEl = panel.querySelector('.player-label');
   var inputEl = panel.querySelector('.name-input');
-  nameEl.style.display  = 'none';
+  labelEl.style.display = 'none';
   inputEl.style.display = 'block';
   inputEl.focus();
   inputEl.select();
@@ -262,17 +272,18 @@ function startNameEdit(index) {
 function commitNameEdit(index) {
   var panel   = gameContainer.querySelector('.player-panel[data-index="' + index + '"]');
   if (!panel) return;
-  var nameEl  = panel.querySelector('.player-name');
+  var labelEl = panel.querySelector('.player-label');
   var inputEl = panel.querySelector('.name-input');
   var newName = inputEl.value.trim() || ('Player ' + (index + 1));
 
   state.players[index].name = newName;
-  nameEl.textContent    = newName;
   inputEl.style.display = 'none';
-  nameEl.style.display  = '';
+  labelEl.style.display = '';
 
-  var banner = panel.querySelector('.win-banner');
-  if (banner) banner.textContent = '\u2726 ' + newName + ' wins! \u2726';
+  var isWinner = labelEl.classList.contains('winner');
+  labelEl.textContent = isWinner
+    ? '\u2726 ' + newName + ' wins! \u2726'
+    : newName;
 
   saveState();
 }
@@ -368,7 +379,7 @@ gameContainer.addEventListener('click', function(e) {
     applyDelta(parseInt(btn.dataset.index, 10), parseInt(btn.dataset.delta, 10));
     return;
   }
-  var nameEl = e.target.closest('.player-name');
+  var nameEl = e.target.closest('.player-label');
   if (nameEl) {
     startNameEdit(parseInt(nameEl.dataset.index, 10));
     return;
@@ -379,11 +390,11 @@ gameContainer.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     var inp = e.target.closest('.name-input');
     if (inp) { e.preventDefault(); commitNameEdit(parseInt(inp.dataset.index, 10)); }
-    var nameEl = e.target.closest('.player-name');
+    var nameEl = e.target.closest('.player-label');
     if (nameEl) { e.preventDefault(); startNameEdit(parseInt(nameEl.dataset.index, 10)); }
   }
   if (e.key === ' ') {
-    var nameEl = e.target.closest('.player-name');
+    var nameEl = e.target.closest('.player-label');
     if (nameEl) { e.preventDefault(); startNameEdit(parseInt(nameEl.dataset.index, 10)); }
   }
 });
