@@ -488,9 +488,9 @@ body.game-active #history-toggle {
 /* ── INSTALL BANNER ──────────────────────────────────────── */
 .install-banner {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
+  top: 5rem; /* below nav, avoids mobile browser bottom bar entirely */
   left: 1rem; right: 1rem;
-  z-index: 60;
+  z-index: 55;
   background: var(--surface);
   border: 1px solid var(--gold);
   border-radius: 12px;
@@ -500,10 +500,16 @@ body.game-active #history-toggle {
   justify-content: space-between;
   gap: .75rem;
   box-shadow: 0 4px 24px rgba(212,168,67,0.2);
-  transform: translateY(140%);
-  transition: transform .35s cubic-bezier(.4,0,.2,1);
+  opacity: 0;
+  transform: translateY(-.5rem);
+  pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease;
 }
-.install-banner.visible { transform: translateY(0); }
+.install-banner.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
 .install-text {
   font-family: 'Lora', serif;
   font-size: .82rem;
