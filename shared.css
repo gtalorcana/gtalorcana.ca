@@ -92,7 +92,7 @@ nav {
   padding-left: 2.5rem;
   background: rgba(13,11,20,0.72);
   backdrop-filter: blur(18px) saturate(1.4);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 3px solid red;
   transition: background var(--transition);
 }
 
