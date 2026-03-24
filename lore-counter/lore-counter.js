@@ -79,6 +79,7 @@ function showSetup() {
   saveState();
   renderSetup();
   if (deferredInstall) installBanner.classList.add('visible');
+  showInstallBanner();
 }
 
 function showGame() {
@@ -488,6 +489,27 @@ document.addEventListener('keydown', function(e) {
 
 // ── PWA Install prompt ─────────────────────────────────────
 var deferredInstall = null;
+
+var isIOS        = /iphone|ipad|ipod/i.test(navigator.userAgent);
+var isStandalone = window.navigator.standalone === true;
+var isIOSSafari  = isIOS && /safari/i.test(navigator.userAgent) && !/crios|fxios/i.test(navigator.userAgent);
+
+function showInstallBanner() {
+  if (isStandalone) return;
+  var strong = installBanner.querySelector('.install-text strong');
+  var span   = installBanner.querySelector('.install-text span');
+  if (isIOS) {
+    if (isIOSSafari) {
+      strong.textContent = 'Add to Home Screen';
+      span.textContent   = 'Tap the Share button at the bottom of Safari, then "Add to Home Screen".';
+    } else {
+      strong.textContent = 'Install as an App';
+      span.textContent   = 'Open this page in Safari, then tap Share → "Add to Home Screen".';
+    }
+    installBtn.style.display = 'none';
+    installBanner.classList.add('visible');
+  }
+}
 
 window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
