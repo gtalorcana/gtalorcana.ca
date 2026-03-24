@@ -98,6 +98,7 @@ nav {
 
 .standalone .nav-back { display: none; }
 .standalone nav { padding-top: 3.5rem; }
+.standalone main { padding-top: 8.5rem; }
 [data-theme="light"] nav {
   background: rgba(253,246,227,0.82);
 }
