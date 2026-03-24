@@ -294,6 +294,7 @@ body.game-active #game-pills { display: flex; }
   border-radius: 999px;
   padding: .5rem 1rem;
   min-height: 36px;
+  white-space: nowrap;
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text-muted);
