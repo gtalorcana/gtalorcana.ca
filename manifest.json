@@ -5,6 +5,7 @@
   "start_url": "/lore-counter/",
   "scope": "/lore-counter/",
   "display": "standalone",
+  "orientation": "portrait",
   "theme_color": "#d4a843",
   "background_color": "#0d0b14",
   "icons": [

@@ -594,7 +594,7 @@ installDismiss.addEventListener('click', function() {
 
 // ── Service worker ─────────────────────────────────────────
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js', { scope: '/lore-counter/' }).catch(function() {});
+  navigator.serviceWorker.register('/sw.js', { scope: '/lore-counter/', updateViaCache: 'none' }).catch(function() {});
 }
 
 // ── Boot ───────────────────────────────────────────────────
