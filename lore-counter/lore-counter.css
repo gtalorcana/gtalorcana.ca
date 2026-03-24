@@ -254,7 +254,7 @@ input.name-input {
   display: none;
   position: absolute;
   z-index: 20;
-  top: 50%;
+  top: calc(50% + (env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) / 2);
   left: 50%;
   transform: translate(-50%, -50%);
   flex-direction: column;
