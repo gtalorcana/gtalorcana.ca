@@ -246,16 +246,23 @@ input.name-input {
 }
 body.game-active #game-pills { display: flex; }
 
-/* Landscape: full-width, pills straddle the vertical divider */
+/* Landscape: dissolve wrapper, pin each pill equidistant from the divider */
 @media (orientation: landscape) {
-  #game-pills {
-    top: auto;
+  #game-pills { display: contents; }
+
+  body.game-active #new-game-quick {
+    display: flex;
+    position: fixed;
     bottom: calc(env(safe-area-inset-bottom) + .75rem);
-    left: 0;
-    transform: none;
-    width: 100%;
-    justify-content: center;
-    gap: 2rem;
+    right: calc(50% + 1rem);
+    top: auto; left: auto; transform: none;
+  }
+  body.game-active #undo-pill {
+    display: flex;
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom) + .75rem);
+    left: calc(50% + 1rem);
+    top: auto; right: auto; transform: none;
   }
 }
 
