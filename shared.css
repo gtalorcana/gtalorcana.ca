@@ -23,6 +23,8 @@
   --heading:     #f0cc74;
   --glow:        rgba(212,168,67,0.25);
   --star:        rgba(212,168,67,0.6);
+  --bg-panel:    rgba(13,11,20,0.92);
+  --bg2-panel:   rgba(19,16,30,0.92);
 }
 
 [data-theme="light"] {
@@ -38,6 +40,8 @@
   --heading:     #7a5c10;
   --glow:        rgba(122,92,16,0.15);
   --star:        rgba(122,92,16,0.5);
+  --bg-panel:    rgba(253,246,227,0.92);
+  --bg2-panel:   rgba(245,234,210,0.92);
 }
 
 /* ── RESET & BASE ────────────────────────────────────── */
