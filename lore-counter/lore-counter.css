@@ -246,12 +246,16 @@ input.name-input {
 }
 body.game-active #game-pills { display: flex; }
 
-/* Landscape: drop to bottom centre */
+/* Landscape: full-width, pills straddle the vertical divider */
 @media (orientation: landscape) {
   #game-pills {
     top: auto;
     bottom: calc(env(safe-area-inset-bottom) + .75rem);
-    transform: translateX(-50%);
+    left: 0;
+    transform: none;
+    width: 100%;
+    justify-content: center;
+    gap: 2rem;
   }
 }
 
