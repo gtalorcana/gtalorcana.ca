@@ -152,7 +152,9 @@ function renderGame() {
   updateMatchStrip();
 
   gameContainer.innerHTML = '';
-  state.players.forEach(function(player, i) {
+  var renderOrder = state.playerCount === 2 ? [1, 0] : state.players.map(function(_, i) { return i; });
+  renderOrder.forEach(function(i) {
+    var player = state.players[i];
     const isTop = (i === 1 && state.playerCount === 2);
     const panel = document.createElement('div');
     panel.className = 'player-panel' + (player.lore >= WIN_LORE ? ' winner' : '');
