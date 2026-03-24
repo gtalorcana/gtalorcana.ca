@@ -47,6 +47,7 @@ const winPromptScore   = document.getElementById('win-prompt-score');
 const winPromptNext    = document.getElementById('win-prompt-next');
 const winPromptDismiss = document.getElementById('win-prompt-dismiss');
 const newGameQuick     = document.getElementById('new-game-quick');
+const gamePills        = document.getElementById('game-pills');
 const installBanner    = document.getElementById('install-banner');
 const installBtn       = document.getElementById('install-btn');
 const playerNamesEl    = document.getElementById('player-names');
@@ -81,13 +82,25 @@ function showSetup() {
   showInstallBanner();
 }
 
+function positionPills() {
+  requestAnimationFrame(function () {
+    var rect = gameContainer.getBoundingClientRect();
+    gamePills.style.top = (rect.top + rect.height / 2) + 'px';
+  });
+}
+
 function showGame() {
   state.screen = 'game';
   document.body.classList.add('game-active');
   setupScreen.style.display = 'none';
   saveState();
   renderGame();
+  positionPills();
 }
+
+window.addEventListener('resize', function () {
+  if (state.screen === 'game') positionPills();
+});
 
 // ── Setup screen ───────────────────────────────────────────
 function renderSetup() {
