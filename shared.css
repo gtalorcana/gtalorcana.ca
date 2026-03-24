@@ -7,8 +7,7 @@
   --parchment:   #fdf6e3;
   --cream:       #f5ead2;
   --mist:        #e8dfc8;
-  --scroll:      #c9b99a;
-  --transition: 0.4s cubic-bezier(.4,0,.2,1);
+--transition: 0.4s cubic-bezier(.4,0,.2,1);
 }
 
 [data-theme="dark"] {
@@ -114,14 +113,6 @@ nav {
   object-fit: contain;
   border: 2px solid var(--gold);
   padding: 2px;
-}
-.logo-placeholder {
-  height: 42px; width: 42px;
-  border-radius: 50%;
-  border: 2px solid var(--gold);
-  background: var(--surface2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.2rem;
 }
 .nav-title {
   font-family: 'Cinzel', serif;

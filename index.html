@@ -9,7 +9,7 @@
   <link rel="icon" type="image/svg+xml" href="/gtalorcana-logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/shared.css" />
   <style>
     /* ── HERO ────────────────────────────────────────────── */
@@ -60,18 +60,7 @@
       box-shadow: 0 0 40px var(--glow), 0 0 80px var(--glow);
       animation: float 5s ease-in-out infinite;
     }
-    .hero-logo-placeholder {
-      width: 120px; height: 120px;
-      border-radius: 50%;
-      border: 3px solid var(--gold);
-      background: var(--surface2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 3rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 0 40px var(--glow), 0 0 80px var(--glow);
-      animation: float 5s ease-in-out infinite;
-    }
-    @keyframes float {
+@keyframes float {
       0%,100% { transform: translateY(0); }
       50%      { transform: translateY(-10px); }
     }
@@ -327,8 +316,7 @@
     .announce-icon {
       font-size: 1.4rem; flex-shrink: 0; margin-top: .1rem;
     }
-    .announce-body {}
-    .announce-title {
+.announce-title {
       font-family: 'Cinzel', serif;
       font-size: .95rem;
       color: var(--heading);
