@@ -340,8 +340,7 @@ function renderHistory() {
     if (!el) return;
     var entries = state.history.filter(function(e) { return e.playerIndex === i; });
     el.innerHTML = entries.map(function(e) {
-      var d = (e.delta > 0 ? '+' : '') + e.delta;
-      return '<span class="ph-entry' + (e.delta < 0 ? ' ph-neg' : '') + '">' + d + '</span>';
+      return '<span class="ph-entry' + (e.delta < 0 ? ' ph-neg' : '') + '">' + e.result + '</span>';
     }).join('');
   });
 }
