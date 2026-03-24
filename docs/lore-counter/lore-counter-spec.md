@@ -104,17 +104,22 @@ Each player panel includes:
 - **[+1]** button — equal size to [−1]; rapid taps within 600ms are batched into one history entry
 - **Win state** — when a player reaches 20 lore:
   - Panel gets a gold highlight
-  - `✦ Player X wins! ✦` banner appears (non-blocking)
-  - Game is **not locked** — players can continue adjusting scores
+  - `✦ Player X wins! ✦` banner appears at the **outer edge** of the panel (away from the divider/pills)
+  - Game is **not locked** — players can continue adjusting scores (minus still works for fat-finger correction)
   - Win prompt appears for both Bo1 and Bo3 (see Match Format section)
+  - Once a winner is set, the other player reaching 20 does **not** trigger a second win state or prompt
 
 All tap targets: minimum **48×48px** (72×72px on mobile, 96×96px on desktop)
 
 ### Game screen viewport
 
-`#game-screen` is `position: fixed` with `top/left/right/bottom: 0` — pinned to all four edges, guaranteed full-screen coverage regardless of iOS viewport unit quirks. Safe area insets (`env(safe-area-inset-*)`) are applied as padding so content clears the notch/Dynamic Island.
+`#game-screen` is `position: fixed` with `top/left/right/bottom: 0` — pinned to all four edges, guaranteed full-screen coverage regardless of iOS viewport unit quirks. Safe area insets (`env(safe-area-inset-*)`) are applied as padding so content clears the notch/Dynamic Island. Background is `var(--bg)` so the safe area strips blend with the panels.
 
-### Game pills (fixed overlay)
+A `#game-stars` div (`position: absolute; inset: 0; z-index: 0`) lives inside `#game-screen` and is populated with the same twinkling star animation as the page-level starfield. Stars are visible in the 1px panel divider gap and the safe area strips; panels remain solid.
+
+### Game pills
+
+`#game-pills` is `position: absolute` inside `#game-screen`, centred at the panel divider using `top: calc(50% + (env(safe-area-inset-top) - env(safe-area-inset-bottom)) / 2)` to account for asymmetric safe area insets. Text selection disabled (`user-select: none`).
 
 Centred at the panel divider in portrait:
 
