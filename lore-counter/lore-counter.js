@@ -83,9 +83,13 @@ function showSetup() {
 }
 
 function positionPills() {
+  // Double RAF ensures measurement happens after a full style+layout pass,
+  // including on boot when restoring state from localStorage.
   requestAnimationFrame(function () {
-    var rect = gameContainer.getBoundingClientRect();
-    gamePills.style.top = (rect.top + rect.height / 2) + 'px';
+    requestAnimationFrame(function () {
+      var rect = gameContainer.getBoundingClientRect();
+      gamePills.style.top = (rect.top + rect.height / 2) + 'px';
+    });
   });
 }
 
