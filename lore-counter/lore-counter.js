@@ -338,10 +338,10 @@ function renderHistory() {
   state.players.forEach(function(_, i) {
     var el = gameContainer.querySelector('.panel-history[data-index="' + i + '"]');
     if (!el) return;
-    var entries = state.history.filter(function(e) { return e.playerIndex === i; }).slice(0, 5);
+    var entries = state.history.filter(function(e) { return e.playerIndex === i; });
     el.innerHTML = entries.map(function(e) {
       var d = (e.delta > 0 ? '+' : '') + e.delta;
-      return '<span class="ph-entry' + (e.delta < 0 ? ' ph-neg' : '') + '">' + d + ' \u2192 ' + e.result + '</span>';
+      return '<span class="ph-entry' + (e.delta < 0 ? ' ph-neg' : '') + '">' + d + '</span>';
     }).join('');
   });
 }
