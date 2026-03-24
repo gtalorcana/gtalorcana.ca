@@ -4,6 +4,7 @@
 const STORAGE_KEY = 'gta-lorcana-counter-state';
 const WIN_LORE    = 20;
 const MAX_HISTORY = 50;
+const BATCH_MS    = 600; // rapid taps within this window merge into one history entry
 
 // ── State ──────────────────────────────────────────────────
 let state = {
@@ -57,6 +58,10 @@ const playerNamesEl    = document.getElementById('player-names');
 
 // ── Two-step confirm timers ────────────────────────────────
 let newGameQuickTimer = null;
+
+// ── Tap batching ───────────────────────────────────────────
+let pendingBatch = null; // { playerIndex, prevLore, delta }
+let batchTimer   = null;
 
 // ── Utilities ──────────────────────────────────────────────
 function escHtml(s) {
@@ -194,28 +199,52 @@ function applyDelta(playerIndex, delta) {
   var next   = Math.max(0, prev + delta);
   if (next === prev) return;
 
-  state.undo  = { playerIndex: playerIndex, prevLore: prev };
   player.lore = next;
-
-  state.history.unshift({
-    playerIndex: playerIndex,
-    name:        player.name,
-    delta:       next - prev,
-    result:      next,
-    seq:         ++state.seq,
-  });
-  if (state.history.length > MAX_HISTORY) state.history.pop();
-
   updatePanel(playerIndex);
-  renderHistory();
 
-  // Bo3 win detection: show prompt when first crossing WIN_LORE
+  // Bo3 win detection fires immediately on crossing threshold
   if (state.matchFormat === 'bo3' && next >= WIN_LORE && prev < WIN_LORE && state.winPromptPlayer === null) {
     state.winPromptPlayer = playerIndex;
     showWinPrompt(playerIndex);
   }
 
+  // Accumulate rapid taps into one history entry
+  if (pendingBatch && pendingBatch.playerIndex === playerIndex) {
+    pendingBatch.delta += (next - prev);
+  } else {
+    if (pendingBatch) commitBatch(); // flush a different player's pending batch
+    pendingBatch = { playerIndex: playerIndex, prevLore: prev, delta: next - prev };
+  }
+  syncUndoBtn();
+  clearTimeout(batchTimer);
+  batchTimer = setTimeout(commitBatch, BATCH_MS);
+}
+
+function commitBatch() {
+  if (!pendingBatch) return;
+  clearTimeout(batchTimer);
+  var b = pendingBatch;
+  pendingBatch = null;
+
+  var player = state.players[b.playerIndex];
+  state.undo = { playerIndex: b.playerIndex, prevLore: b.prevLore };
+  state.history.unshift({
+    playerIndex: b.playerIndex,
+    name:        player.name,
+    delta:       b.delta,
+    result:      player.lore,
+    seq:         ++state.seq,
+  });
+  if (state.history.length > MAX_HISTORY) state.history.pop();
+
+  renderHistory();
+  syncUndoBtn();
   saveState();
+}
+
+function cancelBatch() {
+  clearTimeout(batchTimer);
+  pendingBatch = null;
 }
 
 function updatePanel(index) {
@@ -241,6 +270,19 @@ function updatePanel(index) {
 
 // ── Undo ───────────────────────────────────────────────────
 function doUndo() {
+  // Cancel in-progress batch and revert its score
+  if (pendingBatch) {
+    var b = pendingBatch;
+    cancelBatch();
+    state.players[b.playerIndex].lore = b.prevLore;
+    if (state.winPromptPlayer === b.playerIndex && b.prevLore < WIN_LORE) {
+      hideWinPrompt();
+    }
+    updatePanel(b.playerIndex);
+    renderHistory();
+    saveState();
+    return;
+  }
   if (!state.undo) return;
   var playerIndex = state.undo.playerIndex;
   var prevLore    = state.undo.prevLore;
@@ -248,7 +290,6 @@ function doUndo() {
   state.history.shift();
   state.undo = null;
 
-  // If undo drops score below win threshold, clear win prompt so it can reappear
   if (state.winPromptPlayer === playerIndex && prevLore < WIN_LORE) {
     hideWinPrompt();
   }
@@ -259,7 +300,7 @@ function doUndo() {
 }
 
 function syncUndoBtn() {
-  undoPill.disabled = !state.undo;
+  undoPill.disabled = !pendingBatch && !state.undo;
 }
 
 // ── Name editing ───────────────────────────────────────────
@@ -337,6 +378,7 @@ function hideWinPrompt() {
 }
 
 function startNextGame() {
+  cancelBatch();
   var playerIndex = state.winPromptPlayer;
   state.matchScore[playerIndex]++;
   state.gameNumber++;
@@ -411,6 +453,7 @@ newGameQuick.addEventListener('click', function() {
     newGameQuick.textContent  = 'New Game';
     newGameQuick.className    = '';
     newGameQuick.dataset.step = '0';
+    cancelBatch();
     hideWinPrompt();
     state.history    = [];
     state.undo       = null;
