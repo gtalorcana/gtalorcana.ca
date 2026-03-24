@@ -159,12 +159,6 @@ input.name-input {
 .player-panel.winner .win-banner {
   opacity: 1;
 }
-.player-panel.winner .win-banner.tappable {
-  pointer-events: auto;
-  cursor: pointer;
-  text-decoration: underline dotted;
-  text-underline-offset: 3px;
-}
 
 /* ── SCORE DISPLAY ───────────────────────────────────────── */
 .score-display {
@@ -276,6 +270,7 @@ body.game-active #game-pills { display: flex; }
 #new-game-quick:hover { border-color: var(--gold); color: var(--gold); }
 
 #new-game-quick.confirm { color: var(--gold); border-color: var(--gold); }
+#new-game-quick.next-game { color: var(--gold); border-color: var(--gold); }
 
 /* ── DRAWER BUTTONS (used in win prompt) ─────────────────── */
 .drawer-btn {

@@ -331,13 +331,16 @@ function showWinPrompt(playerIndex) {
 
 function hideWinPrompt() {
   winPrompt.classList.remove('open');
-  // Remove tappable marker from any win banner
-  gameContainer.querySelectorAll('.win-banner.tappable').forEach(function(b) {
-    b.classList.remove('tappable');
-  });
   state.winPromptPlayer = null;
   winPromptNext.style.display  = '';
   winPromptDismiss.textContent = 'Not yet';
+  // Reset pill if it was showing "Next Game"
+  if (newGameQuick.dataset.mode === 'nextgame') {
+    newGameQuick.textContent  = 'New Game';
+    newGameQuick.className    = '';
+    newGameQuick.dataset.step = '0';
+    delete newGameQuick.dataset.mode;
+  }
 }
 
 function startNextGame() {
@@ -362,13 +365,6 @@ gameContainer.addEventListener('click', function(e) {
   var nameEl = e.target.closest('.player-name');
   if (nameEl) {
     startNameEdit(parseInt(nameEl.dataset.index, 10));
-    return;
-  }
-  var banner = e.target.closest('.win-banner.tappable');
-  if (banner) {
-    var idx = parseInt(banner.closest('.player-panel').dataset.index, 10);
-    state.winPromptPlayer = idx;
-    showWinPrompt(idx);
     return;
   }
 });
@@ -415,6 +411,11 @@ document.getElementById('setup-screen').addEventListener('keydown', function(e) 
 winPromptNext.addEventListener('click', startNextGame);
 
 newGameQuick.addEventListener('click', function() {
+  // Re-open the win prompt instead of resetting the match
+  if (newGameQuick.dataset.mode === 'nextgame') {
+    showWinPrompt(state.winPromptPlayer);
+    return;
+  }
   if (newGameQuick.dataset.step === '1') {
     clearTimeout(newGameQuickTimer);
     newGameQuick.textContent  = 'New Game';
@@ -441,13 +442,13 @@ newGameQuick.addEventListener('click', function() {
 });
 winPromptDismiss.addEventListener('click', function() {
   winPrompt.classList.remove('open');
-  // Mark the win banner tappable so the prompt can be re-opened
+  // Swap pill to "Next Game" so user can re-open prompt without risking a full reset
   if (state.winPromptPlayer !== null) {
-    var panel = gameContainer.querySelector('.player-panel[data-index="' + state.winPromptPlayer + '"]');
-    if (panel) {
-      var banner = panel.querySelector('.win-banner');
-      if (banner) banner.classList.add('tappable');
-    }
+    clearTimeout(newGameQuickTimer);
+    newGameQuick.textContent  = 'Next Game';
+    newGameQuick.className    = 'next-game';
+    newGameQuick.dataset.step = '0';
+    newGameQuick.dataset.mode = 'nextgame';
   }
 });
 
