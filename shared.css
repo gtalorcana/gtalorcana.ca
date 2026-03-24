@@ -97,6 +97,7 @@ nav {
 }
 
 .standalone .nav-back { display: none; }
+.standalone .nav-logo { pointer-events: none; cursor: default; }
 .standalone nav { padding-top: 3.5rem; }
 .standalone main { padding-top: 8.5rem; }
 [data-theme="light"] nav {
