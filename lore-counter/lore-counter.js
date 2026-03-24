@@ -331,8 +331,11 @@ function showWinPrompt(playerIndex) {
 
 function hideWinPrompt() {
   winPrompt.classList.remove('open');
+  // Remove tappable marker from any win banner
+  gameContainer.querySelectorAll('.win-banner.tappable').forEach(function(b) {
+    b.classList.remove('tappable');
+  });
   state.winPromptPlayer = null;
-  // Reset button state for next time
   winPromptNext.style.display  = '';
   winPromptDismiss.textContent = 'Not yet';
 }
@@ -359,6 +362,13 @@ gameContainer.addEventListener('click', function(e) {
   var nameEl = e.target.closest('.player-name');
   if (nameEl) {
     startNameEdit(parseInt(nameEl.dataset.index, 10));
+    return;
+  }
+  var banner = e.target.closest('.win-banner.tappable');
+  if (banner) {
+    var idx = parseInt(banner.closest('.player-panel').dataset.index, 10);
+    state.winPromptPlayer = idx;
+    showWinPrompt(idx);
     return;
   }
 });
@@ -431,6 +441,14 @@ newGameQuick.addEventListener('click', function() {
 });
 winPromptDismiss.addEventListener('click', function() {
   winPrompt.classList.remove('open');
+  // Mark the win banner tappable so the prompt can be re-opened
+  if (state.winPromptPlayer !== null) {
+    var panel = gameContainer.querySelector('.player-panel[data-index="' + state.winPromptPlayer + '"]');
+    if (panel) {
+      var banner = panel.querySelector('.win-banner');
+      if (banner) banner.classList.add('tappable');
+    }
+  }
 });
 
 document.addEventListener('keydown', function(e) {
