@@ -146,7 +146,6 @@ function renderGame() {
     if (isTop) panel.setAttribute('data-pos', 'top');
 
     panel.innerHTML =
-      '<div class="win-banner">✦ ' + escHtml(player.name) + ' wins! ✦</div>' +
       '<span class="player-name" data-index="' + i + '" tabindex="0" role="button" aria-label="Edit name">' + escHtml(player.name) + '</span>' +
       '<input class="name-input" data-index="' + i + '" type="text" value="' + escAttr(player.name) + '" maxlength="20" autocomplete="off" aria-label="Player name" />' +
       '<div class="score-display" id="score-' + i + '">' + player.lore + '</div>' +
@@ -154,7 +153,8 @@ function renderGame() {
         '<button class="score-btn score-btn-minus" data-index="' + i + '" data-delta="-1" aria-label="Minus 1"' + (player.lore === 0 ? ' disabled' : '') + '>−</button>' +
         '<button class="score-btn score-btn-plus"  data-index="' + i + '" data-delta="1"  aria-label="Plus 1">+</button>' +
       '</div>' +
-      '<div class="panel-history" data-index="' + i + '"></div>';
+      '<div class="panel-history" data-index="' + i + '"></div>' +
+      '<div class="win-banner">✦ ' + escHtml(player.name) + ' wins! ✦</div>';
 
     gameContainer.appendChild(panel);
   });
