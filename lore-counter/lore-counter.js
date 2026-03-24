@@ -106,7 +106,7 @@ function renderSetup() {
     field.className = 'field';
     field.innerHTML =
       '<label for="name-' + i + '">Player ' + (i + 1) + '</label>' +
-      '<input type="text" id="name-' + i + '" value="' + escAttr(savedName || defaultName) + '" placeholder="' + escAttr(defaultName) + '" maxlength="20" autocomplete="disabled" />';
+      '<input type="text" id="name-' + i + '" value="' + escAttr(savedName || defaultName) + '" placeholder="' + escAttr(defaultName) + '" maxlength="20" autocomplete="off" />';
     playerNamesEl.appendChild(field);
   }
 
@@ -149,7 +149,7 @@ function renderGame() {
     panel.innerHTML =
       '<div class="win-banner">✦ ' + escHtml(player.name) + ' wins! ✦</div>' +
       '<span class="player-name" data-index="' + i + '" tabindex="0" role="button" aria-label="Edit name">' + escHtml(player.name) + '</span>' +
-      '<input class="name-input" data-index="' + i + '" type="text" value="' + escAttr(player.name) + '" maxlength="20" autocomplete="disabled" aria-label="Player name" />' +
+      '<input class="name-input" data-index="' + i + '" type="text" value="' + escAttr(player.name) + '" maxlength="20" autocomplete="off" aria-label="Player name" />' +
       '<div class="score-display" id="score-' + i + '">' + player.lore + '</div>' +
       '<div class="score-btns">' +
         '<button class="score-btn score-btn-minus" data-index="' + i + '" data-delta="-1" aria-label="Minus 1"' + (player.lore === 0 ? ' disabled' : '') + '>−</button>' +
