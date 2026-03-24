@@ -21,6 +21,7 @@ body.game-active {
   right: 0;
   bottom: 0;
   z-index: 10;
+  background: var(--bg);
   user-select: none;
   -webkit-user-select: none;
   /* Respect notch/safe areas */
