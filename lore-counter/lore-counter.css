@@ -246,6 +246,14 @@ input.name-input {
 }
 body.game-active #game-pills { display: flex; }
 
+/* Landscape: drop to bottom centre */
+@media (orientation: landscape) {
+  #game-pills {
+    top: auto;
+    bottom: calc(env(safe-area-inset-bottom) + .75rem);
+    transform: translateX(-50%);
+  }
+}
 
 /* ── PILL BUTTON (shared appearance) ────────────────────── */
 #new-game-quick,
