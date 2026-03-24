@@ -7,13 +7,17 @@ const MAX_HISTORY = 50;
 
 // ── State ──────────────────────────────────────────────────
 let state = {
-  screen:      'setup',
-  playerCount: 2,
-  players:     [],   // [{ name, lore }]
-  history:     [],   // newest first: [{ playerIndex, name, delta, result, seq }]
-  undo:        null, // { playerIndex, prevLore } | null
-  orientation: 'auto',
-  seq:         0,
+  screen:          'setup',
+  playerCount:     2,
+  matchFormat:     'bo1',  // 'bo1' | 'bo3'
+  gameNumber:      1,
+  matchScore:      [],     // game wins per player index
+  players:         [],     // [{ name, lore }]
+  history:         [],     // newest first: [{ playerIndex, name, delta, result, seq }]
+  undo:            null,   // { playerIndex, prevLore } | null
+  winPromptPlayer: null,   // playerIndex who triggered the win prompt | null
+  orientation:     'auto',
+  seq:             0,
 };
 
 // ── Persistence ────────────────────────────────────────────
@@ -35,25 +39,34 @@ function loadState() {
 }
 
 // ── DOM refs ───────────────────────────────────────────────
-const setupScreen    = document.getElementById('setup-screen');
-const gameScreen     = document.getElementById('game-screen');
-const gameContainer  = document.getElementById('game-container');
-const rotateBtn      = document.getElementById('rotate-btn');
-const historyToggle  = document.getElementById('history-toggle');
-const historyOverlay = document.getElementById('history-overlay');
-const historyDrawer  = document.getElementById('history-drawer');
-const historyList    = document.getElementById('history-list');
-const undoBtn        = document.getElementById('undo-btn');
-const clearBtn       = document.getElementById('clear-btn');
-const newGameBtn     = document.getElementById('new-game-btn');
-const installBanner  = document.getElementById('install-banner');
-const installBtn     = document.getElementById('install-btn');
-const installDismiss = document.getElementById('install-dismiss');
-const playerNamesEl  = document.getElementById('player-names');
+const setupScreen      = document.getElementById('setup-screen');
+const gameScreen       = document.getElementById('game-screen');
+const gameContainer    = document.getElementById('game-container');
+const rotateBtn        = document.getElementById('rotate-btn');
+const historyToggle    = document.getElementById('history-toggle');
+const historyOverlay   = document.getElementById('history-overlay');
+const historyDrawer    = document.getElementById('history-drawer');
+const historyList      = document.getElementById('history-list');
+const undoBtn          = document.getElementById('undo-btn');
+const clearBtn         = document.getElementById('clear-btn');
+const newGameBtn       = document.getElementById('new-game-btn');
+const matchStrip       = document.getElementById('match-strip');
+const winPrompt        = document.getElementById('win-prompt');
+const winPromptTitle   = document.getElementById('win-prompt-title');
+const winPromptScore   = document.getElementById('win-prompt-score');
+const winPromptNext    = document.getElementById('win-prompt-next');
+const winPromptDismiss = document.getElementById('win-prompt-dismiss');
+const matchFormatField = document.getElementById('match-format-field');
+const newGameQuick     = document.getElementById('new-game-quick');
+const installBanner    = document.getElementById('install-banner');
+const installBtn       = document.getElementById('install-btn');
+const installDismiss   = document.getElementById('install-dismiss');
+const playerNamesEl    = document.getElementById('player-names');
 
 // ── Two-step confirm timers ────────────────────────────────
-let newGameTimer = null;
-let clearTimer   = null;
+let newGameTimer      = null;
+let clearTimer        = null;
+let newGameQuickTimer = null;
 
 // ── Utilities ──────────────────────────────────────────────
 function escHtml(s) {
@@ -86,15 +99,22 @@ function showGame() {
 
 // ── Setup screen ───────────────────────────────────────────
 function renderSetup() {
-  // Sync radio buttons
-  document.querySelectorAll('input[name="player-count"]').forEach(r => {
+  // Sync player count radios
+  document.querySelectorAll('input[name="player-count"]').forEach(function(r) {
     r.checked = parseInt(r.value) === state.playerCount;
+  });
+
+  // Match format: only available for 2 players
+  matchFormatField.style.display = state.playerCount === 2 ? '' : 'none';
+  if (state.playerCount !== 2) state.matchFormat = 'bo1';
+  document.querySelectorAll('input[name="match-format"]').forEach(function(r) {
+    r.checked = r.value === state.matchFormat;
   });
 
   // Render name inputs
   playerNamesEl.innerHTML = '';
   for (let i = 0; i < state.playerCount; i++) {
-    const savedName = state.players[i] ? state.players[i].name : '';
+    const savedName  = state.players[i] ? state.players[i].name : '';
     const defaultName = 'Player ' + (i + 1);
     const field = document.createElement('div');
     field.className = 'field';
@@ -104,7 +124,6 @@ function renderSetup() {
     playerNamesEl.appendChild(field);
   }
 
-  // Focus first input
   const first = playerNamesEl.querySelector('input');
   if (first) first.focus();
 }
@@ -118,9 +137,12 @@ function startGame() {
       lore: 0,
     });
   });
-  state.history = [];
-  state.undo    = null;
-  state.seq     = 0;
+  state.history         = [];
+  state.undo            = null;
+  state.seq             = 0;
+  state.gameNumber      = 1;
+  state.matchScore      = state.players.map(function() { return 0; });
+  state.winPromptPlayer = null;
   showGame();
 }
 
@@ -129,10 +151,10 @@ function renderGame() {
   gameContainer.setAttribute('data-players', state.playerCount);
   gameContainer.setAttribute('data-orientation', state.orientation);
 
-  // Rotate button only makes sense for 2 players
   rotateBtn.style.visibility = state.playerCount === 2 ? '' : 'hidden';
+  updateRotateBtn();
+  updateMatchStrip();
 
-  // Render panels
   gameContainer.innerHTML = '';
   state.players.forEach(function(player, i) {
     const isTop = (i === 0 && state.playerCount === 2);
@@ -142,18 +164,13 @@ function renderGame() {
     if (isTop) panel.setAttribute('data-pos', 'top');
 
     panel.innerHTML =
-      '<div class="win-banner">🏆 ' + escHtml(player.name) + ' wins!</div>' +
+      '<div class="win-banner">✦ ' + escHtml(player.name) + ' wins! ✦</div>' +
       '<span class="player-name" data-index="' + i + '" tabindex="0" role="button" aria-label="Edit name">' + escHtml(player.name) + '</span>' +
       '<input class="name-input" data-index="' + i + '" type="text" value="' + escAttr(player.name) + '" maxlength="20" autocomplete="off" aria-label="Player name" />' +
       '<div class="score-display" id="score-' + i + '">' + player.lore + '</div>' +
       '<div class="score-btns">' +
         '<button class="score-btn score-btn-minus" data-index="' + i + '" data-delta="-1" aria-label="Minus 1"' + (player.lore === 0 ? ' disabled' : '') + '>−</button>' +
         '<button class="score-btn score-btn-plus"  data-index="' + i + '" data-delta="1"  aria-label="Plus 1">+</button>' +
-      '</div>' +
-      '<div class="quick-btns">' +
-        '<button class="quick-btn" data-index="' + i + '" data-delta="2">+2</button>' +
-        '<button class="quick-btn" data-index="' + i + '" data-delta="3">+3</button>' +
-        '<button class="quick-btn" data-index="' + i + '" data-delta="4">+4</button>' +
       '</div>';
 
     gameContainer.appendChild(panel);
@@ -161,6 +178,24 @@ function renderGame() {
 
   syncUndoBtn();
   renderHistory();
+}
+
+// ── Rotate button label ────────────────────────────────────
+function updateRotateBtn() {
+  var labels = { auto: 'Auto', landscape: 'Landscape', portrait: 'Portrait' };
+  rotateBtn.textContent = labels[state.orientation] || 'AUTO';
+}
+
+// ── Match strip ────────────────────────────────────────────
+function updateMatchStrip() {
+  if (state.matchFormat !== 'bo3') {
+    matchStrip.classList.remove('active');
+    return;
+  }
+  matchStrip.classList.add('active');
+  matchStrip.textContent =
+    'Game ' + state.gameNumber + ' \u00b7 ' +
+    state.matchScore[0] + '\u2013' + state.matchScore[1];
 }
 
 // ── Score changes ──────────────────────────────────────────
@@ -173,18 +208,24 @@ function applyDelta(playerIndex, delta) {
   state.undo  = { playerIndex: playerIndex, prevLore: prev };
   player.lore = next;
 
-  var entry = {
+  state.history.unshift({
     playerIndex: playerIndex,
     name:        player.name,
     delta:       next - prev,
     result:      next,
     seq:         ++state.seq,
-  };
-  state.history.unshift(entry);
+  });
   if (state.history.length > MAX_HISTORY) state.history.pop();
 
   updatePanel(playerIndex);
   renderHistory();
+
+  // Bo3 win detection: show prompt when first crossing WIN_LORE
+  if (state.matchFormat === 'bo3' && next >= WIN_LORE && prev < WIN_LORE && state.winPromptPlayer === null) {
+    state.winPromptPlayer = playerIndex;
+    showWinPrompt(playerIndex);
+  }
+
   saveState();
 }
 
@@ -193,23 +234,17 @@ function updatePanel(index) {
   var panel  = gameContainer.querySelector('.player-panel[data-index="' + index + '"]');
   if (!panel) return;
 
-  // Animate score
   var scoreEl = panel.querySelector('.score-display');
   scoreEl.textContent = player.lore;
   scoreEl.classList.remove('bump');
-  void scoreEl.offsetWidth; // force reflow
+  void scoreEl.offsetWidth;
   scoreEl.classList.add('bump');
 
-  // Win state
-  var wasWinner = panel.classList.contains('winner');
-  var isWinner  = player.lore >= WIN_LORE;
-  panel.classList.toggle('winner', isWinner);
+  panel.classList.toggle('winner', player.lore >= WIN_LORE);
 
-  // Keep win banner name in sync
   var banner = panel.querySelector('.win-banner');
-  if (banner) banner.textContent = '🏆 ' + player.name + ' wins!';
+  if (banner) banner.textContent = '\u2726 ' + player.name + ' wins! \u2726';
 
-  // Minus button
   panel.querySelector('.score-btn-minus').disabled = player.lore === 0;
 
   syncUndoBtn();
@@ -223,6 +258,12 @@ function doUndo() {
   state.players[playerIndex].lore = prevLore;
   state.history.shift();
   state.undo = null;
+
+  // If undo drops score below win threshold, clear win prompt so it can reappear
+  if (state.winPromptPlayer === playerIndex && prevLore < WIN_LORE) {
+    hideWinPrompt();
+  }
+
   updatePanel(playerIndex);
   renderHistory();
   saveState();
@@ -239,7 +280,7 @@ function startNameEdit(index) {
   var nameEl  = panel.querySelector('.player-name');
   var inputEl = panel.querySelector('.name-input');
   nameEl.style.display  = 'none';
-  inputEl.style.display = '';
+  inputEl.style.display = 'block';
   inputEl.focus();
   inputEl.select();
 }
@@ -252,14 +293,12 @@ function commitNameEdit(index) {
   var newName = inputEl.value.trim() || ('Player ' + (index + 1));
 
   state.players[index].name = newName;
-
   nameEl.textContent    = newName;
   inputEl.style.display = 'none';
   nameEl.style.display  = '';
 
-  // Update win banner
   var banner = panel.querySelector('.win-banner');
-  if (banner) banner.textContent = '🏆 ' + newName + ' wins!';
+  if (banner) banner.textContent = '\u2726 ' + newName + ' wins! \u2726';
 
   saveState();
 }
@@ -300,8 +339,8 @@ function resetConfirmBtns() {
   clearTimeout(newGameTimer);
   clearTimeout(clearTimer);
 
-  newGameBtn.textContent = 'New Game';
-  newGameBtn.className   = 'drawer-btn';
+  newGameBtn.textContent  = 'New Game';
+  newGameBtn.className    = 'drawer-btn';
   newGameBtn.dataset.step = '0';
 
   clearBtn.textContent   = 'Clear History';
@@ -313,9 +352,12 @@ function handleNewGame() {
   if (newGameBtn.dataset.step === '1') {
     clearTimeout(newGameTimer);
     closeHistory();
-    state.history = [];
-    state.undo    = null;
-    state.seq     = 0;
+    hideWinPrompt();
+    state.history    = [];
+    state.undo       = null;
+    state.seq        = 0;
+    state.gameNumber = 1;
+    state.matchScore = state.players.map(function() { return 0; });
     state.players.forEach(function(p) { p.lore = 0; });
     showSetup();
     return;
@@ -353,27 +395,66 @@ function handleClearHistory() {
   }, 4000);
 }
 
+// ── Win prompt (Bo3) ───────────────────────────────────────
+function showWinPrompt(playerIndex) {
+  var player       = state.players[playerIndex];
+  var newScore     = state.matchScore.slice();
+  newScore[playerIndex]++;
+  var isMatchOver  = newScore[playerIndex] >= 2;
+
+  winPromptTitle.textContent = '\u2726 ' + player.name + ' wins Game ' + state.gameNumber + '! \u2726';
+
+  if (isMatchOver) {
+    winPromptScore.textContent    = 'Match complete \u00b7 ' + newScore[0] + '\u2013' + newScore[1];
+    winPromptNext.style.display   = 'none';
+    winPromptDismiss.textContent  = 'Close';
+  } else {
+    winPromptScore.textContent    = 'Match \u00b7 ' + newScore[0] + '\u2013' + newScore[1];
+    winPromptNext.style.display   = '';
+    winPromptNext.textContent     = 'Start Game ' + (state.gameNumber + 1);
+    winPromptDismiss.textContent  = 'Not yet';
+  }
+
+  winPrompt.classList.add('open');
+}
+
+function hideWinPrompt() {
+  winPrompt.classList.remove('open');
+  state.winPromptPlayer = null;
+  // Reset button state for next time
+  winPromptNext.style.display  = '';
+  winPromptDismiss.textContent = 'Not yet';
+}
+
+function startNextGame() {
+  var playerIndex = state.winPromptPlayer;
+  state.matchScore[playerIndex]++;
+  state.gameNumber++;
+  state.players.forEach(function(p) { p.lore = 0; });
+  state.history = [];
+  state.undo    = null;
+  hideWinPrompt();
+  renderGame();
+  saveState();
+}
+
 // ── Orientation toggle ─────────────────────────────────────
 function toggleOrientation() {
   var cur  = state.orientation;
   var next = cur === 'auto' ? 'landscape' : cur === 'landscape' ? 'portrait' : 'auto';
   state.orientation = next;
   gameContainer.setAttribute('data-orientation', next);
+  updateRotateBtn();
   saveState();
 }
 
 // ── Event delegation: game container ──────────────────────
 gameContainer.addEventListener('click', function(e) {
-  // Score / quick-add buttons
   var btn = e.target.closest('[data-delta]');
   if (btn && btn.closest('#game-container')) {
-    var index = parseInt(btn.dataset.index, 10);
-    var delta = parseInt(btn.dataset.delta, 10);
-    applyDelta(index, delta);
+    applyDelta(parseInt(btn.dataset.index, 10), parseInt(btn.dataset.delta, 10));
     return;
   }
-
-  // Player name tap
   var nameEl = e.target.closest('.player-name');
   if (nameEl) {
     startNameEdit(parseInt(nameEl.dataset.index, 10));
@@ -381,26 +462,22 @@ gameContainer.addEventListener('click', function(e) {
   }
 });
 
-// Name input: commit on Enter
 gameContainer.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     var inp = e.target.closest('.name-input');
     if (inp) { e.preventDefault(); commitNameEdit(parseInt(inp.dataset.index, 10)); }
-  }
-});
-
-// Name input: commit on blur
-gameContainer.addEventListener('focusout', function(e) {
-  var inp = e.target.closest('.name-input');
-  if (inp) commitNameEdit(parseInt(inp.dataset.index, 10));
-});
-
-// Player name: keyboard activation
-gameContainer.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' || e.key === ' ') {
     var nameEl = e.target.closest('.player-name');
     if (nameEl) { e.preventDefault(); startNameEdit(parseInt(nameEl.dataset.index, 10)); }
   }
+  if (e.key === ' ') {
+    var nameEl = e.target.closest('.player-name');
+    if (nameEl) { e.preventDefault(); startNameEdit(parseInt(nameEl.dataset.index, 10)); }
+  }
+});
+
+gameContainer.addEventListener('focusout', function(e) {
+  var inp = e.target.closest('.name-input');
+  if (inp) commitNameEdit(parseInt(inp.dataset.index, 10));
 });
 
 // ── Setup listeners ────────────────────────────────────────
@@ -411,9 +488,14 @@ document.querySelectorAll('input[name="player-count"]').forEach(function(radio) 
   });
 });
 
+document.querySelectorAll('input[name="match-format"]').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    state.matchFormat = this.value;
+  });
+});
+
 document.getElementById('start-btn').addEventListener('click', startGame);
 
-// Allow Enter on setup card to start game
 document.getElementById('setup-screen').addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && e.target.tagName === 'INPUT') startGame();
 });
@@ -426,8 +508,47 @@ undoBtn.addEventListener('click', doUndo);
 newGameBtn.addEventListener('click', handleNewGame);
 clearBtn.addEventListener('click', handleClearHistory);
 
+winPromptNext.addEventListener('click', startNextGame);
+
+newGameQuick.addEventListener('click', function() {
+  if (newGameQuick.dataset.step === '1') {
+    clearTimeout(newGameQuickTimer);
+    newGameQuick.textContent  = 'New Game';
+    newGameQuick.className    = '';
+    newGameQuick.dataset.step = '0';
+    hideWinPrompt();
+    state.history    = [];
+    state.undo       = null;
+    state.seq        = 0;
+    state.gameNumber = 1;
+    state.matchScore = state.players.map(function() { return 0; });
+    state.players.forEach(function(p) { p.lore = 0; });
+    showSetup();
+    return;
+  }
+  newGameQuick.textContent  = 'Confirm?';
+  newGameQuick.className    = 'confirm';
+  newGameQuick.dataset.step = '1';
+  newGameQuickTimer = setTimeout(function() {
+    newGameQuick.textContent  = 'New Game';
+    newGameQuick.className    = '';
+    newGameQuick.dataset.step = '0';
+  }, 4000);
+});
+winPromptDismiss.addEventListener('click', function() {
+  winPrompt.classList.remove('open');
+  // Don't clear winPromptPlayer here — keep it set so undo can clear the prompt
+  // but DO prevent the prompt from auto-showing again for this crossing
+  // (it will only show again if score drops below 20 and crosses back up)
+});
+
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeHistory();
+  if (e.key === 'Escape') {
+    closeHistory();
+    if (winPrompt.classList.contains('open')) {
+      winPrompt.classList.remove('open');
+    }
+  }
 });
 
 // ── PWA Install prompt ─────────────────────────────────────

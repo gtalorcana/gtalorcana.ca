@@ -224,8 +224,8 @@ input.name-input {
 }
 
 .score-btn-minus {
-  width: 60px; height: 60px;
-  font-size: 1.8rem;
+  width: 72px; height: 72px;
+  font-size: 2rem;
   background: var(--surface2);
   color: var(--text-muted);
   border: 1px solid var(--border);
@@ -238,42 +238,14 @@ input.name-input {
 .score-btn-minus:disabled { opacity: .3; cursor: not-allowed; }
 
 .score-btn-plus {
-  width: 84px; height: 84px;
-  font-size: 2.4rem;
+  width: 72px; height: 72px;
+  font-size: 2rem;
   background: linear-gradient(135deg, var(--gold-dark), var(--gold));
   color: #0d0b14;
   box-shadow: 0 3px 20px rgba(212,168,67,0.4);
 }
 .score-btn-plus:hover { box-shadow: 0 5px 28px rgba(212,168,67,0.6); transform: scale(1.05); }
 .score-btn-plus:active { transform: scale(.94); box-shadow: 0 2px 12px rgba(212,168,67,0.3); }
-
-/* ── QUICK ADD BUTTONS ───────────────────────────────────── */
-.quick-btns {
-  display: flex;
-  gap: .4rem;
-}
-
-.quick-btn {
-  font-family: 'Cinzel', serif;
-  font-size: .72rem;
-  font-weight: 600;
-  letter-spacing: .06em;
-  min-width: 52px; min-height: 48px;
-  padding: .4rem .6rem;
-  background: var(--surface2);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  cursor: pointer;
-  transition: all .15s;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  display: flex; align-items: center; justify-content: center;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.quick-btn:hover { border-color: var(--gold); color: var(--gold); }
-.quick-btn:active { transform: scale(.93); }
 
 /* ── ROTATE BUTTON ───────────────────────────────────────── */
 #rotate-btn {
@@ -283,24 +255,27 @@ input.name-input {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 34px; height: 34px;
-  border-radius: 50%;
+  font-family: 'Cinzel', serif;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  border-radius: 999px;
+  padding: .5rem 1rem;
+  min-height: 36px;
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 1rem;
   cursor: pointer;
   align-items: center; justify-content: center;
-  transition: opacity .2s, border-color .2s, color .2s;
+  transition: border-color .2s, color .2s;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  opacity: .55;
 }
 body.game-active #rotate-btn {
   display: flex;
 }
-#rotate-btn:hover { opacity: 1; border-color: var(--gold); color: var(--gold); }
-#rotate-btn:active { transform: translate(-50%, -50%) scale(.9); }
+#rotate-btn:hover { border-color: var(--gold); color: var(--gold); }
+#rotate-btn:active { transform: translate(-50%, -50%) scale(.93); }
 
 /* In landscape: move rotate btn to bottom center */
 @media (orientation: landscape) {
@@ -310,8 +285,35 @@ body.game-active #rotate-btn {
     left: 50%;
     transform: translateX(-50%);
   }
-  #rotate-btn:active { transform: translateX(-50%) scale(.9); }
+  #rotate-btn:active { transform: translateX(-50%) scale(.93); }
 }
+
+/* ── NEW GAME QUICK BUTTON ───────────────────────────────── */
+#new-game-quick {
+  display: none;
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  left: calc(env(safe-area-inset-left) + 1rem);
+  z-index: 20;
+  font-family: 'Cinzel', serif;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .5rem 1rem;
+  min-height: 36px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+  touch-action: manipulation;
+  align-items: center; justify-content: center;
+}
+body.game-active #new-game-quick { display: flex; }
+#new-game-quick:hover { border-color: var(--gold); color: var(--gold); }
+#new-game-quick.confirm { color: var(--gold); border-color: var(--gold); background: rgba(212,168,67,.08); }
 
 /* ── HISTORY TOGGLE ──────────────────────────────────────── */
 #history-toggle {
@@ -321,18 +323,18 @@ body.game-active #rotate-btn {
   right: calc(env(safe-area-inset-right) + 1rem);
   z-index: 20;
   font-family: 'Cinzel', serif;
-  font-size: .68rem;
+  font-size: .72rem;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: .45rem .95rem;
+  padding: .5rem 1rem;
   min-height: 36px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all .2s;
+  transition: border-color .2s, color .2s;
   touch-action: manipulation;
   align-items: center; justify-content: center;
 }
@@ -485,6 +487,78 @@ body.game-active #history-toggle {
   font-style: italic;
 }
 
+/* ── MATCH STRIP (Bo3) ───────────────────────────────────── */
+.match-strip {
+  position: fixed;
+  top: env(safe-area-inset-top, 0);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  display: none;
+  font-family: 'Cinzel', serif;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(13,11,20,.8);
+  backdrop-filter: blur(10px);
+  padding: .3rem 1.1rem .35rem;
+  border-radius: 0 0 10px 10px;
+  white-space: nowrap;
+  border: 1px solid rgba(212,168,67,0.2);
+  border-top: none;
+}
+body.game-active .match-strip.active { display: block; }
+
+/* ── WIN PROMPT (Bo3) ────────────────────────────────────── */
+.win-prompt {
+  position: fixed; inset: 0;
+  z-index: 70;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(6px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.win-prompt.open { opacity: 1; pointer-events: auto; }
+
+.win-prompt-box {
+  background: var(--surface);
+  border: 1px solid var(--gold);
+  border-radius: 18px;
+  padding: 2rem 1.5rem 1.5rem;
+  text-align: center;
+  max-width: 300px; width: 100%;
+  box-shadow: 0 0 60px rgba(212,168,67,0.25);
+  display: flex; flex-direction: column; gap: .85rem;
+}
+
+.win-prompt-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(.9rem, 4vw, 1.1rem);
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--gold);
+  line-height: 1.4;
+}
+
+.win-prompt-score {
+  font-family: 'Cinzel', serif;
+  font-size: .72rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.win-prompt-next { margin-top: .25rem; }
+
+.win-prompt-dismiss {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center;
+}
+
 /* ── INSTALL BANNER ──────────────────────────────────────── */
 .install-banner {
   position: fixed;
@@ -521,8 +595,26 @@ body.game-active #history-toggle {
 /* ── RESPONSIVE TWEAKS ───────────────────────────────────── */
 @media (max-height: 560px) {
   /* Short screens: tighten up the panel */
-  .score-btn-plus { width: 70px; height: 70px; font-size: 2rem; }
-  .score-btn-minus { width: 50px; height: 50px; font-size: 1.5rem; }
+  .score-btn-plus, .score-btn-minus { width: 58px; height: 58px; font-size: 1.7rem; }
   .score-display { font-size: clamp(3rem, 13vw, 5rem); }
   .player-panel { gap: .4rem; }
+}
+
+@media (min-width: 768px) {
+  /* Desktop: larger controls */
+  #rotate-btn, #history-toggle, #new-game-quick {
+    font-size: .82rem;
+    padding: .6rem 1.25rem;
+    min-height: 42px;
+  }
+  .match-strip {
+    font-size: .82rem;
+    padding: .35rem 1.4rem .4rem;
+  }
+  .score-btn-plus, .score-btn-minus {
+    width: 96px; height: 96px;
+    font-size: 2.6rem;
+  }
+  .score-display { font-size: clamp(5rem, 12vw, 9rem); }
+  .drawer-btn { font-size: .75rem; min-height: 40px; padding: .45rem .85rem; }
 }

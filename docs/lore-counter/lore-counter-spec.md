@@ -106,7 +106,7 @@ Each player panel includes:
 - **Lore score** — large, prominent font
 - **[−1]** button — cannot go below 0
 - **[+1]** button — primary action, largest tap target
-- **Quick add: [+2] [+3] [+4]** — Lorcana quests give 1–4 lore
+- No quick-add buttons — rapid tapping `+` is sufficient; simpler UI preferred
 - **Win state** — when a player reaches 20 lore:
   - Panel gets a gold highlight
   - Small "🏆 Player X wins!" banner appears (non-blocking — no modal)

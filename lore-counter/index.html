@@ -67,6 +67,20 @@
       </div>
     </div>
 
+    <div id="match-format-field" class="field">
+      <label>Match Format</label>
+      <div class="radio-group">
+        <div class="radio-option">
+          <input type="radio" name="match-format" id="fmt-bo1" value="bo1" checked />
+          <label for="fmt-bo1">Bo1</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" name="match-format" id="fmt-bo3" value="bo3" />
+          <label for="fmt-bo3">Bo3</label>
+        </div>
+      </div>
+    </div>
+
     <hr class="divider" />
     <div class="card-title">Names</div>
 
@@ -88,7 +102,21 @@
 </div>
 
 <!-- ── Game UI Controls (fixed overlays) ────────────────── -->
-<button id="rotate-btn" aria-label="Toggle orientation" title="Toggle orientation">⟲</button>
+<button id="new-game-quick" aria-label="New Game">New Game</button>
+<button id="rotate-btn" aria-label="Toggle orientation">AUTO</button>
+
+<!-- ── Match Strip (Bo3 only) ───────────────────────────── -->
+<div class="match-strip" id="match-strip"></div>
+
+<!-- ── Win Prompt (Bo3 only) ────────────────────────────── -->
+<div class="win-prompt" id="win-prompt">
+  <div class="win-prompt-box">
+    <div class="win-prompt-title" id="win-prompt-title"></div>
+    <div class="win-prompt-score" id="win-prompt-score"></div>
+    <button class="btn btn-primary win-prompt-next" id="win-prompt-next">Start Game 2</button>
+    <button class="drawer-btn win-prompt-dismiss" id="win-prompt-dismiss">Not yet</button>
+  </div>
+</div>
 <button id="history-toggle" aria-haspopup="dialog">History</button>
 
 <!-- ── History Drawer ───────────────────────────────────── -->
