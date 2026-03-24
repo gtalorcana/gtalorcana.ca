@@ -497,7 +497,7 @@ function showInstallBanner() {
   if (isStandalone) return;
   if (isIOS) {
     installBanner.querySelector('.install-text strong').textContent = 'Add to Home Screen';
-    installBanner.querySelector('.install-text span').textContent   = 'Install as an app — works offline, no App Store needed.';
+    installBanner.querySelector('.install-text span').textContent   = 'Saves like a regular app — no App Store needed. Opens full screen and works offline.';
     installBanner.classList.add('visible');
   }
 }
