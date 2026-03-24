@@ -252,8 +252,9 @@ input.name-input {
 /* Portrait (default): float at the centre divider between panels */
 #game-pills {
   display: none;
-  position: fixed;
+  position: absolute;
   z-index: 20;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   flex-direction: column;

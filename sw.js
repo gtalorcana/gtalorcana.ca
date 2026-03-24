@@ -1,4 +1,4 @@
-const CACHE = 'lore-counter-20260324043149';
+const CACHE = 'lore-counter-20260324043526';
 
 const PRECACHE = [
   '/lore-counter/',
