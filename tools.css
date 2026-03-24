@@ -1,0 +1,154 @@
+/* ── tools.css ───────────────────────────────────────────────────────────────
+   Shared styles for all GTA Lorcana tool pages.
+   Load order: shared.css → tools.css → [tool-name].css
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ── PAGE LAYOUT ─────────────────────────────────────────── */
+main {
+  position: relative; z-index: 2;
+  padding: 6rem 1rem 3rem;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1.5rem;
+}
+
+.page-header { text-align: center; margin-bottom: .5rem; }
+.page-header h1 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  color: var(--heading);
+  letter-spacing: .06em;
+}
+.page-header p {
+  color: var(--text-muted); font-size: .9rem; margin-top: .4rem;
+}
+
+/* ── CARD ────────────────────────────────────────────────── */
+.card {
+  width: 100%; max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 0 40px var(--glow);
+}
+
+.card-title {
+  font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 1rem;
+}
+
+/* ── FORM ELEMENTS ───────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
+.field:last-child { margin-bottom: 0; }
+
+label {
+  font-family: 'Cinzel', serif; font-size: .72rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted);
+}
+
+input[type="text"],
+input[type="number"] {
+  font-family: 'Lora', serif; font-size: 16px; /* prevents iOS zoom */
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: .65rem .9rem; width: 100%;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+  min-height: 48px;
+  -webkit-appearance: none; appearance: none;
+}
+select {
+  font-family: 'Lora', serif; font-size: 16px;
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: .65rem .9rem; width: 100%;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+  min-height: 48px;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23d4a843' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right .9rem center;
+  padding-right: 2.5rem;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212,168,67,0.15);
+}
+input:disabled, select:disabled { opacity: .5; cursor: not-allowed; }
+
+.input-row { display: flex; gap: .6rem; }
+.input-row input { flex: 1; }
+
+/* ── BUTTONS ─────────────────────────────────────────────── */
+.btn {
+  font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  border: none; border-radius: 8px; cursor: pointer;
+  padding: .65rem 1.2rem; min-height: 48px;
+  transition: all .2s; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #0d0b14; width: 100%;
+  box-shadow: 0 2px 16px rgba(212,168,67,0.3);
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 24px rgba(212,168,67,0.5);
+  transform: translateY(-1px);
+}
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-secondary {
+  background: var(--surface2); color: var(--gold);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover:not(:disabled) { border-color: var(--gold); }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+
+/* ── RADIO GROUP ─────────────────────────────────────────── */
+.radio-group { display: flex; gap: .5rem; flex-wrap: wrap; }
+.radio-option { flex: 1; min-width: 80px; position: relative; }
+.radio-option input[type="radio"] { display: none; }
+.radio-option label {
+  display: flex; align-items: center; justify-content: center;
+  font-size: .78rem; padding: .55rem .4rem; min-height: 48px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+  transition: all .2s; text-transform: uppercase; letter-spacing: .08em;
+  text-align: center; line-height: 1.2;
+}
+.radio-option input:checked + label {
+  border-color: var(--gold); color: var(--gold);
+  background: rgba(212,168,67,0.1);
+  box-shadow: 0 0 0 2px rgba(212,168,67,0.2);
+}
+
+/* ── DIVIDER ─────────────────────────────────────────────── */
+.divider { border: none; border-top: 1px solid var(--border); margin: .75rem 0; }
+
+/* ── SPINNER ─────────────────────────────────────────────── */
+.spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid rgba(212,168,67,0.2);
+  border-top-color: var(--gold);
+  animation: spin .7s linear infinite;
+  margin: 1.5rem auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── ERROR ───────────────────────────────────────────────── */
+.error-msg {
+  background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+  border-radius: 8px; padding: .65rem .9rem;
+  font-size: .82rem; color: #ef4444; display: none;
+}
+.error-msg.visible { display: block; }
+
+/* ── SECTION LABEL ───────────────────────────────────────── */
+.section-label {
+  font-family: 'Cinzel', serif; font-size: .72rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }

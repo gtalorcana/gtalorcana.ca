@@ -1,0 +1,522 @@
+/* ── lore-counter.css ────────────────────────────────────────────────────────
+   Styles unique to the Lore Counter tool.
+   Depends on: shared.css, tools.css
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ── GAME MODE: suppress page chrome ────────────────────── */
+body.game-active nav,
+body.game-active > footer {
+  display: none;
+}
+body.game-active {
+  overflow: hidden;
+}
+
+/* ── GAME SCREEN ─────────────────────────────────────────── */
+#game-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  /* Respect notch/safe areas */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+body.game-active #game-screen {
+  display: block;
+}
+
+/* ── GAME CONTAINER ──────────────────────────────────────── */
+.game-container {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  /* 1px gap + container background = divider line */
+  gap: 1px;
+  background: var(--border);
+}
+
+/* 2-player portrait (default) */
+.game-container[data-players="2"] {
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 1fr;
+}
+
+/* 2-player landscape (auto) */
+@media (orientation: landscape) {
+  .game-container[data-players="2"]:not([data-orientation="portrait"]) {
+    grid-template-rows: 1fr;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* 2-player manual overrides */
+.game-container[data-players="2"][data-orientation="landscape"] {
+  grid-template-rows: 1fr !important;
+  grid-template-columns: 1fr 1fr !important;
+}
+.game-container[data-players="2"][data-orientation="portrait"] {
+  grid-template-rows: 1fr 1fr !important;
+  grid-template-columns: 1fr !important;
+}
+
+/* 3-player */
+.game-container[data-players="3"] {
+  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
+}
+@media (orientation: landscape) {
+  .game-container[data-players="3"]:not([data-orientation="portrait"]) {
+    grid-template-rows: 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+/* 4-player */
+.game-container[data-players="4"] {
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ── PORTRAIT ROTATION (2-player only) ───────────────────── */
+/* Top panel rotated so each player faces their own score */
+.game-container[data-players="2"] .player-panel[data-pos="top"] {
+  transform: rotate(180deg);
+}
+
+/* Landscape auto: no rotation */
+@media (orientation: landscape) {
+  .game-container[data-players="2"]:not([data-orientation="portrait"]) .player-panel[data-pos="top"] {
+    transform: none;
+  }
+}
+
+/* Manual overrides */
+.game-container[data-orientation="landscape"] .player-panel[data-pos="top"] {
+  transform: none !important;
+}
+.game-container[data-orientation="portrait"] .player-panel[data-pos="top"] {
+  transform: rotate(180deg) !important;
+}
+
+/* ── PLAYER PANEL ─────────────────────────────────────────── */
+.player-panel {
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+  transition: background .3s, box-shadow .3s;
+}
+
+/* Win state */
+.player-panel.winner {
+  background: var(--bg2);
+  box-shadow: inset 0 0 80px rgba(212,168,67,0.1);
+}
+
+/* ── PLAYER NAME ─────────────────────────────────────────── */
+.player-name {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(.78rem, 2.5vw, 1rem);
+  color: var(--text-muted);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: color .2s, border-color .2s;
+  padding: .2rem .4rem;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.player-name:hover,
+.player-name:focus { color: var(--gold); border-bottom-color: var(--gold); outline: none; }
+
+/* Override tools.css input styles for name inputs inside panels */
+input.name-input {
+  font-family: 'Lora', serif;
+  font-size: 16px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: .4rem .75rem;
+  min-height: auto;
+  width: min(220px, 80%);
+  outline: none;
+  text-align: center;
+  box-shadow: 0 0 0 3px rgba(212,168,67,0.15);
+  display: none;
+  transition: none;
+}
+
+/* ── WIN BANNER ──────────────────────────────────────────── */
+.win-banner {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(.65rem, 2vw, .85rem);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0;
+  transition: opacity .35s;
+  pointer-events: none;
+  text-align: center;
+}
+.player-panel.winner .win-banner {
+  opacity: 1;
+}
+
+/* ── SCORE DISPLAY ───────────────────────────────────────── */
+.score-display {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(4rem, 16vw, 7rem);
+  font-weight: 700;
+  color: var(--heading);
+  line-height: 1;
+  letter-spacing: -.02em;
+  text-align: center;
+  min-width: 2ch;
+  transition: color .3s;
+  /* bump animation applied via JS */
+  will-change: transform, opacity;
+}
+.score-display.bump {
+  animation: score-bump .15s ease-out;
+}
+@keyframes score-bump {
+  0%   { transform: scale(1);    opacity: 1; }
+  50%  { transform: scale(1.18); opacity: .65; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+.player-panel.winner .score-display {
+  color: var(--gold);
+}
+
+/* ── SCORE BUTTONS ───────────────────────────────────────── */
+.score-btns {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.score-btn {
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .12s, box-shadow .12s, opacity .2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.score-btn-minus {
+  width: 60px; height: 60px;
+  font-size: 1.8rem;
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.score-btn-minus:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.score-btn-minus:active:not(:disabled) { transform: scale(.92); }
+.score-btn-minus:disabled { opacity: .3; cursor: not-allowed; }
+
+.score-btn-plus {
+  width: 84px; height: 84px;
+  font-size: 2.4rem;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: #0d0b14;
+  box-shadow: 0 3px 20px rgba(212,168,67,0.4);
+}
+.score-btn-plus:hover { box-shadow: 0 5px 28px rgba(212,168,67,0.6); transform: scale(1.05); }
+.score-btn-plus:active { transform: scale(.94); box-shadow: 0 2px 12px rgba(212,168,67,0.3); }
+
+/* ── QUICK ADD BUTTONS ───────────────────────────────────── */
+.quick-btns {
+  display: flex;
+  gap: .4rem;
+}
+
+.quick-btn {
+  font-family: 'Cinzel', serif;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  min-width: 52px; min-height: 48px;
+  padding: .4rem .6rem;
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all .15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.quick-btn:hover { border-color: var(--gold); color: var(--gold); }
+.quick-btn:active { transform: scale(.93); }
+
+/* ── ROTATE BUTTON ───────────────────────────────────────── */
+#rotate-btn {
+  display: none;
+  position: fixed;
+  z-index: 20;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  align-items: center; justify-content: center;
+  transition: opacity .2s, border-color .2s, color .2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  opacity: .55;
+}
+body.game-active #rotate-btn {
+  display: flex;
+}
+#rotate-btn:hover { opacity: 1; border-color: var(--gold); color: var(--gold); }
+#rotate-btn:active { transform: translate(-50%, -50%) scale(.9); }
+
+/* In landscape: move rotate btn to bottom center */
+@media (orientation: landscape) {
+  #rotate-btn {
+    top: auto;
+    bottom: calc(env(safe-area-inset-bottom) + .75rem);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  #rotate-btn:active { transform: translateX(-50%) scale(.9); }
+}
+
+/* ── HISTORY TOGGLE ──────────────────────────────────────── */
+#history-toggle {
+  display: none;
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  right: calc(env(safe-area-inset-right) + 1rem);
+  z-index: 20;
+  font-family: 'Cinzel', serif;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .45rem .95rem;
+  min-height: 36px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .2s;
+  touch-action: manipulation;
+  align-items: center; justify-content: center;
+}
+body.game-active #history-toggle {
+  display: flex;
+}
+#history-toggle:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── HISTORY OVERLAY ─────────────────────────────────────── */
+.history-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 40;
+  backdrop-filter: blur(2px);
+}
+.history-overlay.open { display: block; }
+
+/* ── HISTORY DRAWER ──────────────────────────────────────── */
+.history-drawer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 50;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-radius: 18px 18px 0 0;
+  padding: 0 1.25rem;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem);
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  max-height: 72vh;
+  display: flex;
+  flex-direction: column;
+}
+.history-drawer.open { transform: translateY(0); }
+
+.drawer-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: .85rem auto .4rem;
+  flex-shrink: 0;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .5rem 0 .75rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.drawer-title {
+  font-family: 'Cinzel', serif;
+  font-size: .8rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold);
+}
+
+.drawer-actions {
+  display: flex;
+  gap: .4rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ── DRAWER BUTTONS ──────────────────────────────────────── */
+.drawer-btn {
+  font-family: 'Cinzel', serif;
+  font-size: .65rem; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: .35rem .65rem;
+  min-height: 36px;
+  background: var(--surface2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.drawer-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+.drawer-btn:disabled { opacity: .35; cursor: not-allowed; }
+.drawer-btn.danger { color: #ef4444; border-color: rgba(239,68,68,.3); }
+.drawer-btn.danger:hover { border-color: #ef4444; background: rgba(239,68,68,.08); }
+.drawer-btn.confirm { color: var(--gold); border-color: var(--gold); background: rgba(212,168,67,.08); }
+
+/* ── HISTORY LIST ────────────────────────────────────────── */
+.history-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: .35rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.history-entry {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .45rem .1rem;
+  border-bottom: 1px solid var(--border);
+}
+.history-entry:last-child { border-bottom: none; }
+
+.he-seq {
+  font-family: 'Cinzel', serif;
+  font-size: .65rem;
+  color: var(--text-muted);
+  opacity: .5;
+  min-width: 1.5rem;
+  flex-shrink: 0;
+}
+.he-player {
+  font-family: 'Cinzel', serif;
+  font-size: .75rem;
+  color: var(--text-muted);
+  letter-spacing: .05em;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.he-delta {
+  font-family: 'Lora', serif;
+  font-size: .88rem;
+  font-weight: 500;
+  color: var(--gold);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.he-delta.neg { color: var(--text-muted); }
+.he-result {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: .9rem;
+  color: var(--heading);
+  min-width: 2ch;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: .85rem;
+  padding: 2.5rem 0;
+  font-style: italic;
+}
+
+/* ── INSTALL BANNER ──────────────────────────────────────── */
+.install-banner {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 4.5rem);
+  left: 1rem; right: 1rem;
+  z-index: 60;
+  background: var(--surface);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: .9rem 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  box-shadow: 0 4px 24px rgba(212,168,67,0.2);
+  transform: translateY(140%);
+  transition: transform .35s cubic-bezier(.4,0,.2,1);
+}
+.install-banner.visible { transform: translateY(0); }
+.install-text {
+  font-family: 'Lora', serif;
+  font-size: .82rem;
+  color: var(--text);
+  flex: 1;
+}
+.install-actions { display: flex; gap: .4rem; flex-shrink: 0; }
+
+/* ── RESPONSIVE TWEAKS ───────────────────────────────────── */
+@media (max-height: 560px) {
+  /* Short screens: tighten up the panel */
+  .score-btn-plus { width: 70px; height: 70px; font-size: 2rem; }
+  .score-btn-minus { width: 50px; height: 50px; font-size: 1.5rem; }
+  .score-display { font-size: clamp(3rem, 13vw, 5rem); }
+  .player-panel { gap: .4rem; }
+}

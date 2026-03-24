@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Lore Counter" />
+  <meta name="theme-color" content="#d4a843" />
+  <meta property="og:title" content="Lore Counter — GTA Lorcana" />
+  <meta property="og:description" content="Track lore scores during your Disney Lorcana game." />
+  <meta property="og:image" content="https://www.gtalorcana.ca/gtalorcana-logo.svg" />
+  <title>Lore Counter — GTA Lorcana</title>
+  <link rel="icon" type="image/svg+xml" href="/gtalorcana-logo.svg" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/shared.css" />
+  <link rel="stylesheet" href="/tools.css" />
+  <link rel="stylesheet" href="/lore-counter/lore-counter.css" />
+</head>
+<body>
+
+<a href="#setup-screen" class="skip-nav">Skip to content</a>
+<div id="stars"></div>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <img src="/gtalorcana-logo.svg" alt="GTA Lorcana" onerror="this.style.display='none'" />
+    <span class="nav-title">GTA Lorcana</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-back" href="/">← Home</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-label">Light</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Setup Screen ─────────────────────────────────────── -->
+<main id="setup-screen">
+  <div class="page-header">
+    <h1>Lore Counter</h1>
+    <p>Track your Disney Lorcana scores</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Players</div>
+    <div class="field">
+      <label>Number of players</label>
+      <div class="radio-group">
+        <div class="radio-option">
+          <input type="radio" name="player-count" id="count-2" value="2" checked />
+          <label for="count-2">2</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" name="player-count" id="count-3" value="3" />
+          <label for="count-3">3</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" name="player-count" id="count-4" value="4" />
+          <label for="count-4">4</label>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+    <div class="card-title">Names</div>
+
+    <div id="player-names">
+      <!-- Rendered by lore-counter.js -->
+    </div>
+
+    <hr class="divider" />
+
+    <button class="btn btn-primary" id="start-btn">Start Game</button>
+  </div>
+</main>
+
+<!-- ── Game Screen ──────────────────────────────────────── -->
+<div id="game-screen" aria-label="Lore Counter game" role="main">
+  <div class="game-container" id="game-container" data-players="2" data-orientation="auto">
+    <!-- Player panels rendered by lore-counter.js -->
+  </div>
+</div>
+
+<!-- ── Game UI Controls (fixed overlays) ────────────────── -->
+<button id="rotate-btn" aria-label="Toggle orientation" title="Toggle orientation">⟲</button>
+<button id="history-toggle" aria-haspopup="dialog">History</button>
+
+<!-- ── History Drawer ───────────────────────────────────── -->
+<div class="history-overlay" id="history-overlay" aria-hidden="true"></div>
+<div class="history-drawer" id="history-drawer" role="dialog" aria-modal="true" aria-label="Game history">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <span class="drawer-title">History</span>
+    <div class="drawer-actions">
+      <button class="drawer-btn" id="undo-btn" disabled>Undo</button>
+      <button class="drawer-btn" id="clear-btn" data-step="0">Clear History</button>
+      <button class="drawer-btn" id="new-game-btn" data-step="0">New Game</button>
+    </div>
+  </div>
+  <div class="history-list" id="history-list" aria-live="polite"></div>
+</div>
+
+<!-- ── PWA Install Banner ───────────────────────────────── -->
+<div class="install-banner" id="install-banner" role="alert">
+  <span class="install-text">Add to your home screen for offline play</span>
+  <div class="install-actions">
+    <button class="drawer-btn" id="install-dismiss">Dismiss</button>
+    <button class="drawer-btn confirm" id="install-btn">Install</button>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">GTA Lorcana</div>
+  <p>Greater Toronto Area's Disney Lorcana Community</p>
+  <p style="margin-top:.5rem">
+    <a href="https://discord.gg/sNyzVMnTs6" target="_blank" rel="noopener">Discord</a>
+    &nbsp;·&nbsp;
+    <a href="https://www.disneylorcana.com" target="_blank" rel="noopener">Disney Lorcana Official</a>
+  </p>
+  <p style="margin-top:1rem;">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger's Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
+</footer>
+
+<script src="/shared.js"></script>
+<script src="/lore-counter/lore-counter.js"></script>
+</body>
+</html>
