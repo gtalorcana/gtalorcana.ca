@@ -131,6 +131,10 @@ body.game-active #game-screen {
 .player-name:focus { color: var(--gold); border-bottom-color: var(--gold); outline: none; }
 
 /* Override tools.css input styles for name inputs inside panels */
+input[type="search"].name-input,
+input[type="search"].name-input::-webkit-search-decoration,
+input[type="search"].name-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
 input.name-input {
   font-family: 'Lora', serif;
   font-size: 16px;
