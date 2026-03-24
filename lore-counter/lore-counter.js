@@ -497,7 +497,8 @@ function showInstallBanner() {
   if (isStandalone) return;
   if (isIOS) {
     installBanner.querySelector('.install-text strong').textContent = 'Add to Home Screen';
-    installBanner.querySelector('.install-text span').textContent   = 'Tap the share icon (⬆) in your browser, then "Add to Home Screen". Works offline, no App Store needed.';
+    installBanner.querySelector('.install-text span').innerHTML =
+      'Tap <svg width="13" height="16" viewBox="0 0 13 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin:0 2px"><line x1="6.5" y1="0" x2="6.5" y2="9"/><polyline points="3,3.5 6.5,0 10,3.5"/><path d="M1,7 L1,15 L12,15 L12,7"/></svg> in your browser, then \u201cAdd to Home Screen\u201d. Works offline, no App Store needed.';
     installBtn.style.display = 'none';
     installBanner.classList.add('visible');
   }
