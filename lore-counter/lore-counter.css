@@ -248,6 +248,8 @@ input.name-input {
   flex-direction: column;
   gap: .4rem;
   align-items: center;
+  user-select: none;
+  -webkit-user-select: none;
 }
 body.game-active #game-pills { display: flex; }
 
