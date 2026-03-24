@@ -305,7 +305,8 @@ function renderHistory(animate) {
 
     entries.forEach(function(e, idx) {
       var isLatest = idx === entries.length - 1;
-      var cls = 'ph-entry' + (e.delta < 0 ? ' ph-neg' : '') + (isLatest ? '' : ' ph-old');
+      if (isLatest) return; // current score is already shown as the big number
+      var cls = 'ph-entry ph-old' + (e.delta < 0 ? ' ph-neg' : '');
       var span = el.querySelector('.ph-entry[data-seq="' + e.seq + '"]');
       if (span) {
         // Update class in-place so opacity transition fires for newly-old entries
