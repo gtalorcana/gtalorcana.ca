@@ -60,6 +60,23 @@ gameScreen.addEventListener('touchmove', function(e) {
   if (e.touches.length > 1) e.preventDefault();
 }, { passive: false });
 
+// ── Screen Wake Lock ───────────────────────────────────────
+var wakeLock = null;
+function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  navigator.wakeLock.request('screen').then(function(lock) {
+    wakeLock = lock;
+    lock.addEventListener('release', function() { wakeLock = null; });
+  }).catch(function() {});
+}
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+// Re-acquire after tab becomes visible again (lock releases automatically on hide)
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && state.screen === 'game') requestWakeLock();
+});
+
 // ── Two-step confirm timers ────────────────────────────────
 let newGameQuickTimer = null;
 
@@ -82,6 +99,7 @@ function escAttr(s) {
 // ── Screen switching ───────────────────────────────────────
 function showSetup() {
   state.screen = 'setup';
+  releaseWakeLock();
   document.body.classList.remove('game-active');
   setupScreen.style.display = '';
   saveState();
@@ -92,6 +110,7 @@ function showSetup() {
 
 function showGame() {
   state.screen = 'game';
+  requestWakeLock();
   document.body.classList.add('game-active');
   setupScreen.style.display = 'none';
   saveState();
