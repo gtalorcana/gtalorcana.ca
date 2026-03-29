@@ -444,6 +444,7 @@ async function handleAnalyze(request, origin, ctx) {
       current_points: effectivePoints(s),
       max_possible_points: maxPossiblePoints(s),
       tiebreaker_vs_you: 'unknown',
+      match_done: matchDone.has(s.player?.id) || undefined,
       dropped: isDropped(s) || undefined,
     })).sort((a, b) => b.max_possible_points - a.max_possible_points);
     return jsonResponse(response, 200, origin);
@@ -556,6 +557,7 @@ async function handleAnalyze(request, origin, ctx) {
         gw_pct: gwByPlayer[pid] ?? 0.33,
         ogw_pct: theirOgw,
         tiebreaker_vs_you: tiebreakerVsYou,
+        match_done: matchDone.has(pid) || undefined,
         dropped: isDropped(s) || undefined,
       };
       return entry;
