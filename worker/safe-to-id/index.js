@@ -228,6 +228,7 @@ async function handleAnalyze(request, origin, ctx) {
   // Determine which round's standings to use and what currentRound is
   let standingsRoundId;
   let currentRound;
+  let standingsRoundNumber;  // the round the standings actually reflect
   let roundsForMatches;
 
   if (override_round_id) {
@@ -235,6 +236,7 @@ async function handleAnalyze(request, origin, ctx) {
     if (!overrideRound) return errResponse('override_round_id not found in event rounds', 400, origin);
     standingsRoundId = override_round_id;
     currentRound = overrideRound.round_number;
+    standingsRoundNumber = overrideRound.round_number;
     roundsForMatches = rounds.filter(r => r.round_number <= overrideRound.round_number);
   } else {
     const inProgress = rounds.find(r => r.status !== 'COMPLETE');
@@ -243,6 +245,7 @@ async function handleAnalyze(request, origin, ctx) {
       : rounds.length > 0 ? rounds[rounds.length - 1].round_number : 1;
     const lastCompleted = completedRounds[completedRounds.length - 1];
     standingsRoundId = lastCompleted.id;
+    standingsRoundNumber = lastCompleted.round_number;
     roundsForMatches = completedRounds;
   }
 
@@ -276,7 +279,11 @@ async function handleAnalyze(request, origin, ctx) {
   );
   const isDropped = s => droppedPlayerIds.has(s.player?.id);
 
-  const roundsRemaining = Math.max(0, total_swiss_rounds - currentRound);
+  // Use standingsRoundNumber (last completed round) so that roundsRemaining
+  // reflects how many rounds of play remain from the standings' perspective.
+  // Previously this used currentRound, which under-counted by 1 whenever a
+  // round was in-progress (standings from round N, currentRound = N+1).
+  const roundsRemaining = Math.max(0, total_swiss_rounds - standingsRoundNumber);
   const pointsIfIdOne = currentPoints + 1;
   const pointsIfIdTwo = currentPoints + 2;
 
