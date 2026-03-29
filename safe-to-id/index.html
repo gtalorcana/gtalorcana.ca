@@ -729,7 +729,7 @@
     if (d.depth === 'full') {
       fpSection.style.display = 'block';
       if (d.simulation) {
-        renderFullPlus(d.simulation, d.top_cut);
+        renderFullPlus(d.simulation, d.top_cut, d.rounds_remaining);
       } else {
         document.getElementById('simProgress').style.display = 'none';
         document.getElementById('simFooter').style.display = 'none';
@@ -743,7 +743,7 @@
     document.getElementById('result').classList.add('visible');
   }
 
-  function renderFullPlus(fp, topCut) {
+  function renderFullPlus(fp, topCut, roundsRemaining) {
     // Progress bar
     const totalMatches = (fp.known_results ?? 0) + (fp.unknown_results ?? 0);
     const simProgress = document.getElementById('simProgress');
@@ -779,6 +779,11 @@
       <div class="sim-stat"><span class="sim-key">Best case</span><span class="sim-val highlight">Rank ${fp.best_rank ?? '—'}</span></div>
       <div class="sim-stat"><span class="sim-key">Worst case</span><span class="sim-val">Rank ${fp.worst_rank ?? '—'}</span></div>
     `;
+
+    if (roundsRemaining > 1) {
+      const simRound = fp.simulated_round ?? '?';
+      html += `<div class="sim-stat"><span class="sim-key" style="color:#f59e0b;font-style:italic;">⚠ Simulation covers round ${simRound} only — ${roundsRemaining - 1} more round${roundsRemaining > 2 ? 's' : ''} not simulated</span></div>`;
+    }
 
     if (isMC && fp.unknown_results) {
       html += `<div class="sim-stat"><span class="sim-key" style="color:var(--text-muted);font-style:italic;">${fp.unknown_results} matches still in play — too many to check exhaustively</span></div>`;

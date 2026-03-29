@@ -857,5 +857,6 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     unknown_results: N,
     best_scenario: isExhaustive ? bestScenario : null,
     worst_scenario: isExhaustive ? worstScenario : null,
+    simulated_round: currentRound,
   };
 }
