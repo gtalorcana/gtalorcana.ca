@@ -385,12 +385,12 @@
         </div>
       </div>
       <div id="fullPlusBody"></div>
-      <div class="sim-footer" id="simFooter" style="display:none;">
-        <span class="staleness" id="stalenessEl"></span>
-        <button class="btn-refresh" onclick="refreshAnalysis()">🔄 Refresh</button>
-      </div>
     </div>
 
+    <div class="sim-footer" id="simFooter" style="display:none;">
+      <span class="staleness" id="stalenessEl"></span>
+      <button class="btn-refresh" onclick="refreshAnalysis()">🔄 Refresh</button>
+    </div>
     <hr class="divider" style="margin-top: 1rem;" />
     <button class="btn btn-secondary" style="width:100%;" onclick="resetForm()">
       Start Over
@@ -724,7 +724,7 @@
       caveatEl.style.display = 'none';
     }
 
-    // Simulation section (Full mode)
+    // Simulation section (Full mode, final round only)
     const fpSection = document.getElementById('fullPlusSection');
     if (d.depth === 'full' && d.simulation) {
       fpSection.style.display = 'block';
@@ -732,6 +732,10 @@
     } else {
       fpSection.style.display = 'none';
     }
+
+    // Refresh + staleness footer (always visible with results)
+    document.getElementById('simFooter').style.display = 'flex';
+    startStalenessTimer();
 
     document.getElementById('result').classList.add('visible');
   }
@@ -749,10 +753,6 @@
     } else {
       simProgress.style.display = 'none';
     }
-
-    // Staleness + refresh footer
-    document.getElementById('simFooter').style.display = 'flex';
-    startStalenessTimer();
 
     const isMC = fp.simulation_mode === 'monte_carlo';
     const pct = fp.makes_cut_pct;
