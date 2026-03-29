@@ -279,20 +279,107 @@ async function handleAnalyze(request, origin, ctx) {
   );
   const isDropped = s => droppedPlayerIds.has(s.player?.id);
 
-  // Use standingsRoundNumber (last completed round) so that roundsRemaining
-  // reflects how many rounds of play remain from the standings' perspective.
-  // Previously this used currentRound, which under-counted by 1 whenever a
-  // round was in-progress (standings from round N, currentRound = N+1).
-  const roundsRemaining = Math.max(0, total_swiss_rounds - standingsRoundNumber);
-  const pointsIfIdOne = currentPoints + 1;
-  const pointsIfIdTwo = currentPoints + 2;
+  // ── Incorporate known current-round results ──────────────────────────────
+  // Standings are from the last completed round.  When a round is in-progress,
+  // some matches are already done — incorporate those results so the danger
+  // count reflects reality (e.g. a player who already lost can't reach as
+  // high a point total).
+
+  // Fetch current-round pairings (if available) to adjust points
+  let currentPairingsRoundId;
+  if (override_current_pairings_round_id) {
+    currentPairingsRoundId = override_current_pairings_round_id;
+  } else if (override_round_id) {
+    const overrideRound = rounds.find(r => r.id === override_round_id);
+    const nextRound = rounds.find(r => r.round_number === overrideRound.round_number + 1);
+    currentPairingsRoundId = nextRound?.id ?? null;
+  } else {
+    const inProgressRound = rounds.find(r => r.status !== 'COMPLETE');
+    currentPairingsRoundId = inProgressRound?.id ?? null;
+  }
+
+  let currentPairings = null;
+  let pairingMatches = [];
+  if (currentPairingsRoundId) {
+    try {
+      currentPairings = override_current_pairings_round_id
+        ? await rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`)
+        : await fetchWithCache(
+            `matches:current:${currentPairingsRoundId}`,
+            () => rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`),
+            ctx
+          );
+      pairingMatches = currentPairings?.matches ?? currentPairings?.results ?? [];
+    } catch {
+      // Pairings unavailable — proceed without adjustments
+    }
+  }
+
+  // Build per-player point deltas and track who has completed their current match
+  const pointDeltas = {};
+  const matchDone = new Set();
+
+  for (const m of pairingMatches) {
+    const players = m.players ?? [];
+
+    if (m.match_is_bye) {
+      const pid = players[0];
+      if (pid != null) {
+        pointDeltas[pid] = (pointDeltas[pid] ?? 0) + 3;
+        matchDone.add(pid);
+      }
+      continue;
+    }
+
+    if (players.length < 2) continue;
+    const [p1, p2] = players;
+
+    const isComplete = m.status === 'COMPLETE'
+      || m.match_is_intentional_draw === true
+      || m.match_is_unintentional_draw === true
+      || m.winning_player != null;
+
+    if (!isComplete) continue;
+
+    matchDone.add(p1);
+    matchDone.add(p2);
+
+    if (m.match_is_intentional_draw || m.match_is_unintentional_draw) {
+      pointDeltas[p1] = (pointDeltas[p1] ?? 0) + 1;
+      pointDeltas[p2] = (pointDeltas[p2] ?? 0) + 1;
+    } else {
+      const winner = m.winning_player;
+      pointDeltas[winner] = (pointDeltas[winner] ?? 0) + 3;
+      // loser gets 0
+    }
+  }
+
+  // Per-player effective points and max possible points
+  function effectivePoints(s) {
+    const pid = s.player?.id;
+    return (s.points ?? 0) + (pointDeltas[pid] ?? 0);
+  }
+
+  function maxPossiblePoints(s) {
+    const pid = s.player?.id;
+    const pts = effectivePoints(s);
+    const played = standingsRoundNumber + (matchDone.has(pid) ? 1 : 0);
+    return pts + Math.max(0, total_swiss_rounds - played) * 3;
+  }
+
+  // Target player's effective state
+  const adjustedPoints = effectivePoints(myStanding);
+  const targetPlayed = standingsRoundNumber + (matchDone.has(player_id) ? 1 : 0);
+  const roundsRemaining = Math.max(0, total_swiss_rounds - targetPlayed);
+  const pointsIfIdOne = adjustedPoints + 1;
+  const pointsIfIdTwo = adjustedPoints + 2;
 
   // Handle all-players-advance edge case
   if (playerCount > 0 && playerCount <= top_cut) {
     const response = {
       player_name: playerName,
       current_record: record,
-      current_points: currentPoints,
+      current_points: adjustedPoints,
       rounds_remaining: roundsRemaining,
       top_cut,
       depth,
@@ -314,11 +401,9 @@ async function handleAnalyze(request, origin, ctx) {
   function computeScenario(pointsIfId) {
     // canCatch includes dropped players so they still appear in the danger list
     // (with dropped: true), but danger_count only counts active players.
-    const canCatch = otherStandings.filter(s =>
-      (s.points ?? 0) + roundsRemaining * 3 >= pointsIfId
-    );
+    const canCatch = otherStandings.filter(s => maxPossiblePoints(s) >= pointsIfId);
     const activeCanCatch = canCatch.filter(s => !isDropped(s));
-    const alreadyAbove = activeCanCatch.filter(s => (s.points ?? 0) > pointsIfId).length;
+    const alreadyAbove = activeCanCatch.filter(s => effectivePoints(s) > pointsIfId).length;
     const dangerCount = activeCanCatch.length - alreadyAbove;
     let verdict;
     if (dangerCount < top_cut) verdict = 'safe';
@@ -333,7 +418,7 @@ async function handleAnalyze(request, origin, ctx) {
   const response = {
     player_name: playerName,
     current_record: record,
-    current_points: currentPoints,
+    current_points: adjustedPoints,
     rounds_remaining: roundsRemaining,
     top_cut,
     depth,
@@ -356,8 +441,8 @@ async function handleAnalyze(request, origin, ctx) {
   if (depth === 'simple') {
     response.danger_players = oneRound.canCatch.map(s => ({
       name: s.user_event_status?.best_identifier ?? `Player ${s.player?.id}`,
-      current_points: s.points ?? 0,
-      max_possible_points: (s.points ?? 0) + roundsRemaining * 3,
+      current_points: effectivePoints(s),
+      max_possible_points: maxPossiblePoints(s),
       tiebreaker_vs_you: 'unknown',
       dropped: isDropped(s) || undefined,
     })).sort((a, b) => b.max_possible_points - a.max_possible_points);
@@ -450,8 +535,6 @@ async function handleAnalyze(request, origin, ctx) {
       const pid = s.player?.id;
       const theirOmw = s.opponent_match_win_percentage ?? 0;
       const theirOgw = s.opponent_game_win_percentage ?? 0;
-      const maxPossible = (s.points ?? 0) + roundsRemaining * 3;
-
       const myGw = gwByPlayer[player_id] ?? 0.33;
       const theirGw = gwByPlayer[pid] ?? 0.33;
       let tiebreakerVsYou;
@@ -467,8 +550,8 @@ async function handleAnalyze(request, origin, ctx) {
 
       const entry = {
         name: s.user_event_status?.best_identifier ?? `Player ${pid}`,
-        current_points: s.points ?? 0,
-        max_possible_points: maxPossible,
+        current_points: effectivePoints(s),
+        max_possible_points: maxPossiblePoints(s),
         omw_pct: theirOmw,
         gw_pct: gwByPlayer[pid] ?? 0.33,
         ogw_pct: theirOgw,
@@ -486,54 +569,20 @@ async function handleAnalyze(request, origin, ctx) {
   response.caveat = 'Tiebreakers will shift as the current round completes.';
 
   // ── Full: attempt pairing simulation ─────────────────────────────────────
-
-  // Determine which round to use for current pairings
-  let currentPairingsRoundId;
-  if (override_current_pairings_round_id) {
-    currentPairingsRoundId = override_current_pairings_round_id;
-  } else if (override_round_id) {
-    const overrideRound = rounds.find(r => r.id === override_round_id);
-    const nextRound = rounds.find(r => r.round_number === overrideRound.round_number + 1);
-    currentPairingsRoundId = nextRound?.id ?? null;
-  } else {
-    const inProgressRound = rounds.find(r => r.status !== 'COMPLETE');
-    currentPairingsRoundId = inProgressRound?.id ?? null;
-  }
-
-  if (!currentPairingsRoundId) {
-    response.pairings_available = false;
-    return jsonResponse(response, 200, origin);
-  }
-
-  // Fetch current round pairings
-  let currentPairings;
-  try {
-    currentPairings = override_current_pairings_round_id
-      ? await rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`)
-      : await fetchWithCache(
-          `matches:current:${currentPairingsRoundId}`,
-          () => rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`),
-          ctx
-        );
-  } catch (e) {
-    return errResponse(`RPH API error fetching current pairings: ${e.message}`, 502, origin);
-  }
-
-  const pairingMatches = currentPairings.matches ?? currentPairings.results ?? [];
-  if (pairingMatches.length === 0) {
-    response.pairings_available = false;
-    return jsonResponse(response, 200, origin);
-  }
+  // Pairings were already fetched above for point adjustments; reuse them.
 
   // Enrich GW% with known current-round match results before simulation.
-  // Unknown matches can't be helped, but completed ones should be included so
-  // GW% tiebreakers are accurate when players are OMW%-tied.
-  if (depth === 'full') {
+  if (depth === 'full' && pairingMatches.length > 0) {
     for (const match of pairingMatches) {
       applyGameData(match);
     }
     recomputeGwByPlayer();
     response.your_tiebreakers.gw_pct = gwByPlayer[player_id] ?? 0.33;
+  }
+
+  if (!currentPairings || pairingMatches.length === 0) {
+    response.pairings_available = false;
+    return jsonResponse(response, 200, origin);
   }
 
   // Only run simulation when this is the last round — we can't simulate
