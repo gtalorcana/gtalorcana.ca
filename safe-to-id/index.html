@@ -668,7 +668,7 @@
   function renderResult(d) {
     document.getElementById('resName').textContent = d.player_name;
     document.getElementById('resRecord').textContent =
-      `${d.current_record} · ${d.current_points} pts · ${d.rounds_remaining} round(s) remaining`;
+      `${d.current_points} pts · ${d.rounds_remaining} round${d.rounds_remaining !== 1 ? 's' : ''} remaining`;
 
     renderVerdict('verdict1Badge', 'verdict1Detail', d.id_one_round, d.top_cut);
     const v2block = document.getElementById('verdict2Block');
