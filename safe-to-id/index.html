@@ -346,14 +346,14 @@
 
     <!-- ID one round -->
     <div class="verdict-block">
-      <div class="verdict-label">ID this round</div>
+      <div class="verdict-label" id="verdict1Label">ID this round</div>
       <div class="verdict-badge" id="verdict1Badge">—</div>
       <div class="verdict-detail" id="verdict1Detail">—</div>
     </div>
 
     <!-- ID two rounds -->
     <div class="verdict-block" id="verdict2Block">
-      <div class="verdict-label">ID this AND next round</div>
+      <div class="verdict-label" id="verdict2Label">ID this AND next round</div>
       <div class="verdict-badge" id="verdict2Badge">—</div>
       <div class="verdict-detail" id="verdict2Detail">—</div>
     </div>
@@ -669,6 +669,15 @@
     document.getElementById('resName').textContent = d.player_name;
     document.getElementById('resRecord').textContent =
       `${d.current_points} pts · ${d.rounds_remaining} round${d.rounds_remaining !== 1 ? 's' : ''} remaining`;
+
+    // Update labels based on whether target's current match is done
+    if (d.target_match_done) {
+      document.getElementById('verdict1Label').textContent = 'ID next round';
+      document.getElementById('verdict2Label').textContent = 'ID next 2 rounds';
+    } else {
+      document.getElementById('verdict1Label').textContent = 'ID this round';
+      document.getElementById('verdict2Label').textContent = 'ID this AND next round';
+    }
 
     renderVerdict('verdict1Badge', 'verdict1Detail', d.id_one_round, d.top_cut);
     const v2block = document.getElementById('verdict2Block');

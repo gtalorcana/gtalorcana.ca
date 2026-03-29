@@ -415,11 +415,14 @@ async function handleAnalyze(request, origin, ctx) {
   const oneRound = computeScenario(pointsIfIdOne);
   const twoRounds = roundsRemaining > 1 ? computeScenario(pointsIfIdTwo) : null;
 
+  const targetMatchDone = matchDone.has(player_id);
+
   const response = {
     player_name: playerName,
     current_record: record,
     current_points: adjustedPoints,
     rounds_remaining: roundsRemaining,
+    target_match_done: targetMatchDone || undefined,
     top_cut,
     depth,
     all_players_advance: false,
