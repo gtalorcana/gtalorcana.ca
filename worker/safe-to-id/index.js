@@ -536,21 +536,28 @@ async function handleAnalyze(request, origin, ctx) {
     response.your_tiebreakers.gw_pct = gwByPlayer[player_id] ?? 0.33;
   }
 
-  const fullPlusResult = computeFullPlus({
-    standings,
-    hist,
-    gwByPlayer,
-    currentPairings,
-    targetPlayerId: player_id,
-    topCut: top_cut,
-    currentRound,
-    lockedIdRate: locked_id_rate ?? 0.90,
-    bubbleIdRate: bubble_id_rate ?? 0.03,
-    monteCarloSamples: monte_carlo_samples ?? 1000,
-  });
+  // Only run simulation when this is the last round — we can't simulate
+  // future rounds because Swiss pairings depend on results we don't have.
+  if (roundsRemaining <= 1) {
+    const fullPlusResult = computeFullPlus({
+      standings,
+      hist,
+      gwByPlayer,
+      currentPairings,
+      targetPlayerId: player_id,
+      topCut: top_cut,
+      currentRound,
+      lockedIdRate: locked_id_rate ?? 0.90,
+      bubbleIdRate: bubble_id_rate ?? 0.03,
+      monteCarloSamples: monte_carlo_samples ?? 1000,
+    });
 
-  response.pairings_available = true;
-  response.simulation = fullPlusResult;
+    response.pairings_available = true;
+    response.simulation = fullPlusResult;
+  } else {
+    response.pairings_available = true;
+    response.simulation_note = 'Simulation skipped — multiple rounds remain and future pairings are unknown.';
+  }
 
   return jsonResponse(response, 200, origin);
 }
@@ -857,6 +864,5 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     unknown_results: N,
     best_scenario: isExhaustive ? bestScenario : null,
     worst_scenario: isExhaustive ? worstScenario : null,
-    simulated_round: currentRound,
   };
 }
