@@ -14,6 +14,7 @@ A static HTML form page calls a Cloudflare Worker that fetches live data from th
 - The Cloudflare Worker is a **new separate Worker** deployment — do NOT modify the existing `gta-lorcana-sync` worker
 - Both the worker and static HTML page live in the same repo (`gtalorcana.ca`)
 - Use event ID `213150` (8 players) and `341947` (73 players) as test events
+- **Scope: single-phase Swiss events only** (locals, regionals, CCQs). Multi-phase events like Disney Lorcana Challenges (DLCs) are not supported — see the DLC section below for details.
 
 ---
 
@@ -361,6 +362,28 @@ Triggers on push to `main` when `worker/safe-to-id/**` files change.
 - Name: `api`
 - IPv6: `100::`
 - Proxy: Proxied (orange cloud)
+
+---
+
+## Known Limitation: Disney Lorcana Challenge (DLC) Events
+
+DLC events (e.g., Milwaukee, event `237107`) use a multi-phase Swiss structure that differs from standard single-phase tournaments:
+
+| Phase | Players | Rounds | Advancement |
+|-------|---------|--------|-------------|
+| Phase 1 (Day 1) | ~2000 | 8 | Fixed 18-point threshold (not a ranking cut) |
+| Phase 2 (Day 2) | ~276 survivors | 4 | Top 32 by ranking |
+| Top 32 | 32 | — | Single elimination to finals |
+
+Points carry over between phases. Draw rates at these events are much lower (~0.7%) than local events (~5%).
+
+**The current probabilistic model does not handle multi-phase events.** It assumes all N players play all rounds, which overestimates danger after intermediate cuts (predicted 40pts needed for top 8 vs actual 36pts).
+
+**Future approach:** Each phase could be modeled independently with the correct N. Phase 1 survivor count can be estimated as `N × probReach(18, 8)` — this predicted 280 vs 277 actual for Milwaukee (with 1% draw rate). Phase 2 is a standard ranking cut and would work with the existing `computeScenario` logic given the right inputs.
+
+**Additional RPH quirk:** For completed DLC events, RPH sets `registration_status: "ELIMINATED"` on *all* players — including Day 2 survivors. This makes it impossible to distinguish Phase 1 casualties from active Day 2 players using status alone. A DLC implementation would need to either use the point threshold (18+) or check Phase 2 round participation to identify active players.
+
+**Not yet implemented** — the tool currently works for single-phase Swiss events only.
 
 ---
 

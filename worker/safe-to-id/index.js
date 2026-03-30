@@ -287,7 +287,9 @@ async function handleAnalyze(request, origin, ctx) {
 
   // Fetch current-round pairings (if available) to adjust points
   let currentPairingsRoundId;
-  if (override_current_pairings_round_id) {
+  if (override_current_pairings_round_id === 'none') {
+    currentPairingsRoundId = null;
+  } else if (override_current_pairings_round_id) {
     currentPairingsRoundId = override_current_pairings_round_id;
   } else if (override_round_id) {
     const overrideRound = rounds.find(r => r.id === override_round_id);
@@ -312,6 +314,17 @@ async function handleAnalyze(request, origin, ctx) {
       pairingMatches = currentPairings?.matches ?? currentPairings?.results ?? [];
     } catch {
       // Pairings unavailable — proceed without adjustments
+    }
+  }
+
+  // Identify opponent from current-round pairings (if available)
+  let opponentId = null;
+  for (const m of pairingMatches) {
+    if (m.match_is_bye) continue;
+    const players = m.players ?? [];
+    if (players.includes(player_id) && players.length >= 2) {
+      opponentId = players[0] === player_id ? players[1] : players[0];
+      break;
     }
   }
 
@@ -398,6 +411,30 @@ async function handleAnalyze(request, origin, ctx) {
 
   const otherStandings = standings.filter(s => s.player?.id !== player_id);
 
+  // Probability of gaining at least `gap` match points in `rounds` rounds.
+  // Per-round outcomes: win (+3, p=0.475), draw (+1, p=0.05), loss (+0, p=0.475).
+  function probReach(gap, rounds) {
+    if (gap <= 0) return 1.0;
+    if (gap > rounds * 3) return 0.0;
+    const maxPts = rounds * 3;
+    // prob[g] = probability of having exactly g points after r rounds
+    let prob = new Float64Array(maxPts + 1);
+    prob[0] = 1.0;
+    for (let r = 0; r < rounds; r++) {
+      const next = new Float64Array(maxPts + 1);
+      for (let g = 0; g <= r * 3; g++) {
+        if (prob[g] === 0) continue;
+        next[g] += prob[g] * 0.475;       // loss: +0
+        if (g + 1 <= maxPts) next[g + 1] += prob[g] * 0.05; // draw: +1
+        if (g + 3 <= maxPts) next[g + 3] += prob[g] * 0.475; // win: +3
+      }
+      prob = next;
+    }
+    let cumProb = 0;
+    for (let g = gap; g <= maxPts; g++) cumProb += prob[g];
+    return cumProb;
+  }
+
   function computeScenario(pointsIfId) {
     // canCatch includes dropped players so they still appear in the danger list
     // (with dropped: true), but danger_count only counts active players.
@@ -405,11 +442,18 @@ async function handleAnalyze(request, origin, ctx) {
     const activeCanCatch = canCatch.filter(s => !isDropped(s));
     const alreadyAbove = activeCanCatch.filter(s => effectivePoints(s) > pointsIfId).length;
     const dangerCount = activeCanCatch.length - alreadyAbove;
+
+    const expectedDanger = activeCanCatch.reduce((sum, s) => {
+      const gap = pointsIfId - effectivePoints(s);
+      return sum + probReach(gap, roundsRemaining);
+    }, 0);
+
     let verdict;
-    if (dangerCount < top_cut) verdict = 'safe';
-    else if (dangerCount === top_cut) verdict = 'risky';
+    if (expectedDanger < top_cut - 1) verdict = 'safe';
+    else if (expectedDanger < top_cut + 1) verdict = 'risky';
     else verdict = 'unsafe';
-    return { pointsIfId, dangerCount, verdict, canCatch };
+
+    return { pointsIfId, dangerCount, expectedDanger: Math.round(expectedDanger * 10) / 10, verdict, canCatch };
   }
 
   const oneRound = computeScenario(pointsIfIdOne);
@@ -429,15 +473,47 @@ async function handleAnalyze(request, origin, ctx) {
     id_one_round: {
       points_if_id: oneRound.pointsIfId,
       danger_count: oneRound.dangerCount,
+      expected_danger: oneRound.expectedDanger,
       verdict: oneRound.verdict,
+      verdict_source: 'expected',
     },
     id_two_rounds: twoRounds
-      ? { points_if_id: twoRounds.pointsIfId, danger_count: twoRounds.dangerCount, verdict: twoRounds.verdict }
+      ? { points_if_id: twoRounds.pointsIfId, danger_count: twoRounds.dangerCount, expected_danger: twoRounds.expectedDanger, verdict: twoRounds.verdict, verdict_source: 'expected' }
       : null,
   };
 
   if (roundsRemaining <= 1) {
     response.id_two_rounds_note = 'Only 1 round remaining — double ID not applicable.';
+  }
+
+  // Opponent analysis: if pairings identify an opponent, check if they benefit from ID
+  if (opponentId) {
+    const oppStanding = standings.find(s => s.player?.id === opponentId);
+    if (oppStanding && !isDropped(oppStanding)) {
+      const oppName = oppStanding.user_event_status?.best_identifier ?? `Player ${opponentId}`;
+      const oppPoints = effectivePoints(oppStanding);
+      const oppPointsIfId = oppPoints + 1;
+      const oppOtherStandings = standings.filter(s => s.player?.id !== opponentId);
+      const oppCanCatch = oppOtherStandings.filter(s => !isDropped(s) && maxPossiblePoints(s) >= oppPointsIfId);
+      const oppExpectedDanger = oppCanCatch.reduce((sum, s) => {
+        const gap = oppPointsIfId - effectivePoints(s);
+        return sum + probReach(gap, roundsRemaining);
+      }, 0);
+      const oppRoundedED = Math.round(oppExpectedDanger * 10) / 10;
+      let oppVerdict;
+      if (oppExpectedDanger < top_cut - 1) oppVerdict = 'safe';
+      else if (oppExpectedDanger < top_cut + 1) oppVerdict = 'risky';
+      else oppVerdict = 'unsafe';
+
+      response.opponent = {
+        name: oppName,
+        current_points: oppPoints,
+        points_if_id: oppPointsIfId,
+        expected_danger: oppRoundedED,
+        verdict: oppVerdict,
+        will_accept_id: oppVerdict !== 'unsafe',
+      };
+    }
   }
 
   // Simple: return with unknown tiebreakers, no caveat
@@ -608,6 +684,16 @@ async function handleAnalyze(request, origin, ctx) {
 
     response.pairings_available = true;
     response.simulation = fullPlusResult;
+
+    // Override verdict with simulation-based result
+    if (fullPlusResult.makes_cut_pct != null) {
+      const simVerdict = fullPlusResult.makes_cut_pct >= 70 ? 'safe'
+                       : fullPlusResult.makes_cut_pct >= 40 ? 'risky'
+                       : 'unsafe';
+      response.id_one_round.verdict = simVerdict;
+      response.id_one_round.verdict_source = 'simulation';
+      response.id_one_round.makes_cut_pct = fullPlusResult.makes_cut_pct;
+    }
   } else {
     response.pairings_available = true;
     response.simulation_note = 'Simulation skipped — multiple rounds remain and future pairings are unknown.';

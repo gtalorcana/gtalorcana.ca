@@ -131,45 +131,6 @@
     }
 
     /* ── ADVANCED SETTINGS ───────────────────────────────── */
-    .advanced-settings { margin-top: .75rem; display: none; }
-    .advanced-settings.visible { display: block; }
-    .advanced-toggle {
-      background: none; border: none; cursor: pointer;
-      font-family: 'Cinzel', serif; font-size: .72rem;
-      letter-spacing: .1em; text-transform: uppercase;
-      color: var(--text-muted); padding: 0;
-      display: flex; align-items: center; gap: .4rem;
-    }
-    .advanced-toggle:hover { color: var(--gold); }
-    .advanced-body {
-      display: none; margin-top: .65rem;
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 8px; padding: .75rem 1rem;
-    }
-    .advanced-body.open { display: block; }
-    .adv-row {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: .5rem; margin-bottom: .55rem; font-size: .8rem;
-    }
-    .adv-row:last-child { margin-bottom: 0; }
-    .adv-label { color: var(--text-muted); flex: 1; }
-    .adv-input-wrap { display: flex; align-items: center; gap: .25rem; }
-    .adv-input {
-      width: 58px; text-align: right;
-      font-family: 'Lora', serif; font-size: .8rem;
-      background: var(--surface); color: var(--text);
-      border: 1px solid var(--border); border-radius: 5px;
-      padding: .3rem .4rem; outline: none;
-    }
-    .adv-input:focus { border-color: var(--gold); }
-    .adv-input:disabled { opacity: .45; }
-    .adv-unit { font-size: .75rem; color: var(--text-muted); }
-    .adv-check-label {
-      display: flex; align-items: center; gap: .4rem;
-      font-size: .78rem; color: var(--text-muted);
-      cursor: pointer; letter-spacing: normal; text-transform: none;
-    }
-
     /* ── PROGRESS BAR ────────────────────────────────────── */
     .sim-progress { margin-bottom: .6rem; }
     .sim-progress-text { font-size: .75rem; color: var(--text-muted); margin-bottom: .3rem; }
@@ -288,40 +249,8 @@
       <div id="depthNote" style="display:none; font-size:.75rem; color:var(--text-muted); margin-top:.5rem; font-style:italic;"></div>
     </div>
 
-    <div class="advanced-settings" id="advancedSettings">
-      <button class="advanced-toggle" type="button" onclick="toggleAdvanced()">
-        ⚙️ Advanced Settings <span id="advArrow">▶</span>
-      </button>
-      <div class="advanced-body" id="advancedBody">
-        <div class="adv-row">
-          <span class="adv-label">Top table ID rate</span>
-          <div class="adv-input-wrap">
-            <input class="adv-input" type="number" id="advLockedRate" min="0" max="100" value="90" />
-            <span class="adv-unit">%</span>
-          </div>
-        </div>
-        <div class="adv-row">
-          <span class="adv-label">Seeding matters</span>
-          <label class="adv-check-label">
-            <input type="checkbox" id="advSeeding" onchange="handleSeedingChange()" />
-            bracket position affects top cut
-          </label>
-        </div>
-        <div class="adv-row">
-          <span class="adv-label">Bubble ID rate</span>
-          <div class="adv-input-wrap">
-            <input class="adv-input" type="number" id="advBubbleRate" min="0" max="100" value="3" />
-            <span class="adv-unit">%</span>
-          </div>
-        </div>
-        <div class="adv-row">
-          <span class="adv-label">Monte Carlo samples</span>
-          <div class="adv-input-wrap">
-            <input class="adv-input" type="number" id="advMcSamples" min="100" max="10000" value="1000" style="width:70px;" />
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Advanced simulation settings removed — defaults (90% locked ID rate,
+         3% bubble ID rate, 1000 MC samples) are used automatically -->
 
     <div class="error-msg" id="analyzeError"></div>
 
@@ -356,6 +285,13 @@
       <div class="verdict-label" id="verdict2Label">ID this AND next round</div>
       <div class="verdict-badge" id="verdict2Badge">—</div>
       <div class="verdict-detail" id="verdict2Detail">—</div>
+    </div>
+
+    <!-- Opponent ID analysis -->
+    <div id="opponentSection" style="display:none; margin-top: 0.75rem;">
+      <hr class="divider" />
+      <div class="section-label">Your Opponent</div>
+      <div id="opponentBody"></div>
     </div>
 
     <!-- Tiebreakers (hidden in simple mode) -->
@@ -503,27 +439,12 @@
     } else {
       noteEl.style.display = 'none';
     }
-    const advSection = document.getElementById('advancedSettings');
-    if (advSection) advSection.classList.toggle('visible', val === 'full');
   }
   document.querySelectorAll('input[name="depth"]').forEach(radio => {
     radio.addEventListener('change', updateDepthNote);
   });
   updateDepthNote();
 
-  // ── Advanced Settings ────────────────────────────────────
-  function toggleAdvanced() {
-    const body = document.getElementById('advancedBody');
-    const arrow = document.getElementById('advArrow');
-    const isOpen = body.classList.toggle('open');
-    arrow.textContent = isOpen ? '▼' : '▶';
-  }
-  function handleSeedingChange() {
-    const seeding = document.getElementById('advSeeding').checked;
-    const lockedInput = document.getElementById('advLockedRate');
-    lockedInput.value = seeding ? 40 : 90;
-    lockedInput.disabled = seeding;
-  }
 
   // ── Staleness timer ──────────────────────────────────────
   let stalenessTimer = null;
@@ -629,9 +550,9 @@
     document.getElementById('loading').style.display = 'block';
     document.getElementById('analyzeBtn').disabled = true;
 
-    const lockedIdRate = parseFloat(document.getElementById('advLockedRate')?.value ?? 90) / 100;
-    const bubbleIdRate = parseFloat(document.getElementById('advBubbleRate')?.value ?? 3) / 100;
-    const mcSamples = parseInt(document.getElementById('advMcSamples')?.value ?? 1000, 10) || 1000;
+    const lockedIdRate = 0.90;
+    const bubbleIdRate = 0.03;
+    const mcSamples = 1000;
 
     try {
       const res = await fetch(`${WORKER}/safe-to-id/analyze`, {
@@ -686,6 +607,26 @@
       renderVerdict('verdict2Badge', 'verdict2Detail', d.id_two_rounds, d.top_cut);
     } else {
       v2block.style.display = 'none';
+    }
+
+    // Opponent analysis
+    const oppSection = document.getElementById('opponentSection');
+    if (d.opponent) {
+      oppSection.style.display = '';
+      const opp = d.opponent;
+      const oppIcons = { safe: '✅', risky: '⚠️', unsafe: '❌' };
+      const oppIcon = oppIcons[opp.verdict] || '❓';
+      const willAccept = opp.will_accept_id;
+      let oppDetail;
+      if (willAccept) {
+        oppDetail = `${esc(opp.name)} (${opp.current_points}pts → ${opp.points_if_id}pts) — ID is ${opp.verdict} for them too. Likely to accept.`;
+      } else {
+        oppDetail = `${esc(opp.name)} (${opp.current_points}pts → ${opp.points_if_id}pts) — ID is unsafe for them (expected danger ~${opp.expected_danger}). They may want to play it out.`;
+      }
+      document.getElementById('opponentBody').innerHTML =
+        `<div class="sim-stat"><span class="sim-key">${oppIcon} ${oppDetail}</span></div>`;
+    } else {
+      oppSection.style.display = 'none';
     }
 
     // Tiebreakers
@@ -799,6 +740,8 @@
       html += `</div>`;
     }
 
+    html += `<div style="margin-top:.6rem;font-size:.7rem;color:var(--text-muted);font-style:italic;">Simulation assumes ~90% of locked-in players ID and ~3% of bubble players ID.</div>`;
+
     document.getElementById('fullPlusBody').innerHTML = html;
   }
 
@@ -813,12 +756,23 @@
 
     const n = scenario.danger_count;
     const playerWord = n === 1 ? 'player' : 'players';
-    if (scenario.verdict === 'safe') {
-      detail.textContent = `${n} ${playerWord} can catch you. Top ${topCut} cut — you're in.`;
-    } else if (scenario.verdict === 'risky') {
-      detail.textContent = `${n} ${playerWord} can catch you. Exactly on the bubble — tiebreakers decide.`;
+    const src = scenario.verdict_source;
+
+    if (src === 'simulation') {
+      const pctStr = scenario.makes_cut_pct != null ? `~${Math.round(scenario.makes_cut_pct)}%` : '?';
+      detail.textContent = `${pctStr} chance of making top ${topCut} across all simulated scenarios. (${n} ${playerWord} can theoretically catch you)`;
+    } else if (src === 'expected') {
+      const ed = scenario.expected_danger != null ? scenario.expected_danger : '?';
+      detail.textContent = `~${ed} expected ${playerWord} reaching your points. (${n} can theoretically catch you — not all can win simultaneously)`;
     } else {
-      detail.textContent = `${n} ${playerWord} can catch you. Too many — reconsider the ID.`;
+      // Fallback: plain danger_count
+      if (scenario.verdict === 'safe') {
+        detail.textContent = `${n} ${playerWord} can catch you. Top ${topCut} cut — you're in.`;
+      } else if (scenario.verdict === 'risky') {
+        detail.textContent = `${n} ${playerWord} can catch you. Exactly on the bubble — tiebreakers decide.`;
+      } else {
+        detail.textContent = `${n} ${playerWord} can catch you. Too many — reconsider the ID.`;
+      }
     }
   }
 
