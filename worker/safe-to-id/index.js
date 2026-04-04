@@ -384,8 +384,10 @@ async function handleAnalyze(request, origin, ctx) {
   const adjustedPoints = effectivePoints(myStanding);
   const targetPlayed = standingsRoundNumber + (matchDone.has(player_id) ? 1 : 0);
   const roundsRemaining = Math.max(0, total_swiss_rounds - targetPlayed);
-  const pointsIfIdOne = adjustedPoints + 1;
-  const pointsIfIdTwo = adjustedPoints + 2;
+  // When all rounds are played (e.g. target had a bye), the ID question is moot —
+  // use actual points rather than a hypothetical +1.
+  const pointsIfIdOne = roundsRemaining > 0 ? adjustedPoints + 1 : adjustedPoints;
+  const pointsIfIdTwo = roundsRemaining > 0 ? adjustedPoints + 2 : adjustedPoints;
 
   // Handle all-players-advance edge case
   if (playerCount > 0 && playerCount <= top_cut) {
@@ -763,8 +765,15 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     };
   }
 
+  // Check if target has a bye — byes are auto-wins, not ID-able
+  const pairingMatches = currentPairings.matches ?? currentPairings.results ?? [];
+  const targetHasBye = pairingMatches.some(m =>
+    m.match_is_bye && (m.players ?? []).includes(targetPlayerId)
+  );
+
   const targetPts = standingsMap[targetPlayerId]?.pts ?? 0;
-  const targetPointsAfterID = targetPts + 1;
+  // Bye targets keep their bye points; non-bye targets get +1 for the hypothetical ID.
+  const targetPointsAfterID = targetPts + (targetHasBye ? 3 : 1);
 
   // Classify a player by their situation relative to the cut line.
   // locked: already at or above the points target — safe even without winning
@@ -799,7 +808,6 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
 
   // Process current round matches — split into known (applied as facts)
   // and unknown (to be simulated).
-  const pairingMatches = currentPairings.matches ?? currentPairings.results ?? [];
 
   const knownAddWins = {};
   const knownAddPlayed = {};
@@ -808,9 +816,12 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   const unknownMatches = [];
   let knownResultsCount = 0;
 
-  // Target player always IDs (+1 point each, +1 played for both, no win credited)
-  knownPtDelta[targetPlayerId] = 1;
-  knownAddPlayed[targetPlayerId] = 1;
+  // Target player IDs (+1 point, +1 played) — unless they have a bye,
+  // in which case the bye processing below handles their points correctly.
+  if (!targetHasBye) {
+    knownPtDelta[targetPlayerId] = 1;
+    knownAddPlayed[targetPlayerId] = 1;
+  }
 
   for (const m of pairingMatches) {
     const players = m.players ?? [];

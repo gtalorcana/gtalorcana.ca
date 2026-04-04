@@ -117,6 +117,8 @@ danger_count > top_cut  → "unsafe"
 
 `id_two_rounds` is `null` with an explanatory note when `rounds_remaining <= 1`.
 
+**Bye edge case:** When the target player has a bye, they can't ID — the bye is an automatic win (+3). Both the danger-count path and the simulation use the player's actual bye points (no +1 added). The UI label changes from "ID this/next round" to "Make top cut?" when `rounds_remaining` is 0.
+
 If `player_count <= top_cut`, all verdicts are forced to `"safe"` and `all_players_advance: true` is set regardless of depth.
 
 ---

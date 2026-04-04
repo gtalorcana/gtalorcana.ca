@@ -592,7 +592,10 @@
       `${d.current_points} pts · ${d.rounds_remaining} round${d.rounds_remaining !== 1 ? 's' : ''} remaining`;
 
     // Update labels based on whether target's current match is done
-    if (d.target_match_done) {
+    if (d.target_match_done && d.rounds_remaining === 0) {
+      document.getElementById('verdict1Label').textContent = 'Make top cut?';
+      document.getElementById('verdict2Label').textContent = '';
+    } else if (d.target_match_done) {
       document.getElementById('verdict1Label').textContent = 'ID next round';
       document.getElementById('verdict2Label').textContent = 'ID next 2 rounds';
     } else {
