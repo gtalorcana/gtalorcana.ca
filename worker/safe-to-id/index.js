@@ -905,7 +905,9 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     // RPH OMW% formula: average of opponents' match point % = points / (3 × rounds),
     // floor 0.33. This exactly matches what RPH reports in standings.
     // Using final simulated points for each opponent so OMW% reflects this scenario.
-    const totalRounds = currentRound + 1;
+    // After the current round completes, each player has played `currentRound` rounds.
+    // (currentRound is the in-progress round number, e.g. 4 for round 4.)
+    const totalRounds = currentRound;
     function omwOf(pid) {
       const pastOpps = hist.opps[pid] ?? [];
       const currOpp = currentRoundOpps[pid];
