@@ -657,7 +657,9 @@
       dangerList.innerHTML = d.danger_players.map(p => {
         const icon = tbIcon(p.tiebreaker_vs_you);
         const status = p.dropped ? ' (dropped)' : p.match_done ? ' ✓' : ' ⏳';
-        const pts = `${p.current_points}pts → ${p.max_possible_points}pts`;
+        const pts = p.current_points === p.max_possible_points
+          ? `${p.current_points}pts`
+          : `${p.current_points}pts → ${p.max_possible_points}pts`;
         return `
           <div class="danger-player">
             <span class="dp-name">${esc(p.name)}${status}</span>
