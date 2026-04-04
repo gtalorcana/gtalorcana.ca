@@ -959,22 +959,17 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   if (isExhaustive) {
     const total = Math.pow(3, N);
     for (let combo = 0; combo < total; combo++) {
-      let weight = 1.0;
       const outcomes = unknownMatches.map((m, i) => {
         const digit = Math.floor(combo / Math.pow(3, i)) % 3;
-        const winProb = (1 - m.idProbability) * 0.5;
-        weight *= digit === 0 ? m.idProbability : winProb;
         return { p1: m.p1, p2: m.p2, outcome: digit };
       });
       const rank = simulateScenario(outcomes);
-      totalWeight += weight;
-      if (rank <= topCut) {
-        makesCutCount++;
-        weightedMakesCut += weight;
-      }
+      if (rank <= topCut) makesCutCount++;
       if (rank < bestRank) { bestRank = rank; bestScenario = outcomes; }
       if (rank > worstRank) { worstRank = rank; worstScenario = outcomes; }
     }
+    totalWeight = Math.pow(3, N);
+    weightedMakesCut = makesCutCount;
     const bubbleOnly = outcomes => outcomes.filter(({ p1, p2 }) =>
       classifyPlayer(p1) === 'bubble' || classifyPlayer(p2) === 'bubble'
     );

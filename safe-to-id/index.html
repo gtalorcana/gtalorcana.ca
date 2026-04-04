@@ -745,7 +745,9 @@
       html += `</div>`;
     }
 
-    html += `<div style="margin-top:.6rem;font-size:.7rem;color:var(--text-muted);font-style:italic;">Simulation assumes ~90% of locked-in players ID and ~3% of bubble players ID.</div>`;
+    if (isMC) {
+      html += `<div style="margin-top:.6rem;font-size:.7rem;color:var(--text-muted);font-style:italic;">Simulation assumes ~90% of locked-in players ID and ~3% of bubble players ID.</div>`;
+    }
 
     document.getElementById('fullPlusBody').innerHTML = html;
   }
