@@ -603,18 +603,19 @@
       document.getElementById('verdict2Label').textContent = 'ID this AND next round';
     }
 
-    renderVerdict('verdict1Badge', 'verdict1Detail', d.id_one_round, d.top_cut);
+    const matchDone = !!d.target_match_done;
+    renderVerdict('verdict1Badge', 'verdict1Detail', d.id_one_round, d.top_cut, matchDone);
     const v2block = document.getElementById('verdict2Block');
     if (d.id_two_rounds) {
       v2block.style.display = '';
-      renderVerdict('verdict2Badge', 'verdict2Detail', d.id_two_rounds, d.top_cut);
+      renderVerdict('verdict2Badge', 'verdict2Detail', d.id_two_rounds, d.top_cut, matchDone);
     } else {
       v2block.style.display = 'none';
     }
 
-    // Opponent analysis
+    // Opponent analysis — hide if match is already done (ID offer is no longer relevant)
     const oppSection = document.getElementById('opponentSection');
-    if (d.opponent) {
+    if (d.opponent && !d.target_match_done) {
       oppSection.style.display = '';
       const opp = d.opponent;
       const oppIcons = { safe: '✅', risky: '⚠️', unsafe: '❌' };
@@ -752,7 +753,7 @@
     document.getElementById('fullPlusBody').innerHTML = html;
   }
 
-  function renderVerdict(badgeId, detailId, scenario, topCut) {
+  function renderVerdict(badgeId, detailId, scenario, topCut, matchAlreadyDone = false) {
     const badge = document.getElementById(badgeId);
     const detail = document.getElementById(detailId);
     badge.className = `verdict-badge ${scenario.verdict}`;
@@ -767,7 +768,8 @@
 
     if (src === 'simulation') {
       const pctStr = scenario.makes_cut_pct != null ? `~${Math.round(scenario.makes_cut_pct)}%` : '?';
-      detail.textContent = `${pctStr} chance of making top ${topCut} across all simulated scenarios. (${n} ${playerWord} can theoretically catch you)`;
+      const suffix = matchAlreadyDone ? '' : ` (${n} ${playerWord} can theoretically catch you)`;
+      detail.textContent = `${pctStr} chance of making top ${topCut} across all simulated scenarios.${suffix}`;
     } else if (src === 'expected') {
       const ed = scenario.expected_danger != null ? scenario.expected_danger : '?';
       detail.textContent = `~${ed} expected ${playerWord} reaching your points. (${n} can theoretically catch you — not all can win simultaneously)`;
@@ -778,7 +780,8 @@
       } else if (scenario.verdict === 'risky') {
         detail.textContent = `${n} ${playerWord} can catch you. Exactly on the bubble — tiebreakers decide.`;
       } else {
-        detail.textContent = `${n} ${playerWord} can catch you. Too many — reconsider the ID.`;
+        const actionHint = matchAlreadyDone ? '' : ' Reconsider the ID.';
+        detail.textContent = `${n} ${playerWord} can catch you. Too many.${actionHint}`;
       }
     }
   }
