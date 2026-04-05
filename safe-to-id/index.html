@@ -169,7 +169,7 @@
     .help-link:hover { color: var(--gold); }
 
     .modal-backdrop {
-      display: none; position: fixed; inset: 0; z-index: 1000;
+      display: none; position: fixed; inset: 0; z-index: 200;
       background: rgba(0,0,0,.65); backdrop-filter: blur(2px);
     }
     .modal-backdrop.open { display: flex; align-items: flex-end; }
@@ -399,66 +399,7 @@
       Start Over
     </button>
   </div>
-  <!-- Help Modal -->
-  <div class="modal-backdrop" id="helpBackdrop" onclick="closeHelpOnBackdrop(event)">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-      <button class="modal-close" onclick="closeHelp()" aria-label="Close">✕</button>
-      <h2 id="helpTitle">How Safe to ID? works</h2>
 
-      <p>An <strong>Intentional Draw (ID)</strong> gives both players 1 match point each instead of playing for a win (3 points). This tool tells you whether taking that deal is likely to leave you in the top cut.</p>
-
-      <h3>Safe / Risky / Unsafe</h3>
-      <p>The tool looks at every other player in the event and asks: <em>can they realistically reach or pass your projected points?</em> Players who can are called <strong>danger players</strong>.</p>
-      <ul>
-        <li><span class="verdict-pill safe">SAFE</span> — unlikely enough danger players catch you</li>
-        <li><span class="verdict-pill risky">RISKY</span> — right on the bubble; tiebreakers will decide</li>
-        <li><span class="verdict-pill unsafe">UNSAFE</span> — too many players can catch you</li>
-      </ul>
-
-      <h3>Danger count (Simple mode)</h3>
-      <p>A player is a danger if:</p>
-      <div class="formula-block">
-        their current points + (rounds left × 3) ≥ your points after ID
-      </div>
-      <p>That's the maximum they can score by winning every remaining round. If fewer players than the top-cut size can reach your score, you're safe.</p>
-
-      <h3>Expected danger (Full mode)</h3>
-      <p>Not every danger player will actually catch you — they'd all have to win simultaneously, which can't happen when they're paired against each other. Full mode weights each danger player by their statistical probability of winning enough rounds:</p>
-      <div class="formula-block">
-        per round: win (+3) = 47.5% · draw (+1) = 5% · loss (+0) = 47.5%
-      </div>
-      <p>The expected danger number is more realistic than the raw count, and it's what drives the safe/risky/unsafe verdict in Full mode.</p>
-
-      <h3>Tiebreakers</h3>
-      <p>When players finish with the same points, Ravensburger uses three tiebreakers in order:</p>
-      <ul>
-        <li><strong>OMW% (Opponent Match Win %)</strong> — average of your opponents' win rates. Playing tougher opponents boosts this.</li>
-        <li><strong>GW% (Game Win %)</strong> — your own percentage of individual games won across all matches.</li>
-        <li><strong>OGW% (Opponent Game Win %)</strong> — average of your opponents' game win percentages.</li>
-      </ul>
-      <p>The formula RPH uses for OMW%:</p>
-      <div class="formula-block">
-        OMW% = average of: max(33%, opponent's points ÷ (3 × rounds played))
-      </div>
-      <p>The 33% floor prevents opponents with losing records from dragging your tiebreaker below a baseline.</p>
-
-      <h3>Simulation (Full mode, final round)</h3>
-      <p>When pairings are available for the current round, the tool simulates every realistic combination of match outcomes for the remaining unknown matches. For each scenario it recomputes everyone's points and tiebreakers, ranks all players, and checks whether you make the cut.</p>
-      <p>The <strong>simulation %</strong> is the probability-weighted fraction of those scenarios where you make cut. Matches between players who are already locked into the cut are assumed to ID ~90% of the time; bubble matches are assumed to play out.</p>
-      <ul>
-        <li>≤ 12 unknown matches → exhaustive (every combination checked)</li>
-        <li>&gt; 12 unknown matches → Monte Carlo (1,000 random samples, ±3.5%)</li>
-      </ul>
-
-      <h3>Limitations</h3>
-      <ul>
-        <li>Win probability is assumed 50/50 — player skill isn't factored in.</li>
-        <li>ID rates (90% locked, 3% bubble) are estimates based on typical tournament behaviour.</li>
-        <li>Tiebreakers shift as the round finishes — refresh to get the latest.</li>
-        <li>Multi-phase (DLC) events are not fully supported.</li>
-      </ul>
-    </div>
-  </div>
 </main>
 
 <footer>
@@ -992,5 +933,67 @@
     if (e.key === 'Escape') closeHelp();
   });
 </script>
+
+<!-- Help Modal — lives here as a direct child of body so it's always
+     in the root stacking context, above nav, footer, and main content -->
+<div class="modal-backdrop" id="helpBackdrop" onclick="closeHelpOnBackdrop(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <button class="modal-close" onclick="closeHelp()" aria-label="Close">✕</button>
+    <h2 id="helpTitle">How Safe to ID? works</h2>
+
+    <p>An <strong>Intentional Draw (ID)</strong> gives both players 1 match point each instead of playing for a win (3 points). This tool tells you whether taking that deal is likely to leave you in the top cut.</p>
+
+    <h3>Safe / Risky / Unsafe</h3>
+    <p>The tool looks at every other player in the event and asks: <em>can they realistically reach or pass your projected points?</em> Players who can are called <strong>danger players</strong>.</p>
+    <ul>
+      <li><span class="verdict-pill safe">SAFE</span> — unlikely enough danger players catch you</li>
+      <li><span class="verdict-pill risky">RISKY</span> — right on the bubble; tiebreakers will decide</li>
+      <li><span class="verdict-pill unsafe">UNSAFE</span> — too many players can catch you</li>
+    </ul>
+
+    <h3>Danger count (Simple mode)</h3>
+    <p>A player is a danger if:</p>
+    <div class="formula-block">
+      their current points + (rounds left × 3) ≥ your points after ID
+    </div>
+    <p>That's the maximum they can score by winning every remaining round. If fewer players than the top-cut size can reach your score, you're safe.</p>
+
+    <h3>Expected danger (Full mode)</h3>
+    <p>Not every danger player will actually catch you — they'd all have to win simultaneously, which can't happen when they're paired against each other. Full mode weights each danger player by their statistical probability of winning enough rounds:</p>
+    <div class="formula-block">
+      per round: win (+3) = 47.5% · draw (+1) = 5% · loss (+0) = 47.5%
+    </div>
+    <p>The expected danger number is more realistic than the raw count, and it's what drives the safe/risky/unsafe verdict in Full mode.</p>
+
+    <h3>Tiebreakers</h3>
+    <p>When players finish with the same points, Ravensburger uses three tiebreakers in order:</p>
+    <ul>
+      <li><strong>OMW% (Opponent Match Win %)</strong> — average of your opponents' win rates. Playing tougher opponents boosts this.</li>
+      <li><strong>GW% (Game Win %)</strong> — your own percentage of individual games won across all matches.</li>
+      <li><strong>OGW% (Opponent Game Win %)</strong> — average of your opponents' game win percentages.</li>
+    </ul>
+    <p>The formula RPH uses for OMW%:</p>
+    <div class="formula-block">
+      OMW% = average of: max(33%, opponent's points ÷ (3 × rounds played))
+    </div>
+    <p>The 33% floor prevents opponents with losing records from dragging your tiebreaker below a baseline.</p>
+
+    <h3>Simulation (Full mode, final round)</h3>
+    <p>When pairings are available for the current round, the tool simulates every realistic combination of match outcomes for the remaining unknown matches. For each scenario it recomputes everyone's points and tiebreakers, ranks all players, and checks whether you make the cut.</p>
+    <p>The <strong>simulation %</strong> is the probability-weighted fraction of those scenarios where you make cut. Matches between players who are already locked into the cut are assumed to ID ~90% of the time; bubble matches are assumed to play out.</p>
+    <ul>
+      <li>≤ 12 unknown matches → exhaustive (every combination checked)</li>
+      <li>&gt; 12 unknown matches → Monte Carlo (1,000 random samples, ±3.5%)</li>
+    </ul>
+
+    <h3>Limitations</h3>
+    <ul>
+      <li>Win probability is assumed 50/50 — player skill isn't factored in.</li>
+      <li>ID rates (90% locked, 3% bubble) are estimates based on typical tournament behaviour.</li>
+      <li>Tiebreakers shift as the round finishes — refresh to get the latest.</li>
+      <li>Multi-phase (DLC) events are not fully supported.</li>
+    </ul>
+  </div>
+</div>
 </body>
 </html>
