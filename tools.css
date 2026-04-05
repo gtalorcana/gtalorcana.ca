@@ -4,6 +4,7 @@
    ──────────────────────────────────────────────────────────────────────────── */
 
 /* ── PAGE LAYOUT ─────────────────────────────────────────── */
+/* z-index stack: stars=0, main/footer=2, nav=100, modals=300+ */
 main {
   position: relative; z-index: 2;
   padding: 6rem 1rem 3rem;
