@@ -772,8 +772,34 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   );
 
   const targetPts = standingsMap[targetPlayerId]?.pts ?? 0;
-  // Bye targets keep their bye points; non-bye targets get +1 for the hypothetical ID.
-  const targetPointsAfterID = targetPts + (targetHasBye ? 3 : 1);
+
+  // Check if the target's match is already complete so we use the actual result
+  // rather than the hypothetical ID. This matters when all-but-one matches are
+  // done and the target's own match finished before they ran the tool.
+  let targetMatchAlreadyDone = false;
+  let targetActualDelta = 1; // default: assume ID (+1)
+  if (!targetHasBye) {
+    for (const m of pairingMatches) {
+      const players = m.players ?? [];
+      if (m.match_is_bye || players.length < 2) continue;
+      if (!players.includes(targetPlayerId)) continue;
+      if (isKnownResult(m)) {
+        targetMatchAlreadyDone = true;
+        if (m.match_is_intentional_draw || m.match_is_unintentional_draw) {
+          targetActualDelta = 1;
+        } else if (m.winning_player === targetPlayerId) {
+          targetActualDelta = 3;
+        } else {
+          targetActualDelta = 0;
+        }
+      }
+      break;
+    }
+  }
+
+  // Bye targets keep their bye points; non-bye targets get their actual delta if the
+  // match is done, or +1 for the hypothetical ID if it hasn't been played yet.
+  const targetPointsAfterID = targetPts + (targetHasBye ? 3 : targetActualDelta);
 
   // Classify a player by their situation relative to the cut line.
   // locked: already at or above the points target — safe even without winning
@@ -816,10 +842,10 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   const unknownMatches = [];
   let knownResultsCount = 0;
 
-  // Target player IDs (+1 point, +1 played) — unless they have a bye,
-  // in which case the bye processing below handles their points correctly.
+  // Target player: use actual delta if their match is already done, else assume ID (+1).
+  // Byes are handled in the loop below.
   if (!targetHasBye) {
-    knownPtDelta[targetPlayerId] = 1;
+    knownPtDelta[targetPlayerId] = targetActualDelta;
     knownAddPlayed[targetPlayerId] = 1;
   }
 
@@ -841,14 +867,29 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     if (players.length < 2) continue;
     const [p1, p2] = players;
 
-    // Target player's match: treated as ID regardless of actual status
+    // Target player's match: if already done use the actual result; otherwise assume ID.
     if (p1 === targetPlayerId || p2 === targetPlayerId) {
       const opp = p1 === targetPlayerId ? p2 : p1;
-      knownPtDelta[opp] = (knownPtDelta[opp] ?? 0) + 1;
-      knownAddPlayed[opp] = (knownAddPlayed[opp] ?? 0) + 1;
       currentRoundOpps[targetPlayerId] = opp;
       currentRoundOpps[opp] = targetPlayerId;
       knownResultsCount++;
+      knownAddPlayed[opp] = (knownAddPlayed[opp] ?? 0) + 1;
+      if (targetMatchAlreadyDone) {
+        // Mirror the target's actual result for the opponent
+        if (targetActualDelta === 1) {
+          // Draw — opponent also gets +1
+          knownPtDelta[opp] = (knownPtDelta[opp] ?? 0) + 1;
+        } else if (targetActualDelta === 3) {
+          // Target won — opponent gets 0 (no entry needed)
+        } else {
+          // Target lost — opponent won, gets +3
+          knownAddWins[opp] = (knownAddWins[opp] ?? 0) + 1;
+          knownPtDelta[opp] = (knownPtDelta[opp] ?? 0) + 3;
+        }
+      } else {
+        // Match not yet played — assume mutual ID
+        knownPtDelta[opp] = (knownPtDelta[opp] ?? 0) + 1;
+      }
       continue;
     }
 
@@ -963,15 +1004,25 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     for (let combo = 0; combo < total; combo++) {
       const outcomes = unknownMatches.map((m, i) => {
         const digit = Math.floor(combo / Math.pow(3, i)) % 3;
-        return { p1: m.p1, p2: m.p2, outcome: digit };
+        return { p1: m.p1, p2: m.p2, outcome: digit, idProbability: m.idProbability };
       });
+      // Weight this scenario by the product of each outcome's probability so that
+      // high-idProbability matches (e.g. locked vs locked at 0.90) count more than
+      // low-probability decisive results. Without this, all 3^N scenarios are equal
+      // which badly skews the % when idProbability varies across matches.
+      let weight = 1;
+      for (const { outcome, idProbability } of outcomes) {
+        weight *= outcome === 0 ? idProbability : (1 - idProbability) * 0.5;
+      }
       const rank = simulateScenario(outcomes);
-      if (rank <= topCut) makesCutCount++;
+      totalWeight += weight;
+      if (rank <= topCut) {
+        makesCutCount++;
+        weightedMakesCut += weight;
+      }
       if (rank < bestRank) { bestRank = rank; bestScenario = outcomes; }
       if (rank > worstRank) { worstRank = rank; worstScenario = outcomes; }
     }
-    totalWeight = Math.pow(3, N);
-    weightedMakesCut = makesCutCount;
     const bubbleOnly = outcomes => outcomes.filter(({ p1, p2 }) =>
       classifyPlayer(p1) === 'bubble' || classifyPlayer(p2) === 'bubble'
     );
