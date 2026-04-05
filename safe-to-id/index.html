@@ -517,7 +517,7 @@
       document.getElementById('eventName').textContent = data.event_name;
       const isComplete = data.event_lifecycle_status === 'EVENT_COMPLETE';
       document.getElementById('eventMeta').textContent = isComplete
-        ? `${data.player_count} players · ${data.total_swiss_rounds} rounds · Event complete`
+        ? `${data.player_count} players · ${data.total_swiss_rounds} rounds · Swiss complete`
         : `${data.player_count} players · Round ${data.current_round} of ${data.total_swiss_rounds}`;
       document.getElementById('eventInfo').classList.add('visible');
 
@@ -545,7 +545,7 @@
 
     if (!eventData)   { showError('analyzeError', 'Fetch an event first.'); return; }
     if (eventData.event_lifecycle_status === 'EVENT_COMPLETE') {
-      showError('analyzeError', 'This event has ended — all rounds are complete. There\'s nothing left to ID.');
+      showError('analyzeError', 'Swiss rounds are complete — there\'s nothing left to ID.');
       return;
     }
     if (!playerId)    { showError('analyzeError', 'Please select yourself from the list.'); return; }
