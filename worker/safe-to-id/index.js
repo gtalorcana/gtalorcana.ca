@@ -232,7 +232,7 @@ async function handleAnalyze(request, origin, ctx) {
   let roundsForMatches;
 
   if (override_round_id) {
-    const overrideRound = rounds.find(r => r.id === override_round_id);
+    const overrideRound = rounds.find(r => String(r.id) === String(override_round_id));
     if (!overrideRound) return errResponse('override_round_id not found in event rounds', 400, origin);
     standingsRoundId = override_round_id;
     currentRound = overrideRound.round_number;
@@ -292,7 +292,7 @@ async function handleAnalyze(request, origin, ctx) {
   } else if (override_current_pairings_round_id) {
     currentPairingsRoundId = override_current_pairings_round_id;
   } else if (override_round_id) {
-    const overrideRound = rounds.find(r => r.id === override_round_id);
+    const overrideRound = rounds.find(r => String(r.id) === String(override_round_id));
     const nextRound = rounds.find(r => r.round_number === overrideRound.round_number + 1);
     currentPairingsRoundId = nextRound?.id ?? null;
   } else {
