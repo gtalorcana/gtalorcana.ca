@@ -159,6 +159,70 @@
     }
     .btn-refresh:hover { border-color: var(--gold); color: var(--gold); }
 
+    /* ── HELP MODAL ──────────────────────────────────────────── */
+    .help-link {
+      font-family: 'Cinzel', serif; font-size: .7rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--text-muted);
+      background: none; border: none; cursor: pointer; padding: 0;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
+    .help-link:hover { color: var(--gold); }
+
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(2px);
+    }
+    .modal-backdrop.open { display: flex; align-items: flex-end; }
+    @media (min-width: 540px) {
+      .modal-backdrop.open { align-items: center; justify-content: center; }
+    }
+
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px 12px 0 0; width: 100%; max-height: 85vh;
+      overflow-y: auto; padding: 1.5rem 1.25rem 2rem;
+      position: relative;
+    }
+    @media (min-width: 540px) {
+      .modal { border-radius: 12px; max-width: 520px; max-height: 80vh; }
+    }
+
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; cursor: pointer;
+      font-size: 1.2rem; color: var(--text-muted); line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    .modal h2 {
+      font-family: 'Cinzel Decorative', serif; font-size: 1rem;
+      color: var(--heading); margin-bottom: 1rem;
+    }
+    .modal h3 {
+      font-family: 'Cinzel', serif; font-size: .8rem; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--gold); margin: 1.25rem 0 .5rem;
+    }
+    .modal p, .modal li {
+      font-size: .82rem; color: var(--text-muted); line-height: 1.65;
+    }
+    .modal ul { padding-left: 1.2rem; margin: 0; }
+    .modal li { margin-bottom: .3rem; }
+    .modal strong { color: var(--text); }
+    .modal .verdict-pill {
+      display: inline-block; border-radius: 4px; padding: .15rem .5rem;
+      font-size: .75rem; font-weight: 600; vertical-align: middle;
+    }
+    .modal .verdict-pill.safe   { background: rgba(34,197,94,.15);  color: #22c55e; }
+    .modal .verdict-pill.risky  { background: rgba(245,158,11,.15); color: #f59e0b; }
+    .modal .verdict-pill.unsafe { background: rgba(239,68,68,.15);  color: #ef4444; }
+    .modal .formula-block {
+      background: var(--surface2); border-radius: 6px;
+      padding: .6rem .85rem; margin: .5rem 0;
+      font-family: 'Lora', serif; font-size: .78rem;
+      color: var(--text); line-height: 1.7;
+    }
+    .modal hr { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
   </style>
 </head>
 <body>
@@ -187,6 +251,9 @@
   <div class="page-header">
     <h1>🤝 Safe to ID?</h1>
     <p>Can you safely take the Intentional Draw?</p>
+    <p style="margin-top:.4rem;">
+      <button class="help-link" onclick="openHelp()">How does the math work?</button>
+    </p>
   </div>
 
   <!-- Form Card -->
@@ -331,6 +398,66 @@
     <button class="btn btn-secondary" style="width:100%;" onclick="resetForm()">
       Start Over
     </button>
+  </div>
+  <!-- Help Modal -->
+  <div class="modal-backdrop" id="helpBackdrop" onclick="closeHelpOnBackdrop(event)">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <button class="modal-close" onclick="closeHelp()" aria-label="Close">✕</button>
+      <h2 id="helpTitle">How Safe to ID? works</h2>
+
+      <p>An <strong>Intentional Draw (ID)</strong> gives both players 1 match point each instead of playing for a win (3 points). This tool tells you whether taking that deal is likely to leave you in the top cut.</p>
+
+      <h3>Safe / Risky / Unsafe</h3>
+      <p>The tool looks at every other player in the event and asks: <em>can they realistically reach or pass your projected points?</em> Players who can are called <strong>danger players</strong>.</p>
+      <ul>
+        <li><span class="verdict-pill safe">SAFE</span> — unlikely enough danger players catch you</li>
+        <li><span class="verdict-pill risky">RISKY</span> — right on the bubble; tiebreakers will decide</li>
+        <li><span class="verdict-pill unsafe">UNSAFE</span> — too many players can catch you</li>
+      </ul>
+
+      <h3>Danger count (Simple mode)</h3>
+      <p>A player is a danger if:</p>
+      <div class="formula-block">
+        their current points + (rounds left × 3) ≥ your points after ID
+      </div>
+      <p>That's the maximum they can score by winning every remaining round. If fewer players than the top-cut size can reach your score, you're safe.</p>
+
+      <h3>Expected danger (Full mode)</h3>
+      <p>Not every danger player will actually catch you — they'd all have to win simultaneously, which can't happen when they're paired against each other. Full mode weights each danger player by their statistical probability of winning enough rounds:</p>
+      <div class="formula-block">
+        per round: win (+3) = 47.5% · draw (+1) = 5% · loss (+0) = 47.5%
+      </div>
+      <p>The expected danger number is more realistic than the raw count, and it's what drives the safe/risky/unsafe verdict in Full mode.</p>
+
+      <h3>Tiebreakers</h3>
+      <p>When players finish with the same points, Ravensburger uses three tiebreakers in order:</p>
+      <ul>
+        <li><strong>OMW% (Opponent Match Win %)</strong> — average of your opponents' win rates. Playing tougher opponents boosts this.</li>
+        <li><strong>GW% (Game Win %)</strong> — your own percentage of individual games won across all matches.</li>
+        <li><strong>OGW% (Opponent Game Win %)</strong> — average of your opponents' game win percentages.</li>
+      </ul>
+      <p>The formula RPH uses for OMW%:</p>
+      <div class="formula-block">
+        OMW% = average of: max(33%, opponent's points ÷ (3 × rounds played))
+      </div>
+      <p>The 33% floor prevents opponents with losing records from dragging your tiebreaker below a baseline.</p>
+
+      <h3>Simulation (Full mode, final round)</h3>
+      <p>When pairings are available for the current round, the tool simulates every realistic combination of match outcomes for the remaining unknown matches. For each scenario it recomputes everyone's points and tiebreakers, ranks all players, and checks whether you make the cut.</p>
+      <p>The <strong>simulation %</strong> is the probability-weighted fraction of those scenarios where you make cut. Matches between players who are already locked into the cut are assumed to ID ~90% of the time; bubble matches are assumed to play out.</p>
+      <ul>
+        <li>≤ 12 unknown matches → exhaustive (every combination checked)</li>
+        <li>&gt; 12 unknown matches → Monte Carlo (1,000 random samples, ±3.5%)</li>
+      </ul>
+
+      <h3>Limitations</h3>
+      <ul>
+        <li>Win probability is assumed 50/50 — player skill isn't factored in.</li>
+        <li>ID rates (90% locked, 3% bubble) are estimates based on typical tournament behaviour.</li>
+        <li>Tiebreakers shift as the round finishes — refresh to get the latest.</li>
+        <li>Multi-phase (DLC) events are not fully supported.</li>
+      </ul>
+    </div>
   </div>
 </main>
 
@@ -848,6 +975,22 @@
   function hideEventInfo() {
     document.getElementById('eventInfo').classList.remove('visible');
   }
+
+  // ── Help modal ───────────────────────────────────────────
+  function openHelp() {
+    document.getElementById('helpBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeHelp() {
+    document.getElementById('helpBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function closeHelpOnBackdrop(e) {
+    if (e.target === document.getElementById('helpBackdrop')) closeHelp();
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeHelp();
+  });
 </script>
 </body>
 </html>
