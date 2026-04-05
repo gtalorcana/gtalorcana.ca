@@ -515,8 +515,10 @@
 
       // Populate event info strip
       document.getElementById('eventName').textContent = data.event_name;
-      document.getElementById('eventMeta').textContent =
-        `${data.player_count} players · Round ${data.current_round} of ${data.total_swiss_rounds}`;
+      const isComplete = data.event_lifecycle_status === 'EVENT_COMPLETE';
+      document.getElementById('eventMeta').textContent = isComplete
+        ? `${data.player_count} players · ${data.total_swiss_rounds} rounds · Event complete`
+        : `${data.player_count} players · Round ${data.current_round} of ${data.total_swiss_rounds}`;
       document.getElementById('eventInfo').classList.add('visible');
 
       // Populate fields
@@ -542,6 +544,10 @@
     const depth = document.querySelector('input[name="depth"]:checked')?.value ?? 'full';
 
     if (!eventData)   { showError('analyzeError', 'Fetch an event first.'); return; }
+    if (eventData.event_lifecycle_status === 'EVENT_COMPLETE') {
+      showError('analyzeError', 'This event has ended — all rounds are complete. There\'s nothing left to ID.');
+      return;
+    }
     if (!playerId)    { showError('analyzeError', 'Please select yourself from the list.'); return; }
     if (!totalRounds || totalRounds < 1) { showError('analyzeError', 'Total rounds must be at least 1.'); return; }
     if (!topCut || topCut < 1)           { showError('analyzeError', 'Top cut must be at least 1.'); return; }
