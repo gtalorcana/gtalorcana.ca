@@ -8,54 +8,6 @@
 
 const RPH_BASE = 'https://api.cloudflare.ravensburgerplay.com/hydraproxy/api/v2';
 
-// ── Mock RPH data (local dev only — set RPH_BASE_OVERRIDE=mock in .dev.vars) ─
-import mockEvent404135      from './fixtures/event-404135.json';
-import mockR651002Standings from './fixtures/round-651002-standings.json';
-import mockR651002Matches   from './fixtures/round-651002-matches.json';
-import mockR651003Standings from './fixtures/round-651003-standings.json';
-import mockR651003Matches   from './fixtures/round-651003-matches.json';
-import mockR651004Standings from './fixtures/round-651004-standings.json';
-import mockR651004Matches   from './fixtures/round-651004-matches.json';
-import mockR651005Standings from './fixtures/round-651005-standings.json';
-import mockR651005Matches   from './fixtures/round-651005-matches.json';
-
-const MOCK_DATA = {
-  'event-404135':           mockEvent404135,
-  'round-651002-standings': mockR651002Standings,
-  'round-651002-matches':   mockR651002Matches,
-  'round-651003-standings': mockR651003Standings,
-  'round-651003-matches':   mockR651003Matches,
-  'round-651004-standings': mockR651004Standings,
-  'round-651004-matches':   mockR651004Matches,
-  'round-651005-standings': mockR651005Standings,
-  'round-651005-matches':   mockR651005Matches,
-};
-
-function mockRphFetch(url) {
-  const u = new URL(url);
-  if (/\/events\/?$/.test(u.pathname)) {
-    const id = u.searchParams.get('id');
-    const data = MOCK_DATA[`event-${id}`];
-    if (!data) throw new Error(`No mock fixture for event ${id}`);
-    return Promise.resolve(data);
-  }
-  const standingsMatch = u.pathname.match(/\/tournament-rounds\/([^/]+)\/standings/);
-  if (standingsMatch) {
-    const data = MOCK_DATA[`round-${standingsMatch[1]}-standings`];
-    if (!data) throw new Error(`No mock fixture for round ${standingsMatch[1]} standings`);
-    return Promise.resolve(data);
-  }
-  const matchesMatch = u.pathname.match(/\/tournament-rounds\/([^/]+)\/matches/);
-  if (matchesMatch) {
-    const data = MOCK_DATA[`round-${matchesMatch[1]}-matches`];
-    if (!data) throw new Error(`No mock fixture for round ${matchesMatch[1]} matches`);
-    return Promise.resolve(data);
-  }
-  throw new Error(`No mock handler for: ${url}`);
-}
-
-let _useMock = false;
-
 const ALLOWED_ORIGINS = [
   'https://gtalorcana.ca',
   'https://www.gtalorcana.ca',
@@ -86,7 +38,6 @@ function errResponse(message, status, origin) {
 }
 
 async function rphFetch(url) {
-  if (_useMock) return mockRphFetch(url);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`RPH returned ${res.status} for ${url}`);
   return res.json();
@@ -119,8 +70,6 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
-
-    _useMock = env?.RPH_BASE_OVERRIDE === 'mock';
 
     if (url.pathname === '/safe-to-id/event' && request.method === 'GET') {
       return handleEvent(url, origin, ctx);
