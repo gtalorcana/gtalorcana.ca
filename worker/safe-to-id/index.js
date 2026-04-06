@@ -71,12 +71,14 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
+    const rphBase = env?.RPH_BASE_OVERRIDE ?? RPH_BASE;
+
     if (url.pathname === '/safe-to-id/event' && request.method === 'GET') {
-      return handleEvent(url, origin, ctx);
+      return handleEvent(url, origin, ctx, rphBase);
     }
 
     if (url.pathname === '/safe-to-id/analyze' && request.method === 'POST') {
-      return handleAnalyze(request, origin, ctx);
+      return handleAnalyze(request, origin, ctx, rphBase);
     }
 
     return errResponse('Not found', 404, origin);
@@ -85,7 +87,7 @@ export default {
 
 // ── GET /safe-to-id/event?id={event_id} ────────────────────────────────────────
 
-async function handleEvent(url, origin, ctx) {
+async function handleEvent(url, origin, ctx, rphBase = RPH_BASE) {
   const eventIdStr = url.searchParams.get('id');
   if (!eventIdStr || !/^\d+$/.test(eventIdStr)) {
     return errResponse('Missing or invalid event ID', 400, origin);
@@ -173,7 +175,7 @@ async function handleEvent(url, origin, ctx) {
 
 // ── POST /safe-to-id/analyze ────────────────────────────────────────────────────
 
-async function handleAnalyze(request, origin, ctx) {
+async function handleAnalyze(request, origin, ctx, rphBase = RPH_BASE) {
   let body;
   try {
     body = await request.json();
