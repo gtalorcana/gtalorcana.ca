@@ -183,10 +183,8 @@ async function handleAnalyze(request, origin, ctx) {
 
   const {
     event_id, total_swiss_rounds, top_cut, player_id, depth,
-    override_round_id, override_current_pairings_round_id,
     locked_id_rate, bubble_id_rate, monte_carlo_samples,
   } = body;
-  const useCache = !override_round_id;
 
   if (!event_id || !total_swiss_rounds || !top_cut || !player_id || !depth) {
     return errResponse('Missing required fields: event_id, total_swiss_rounds, top_cut, player_id, depth', 400, origin);
@@ -198,9 +196,7 @@ async function handleAnalyze(request, origin, ctx) {
   // Fetch event to determine current round and round IDs
   let eventData;
   try {
-    eventData = useCache
-      ? await fetchWithCache(`event:${event_id}`, () => rphFetch(`${RPH_BASE}/events/?id=${event_id}`), ctx)
-      : await rphFetch(`${RPH_BASE}/events/?id=${event_id}`);
+    eventData = await fetchWithCache(`event:${event_id}`, () => rphFetch(`${RPH_BASE}/events/?id=${event_id}`), ctx);
   } catch (e) {
     return errResponse(`RPH API error: ${e.message}`, 502, origin);
   }
@@ -226,35 +222,19 @@ async function handleAnalyze(request, origin, ctx) {
   }
 
   // Determine which round's standings to use and what currentRound is
-  let standingsRoundId;
-  let currentRound;
-  let standingsRoundNumber;  // the round the standings actually reflect
-  let roundsForMatches;
-
-  if (override_round_id) {
-    const overrideRound = rounds.find(r => String(r.id) === String(override_round_id));
-    if (!overrideRound) return errResponse('override_round_id not found in event rounds', 400, origin);
-    standingsRoundId = override_round_id;
-    currentRound = overrideRound.round_number;
-    standingsRoundNumber = overrideRound.round_number;
-    roundsForMatches = rounds.filter(r => r.round_number <= overrideRound.round_number);
-  } else {
-    const inProgress = rounds.find(r => r.status !== 'COMPLETE');
-    currentRound = inProgress
-      ? inProgress.round_number
-      : rounds.length > 0 ? rounds[rounds.length - 1].round_number : 1;
-    const lastCompleted = completedRounds[completedRounds.length - 1];
-    standingsRoundId = lastCompleted.id;
-    standingsRoundNumber = lastCompleted.round_number;
-    roundsForMatches = completedRounds;
-  }
+  const inProgress = rounds.find(r => r.status !== 'COMPLETE');
+  const currentRound = inProgress
+    ? inProgress.round_number
+    : rounds.length > 0 ? rounds[rounds.length - 1].round_number : 1;
+  const lastCompleted = completedRounds[completedRounds.length - 1];
+  const standingsRoundId = lastCompleted.id;
+  const standingsRoundNumber = lastCompleted.round_number;
+  const roundsForMatches = completedRounds;
 
   // Fetch standings
   let standingsData;
   try {
-    standingsData = useCache
-      ? await fetchWithCache(`standings:${standingsRoundId}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`), ctx)
-      : await rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`);
+    standingsData = await fetchWithCache(`standings:${standingsRoundId}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${standingsRoundId}/standings`), ctx);
   } catch (e) {
     return errResponse(`RPH API error fetching standings: ${e.message}`, 502, origin);
   }
@@ -286,31 +266,18 @@ async function handleAnalyze(request, origin, ctx) {
   // high a point total).
 
   // Fetch current-round pairings (if available) to adjust points
-  let currentPairingsRoundId;
-  if (override_current_pairings_round_id === 'none') {
-    currentPairingsRoundId = null;
-  } else if (override_current_pairings_round_id) {
-    currentPairingsRoundId = override_current_pairings_round_id;
-  } else if (override_round_id) {
-    const overrideRound = rounds.find(r => String(r.id) === String(override_round_id));
-    const nextRound = rounds.find(r => r.round_number === overrideRound.round_number + 1);
-    currentPairingsRoundId = nextRound?.id ?? null;
-  } else {
-    const inProgressRound = rounds.find(r => r.status !== 'COMPLETE');
-    currentPairingsRoundId = inProgressRound?.id ?? null;
-  }
+  const inProgressRound = rounds.find(r => r.status !== 'COMPLETE');
+  const currentPairingsRoundId = inProgressRound?.id ?? null;
 
   let currentPairings = null;
   let pairingMatches = [];
   if (currentPairingsRoundId) {
     try {
-      currentPairings = override_current_pairings_round_id
-        ? await rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`)
-        : await fetchWithCache(
-            `matches:current:${currentPairingsRoundId}`,
-            () => rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`),
-            ctx
-          );
+      currentPairings = await fetchWithCache(
+        `matches:current:${currentPairingsRoundId}`,
+        () => rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`),
+        ctx
+      );
       pairingMatches = currentPairings?.matches ?? currentPairings?.results ?? [];
     } catch {
       // Pairings unavailable — proceed without adjustments
@@ -589,9 +556,7 @@ async function handleAnalyze(request, origin, ctx) {
     try {
       allMatchData = await Promise.all(
         roundsForMatches.map(r =>
-          useCache
-            ? fetchWithCache(`matches:${r.id}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`), ctx)
-            : rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`)
+          fetchWithCache(`matches:${r.id}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`), ctx)
         )
       );
     } catch (e) {

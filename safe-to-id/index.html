@@ -159,16 +159,6 @@
     }
     .btn-refresh:hover { border-color: var(--gold); color: var(--gold); }
 
-    /* ── DEV MODE ────────────────────────────────────────────── */
-    #devBanner {
-      width: 100%; max-width: 480px;
-      background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.4);
-      border-radius: 8px; padding: .5rem .9rem;
-      font-family: 'Cinzel', serif; font-size: .7rem; letter-spacing: .12em;
-      text-transform: uppercase; color: #f59e0b; text-align: center;
-    }
-    #devCard { border-color: rgba(245,158,11,.4); }
-
     /* ── HELP MODAL ──────────────────────────────────────────── */
     .help-link {
       font-family: 'Cinzel', serif; font-size: .7rem; letter-spacing: .1em;
@@ -258,9 +248,6 @@
 </nav>
 
 <main id="main-content">
-  <!-- Dev mode banner — only shown when ?dev=1 -->
-  <div id="devBanner" style="display:none;">⚙️ Dev Override Mode</div>
-
   <div class="page-header">
     <h1>🤝 Safe to ID?</h1>
     <p>Can you safely take the Intentional Draw?</p>
@@ -332,24 +319,6 @@
     <!-- Advanced simulation settings removed — defaults (90% locked ID rate,
          3% bubble ID rate, 1000 MC samples) are used automatically -->
 
-  </div>
-
-  <!-- Dev overrides card — only shown when ?dev=1 -->
-  <div class="card" id="devCard" style="display:none;">
-    <div class="card-title">⚙️ Dev Overrides</div>
-    <div class="field">
-      <label for="devStandingsRound">Standings round</label>
-      <select id="devStandingsRound" disabled>
-        <option value="">Auto (last completed round)</option>
-      </select>
-    </div>
-    <div class="field" style="margin-bottom:0;">
-      <label for="devPairingsRound">Pairings round</label>
-      <select id="devPairingsRound" disabled>
-        <option value="">Auto (next after standings round)</option>
-        <option value="none">None (skip pairings / no simulation)</option>
-      </select>
-    </div>
   </div>
 
   <!-- Analyze -->
@@ -454,13 +423,6 @@
   const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   const WORKER = isLocal ? 'http://localhost:8787' : 'https://api.gtalorcana.ca';
 
-  // ── Dev override mode ────────────────────────────────────
-  const isDevMode = new URLSearchParams(location.search).has('dev');
-  if (isDevMode) {
-    document.getElementById('devBanner').style.display = '';
-    document.getElementById('devCard').style.display = '';
-  }
-
   // ── State ───────────────────────────────────────────────
   let eventData = null;
 
@@ -480,31 +442,6 @@
     playerHidden.value = '';
     playerList.innerHTML = '';
     playerList.classList.remove('open');
-  }
-
-  function populateDevOverrides(rounds) {
-    const standingsSel = document.getElementById('devStandingsRound');
-    const pairingsSel  = document.getElementById('devPairingsRound');
-
-    // Rebuild standings select
-    standingsSel.innerHTML = '<option value="">Auto (last completed round)</option>';
-    for (const r of rounds) {
-      const opt = document.createElement('option');
-      opt.value = r.id;
-      opt.textContent = `Round ${r.round_number} — ${r.status ?? r.id}`;
-      standingsSel.appendChild(opt);
-    }
-    standingsSel.disabled = false;
-
-    // Rebuild pairings select (keep the static "none" option)
-    pairingsSel.innerHTML = '<option value="">Auto (next after standings round)</option><option value="none">None (skip pairings / no simulation)</option>';
-    for (const r of rounds) {
-      const opt = document.createElement('option');
-      opt.value = r.id;
-      opt.textContent = `Round ${r.round_number} — ${r.status ?? r.id}`;
-      pairingsSel.appendChild(opt);
-    }
-    pairingsSel.disabled = false;
   }
 
   function renderList(query) {
@@ -661,7 +598,6 @@
       document.getElementById('totalRounds').disabled = false;
 
       populatePlayers(data.players);
-      if (isDevMode) populateDevOverrides(data.rounds ?? []);
     } catch (e) {
       showError('fetchError', 'Network error — is the worker running?');
     } finally {
@@ -680,7 +616,7 @@
     const depth = document.querySelector('input[name="depth"]:checked')?.value ?? 'full';
 
     if (!eventData)   { showError('analyzeError', 'Fetch an event first.'); return; }
-    if (!isDevMode && eventData.event_lifecycle_status === 'EVENT_COMPLETE') {
+    if (eventData.event_lifecycle_status === 'EVENT_COMPLETE') {
       showError('analyzeError', 'Swiss rounds are complete — there\'s nothing left to ID.');
       return;
     }
@@ -696,9 +632,6 @@
     const bubbleIdRate = 0.03;
     const mcSamples = 1000;
 
-    const overrideRoundId    = isDevMode ? (document.getElementById('devStandingsRound').value || undefined) : undefined;
-    const overridePairingsId = isDevMode ? (document.getElementById('devPairingsRound').value || undefined) : undefined;
-
     try {
       const res = await fetch(`${WORKER}/safe-to-id/analyze`, {
         method: 'POST',
@@ -712,8 +645,6 @@
           locked_id_rate: lockedIdRate,
           bubble_id_rate: bubbleIdRate,
           monte_carlo_samples: mcSamples,
-          ...(overrideRoundId    && { override_round_id: overrideRoundId }),
-          ...(overridePairingsId && { override_current_pairings_round_id: overridePairingsId }),
         }),
       });
       const data = await res.json();
@@ -973,14 +904,6 @@
     document.getElementById('totalRounds').value = '';
     document.getElementById('totalRounds').disabled = true;
     document.getElementById('analyzeBtn').disabled = true;
-    if (isDevMode) {
-      const standingsSel = document.getElementById('devStandingsRound');
-      standingsSel.innerHTML = '<option value="">Auto (last completed round)</option>';
-      standingsSel.disabled = true;
-      const pairingsSel = document.getElementById('devPairingsRound');
-      pairingsSel.innerHTML = '<option value="">Auto (next after standings round)</option><option value="none">None (skip pairings / no simulation)</option>';
-      pairingsSel.disabled = true;
-    }
   }
 
   // ── Helpers ──────────────────────────────────────────────
