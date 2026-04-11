@@ -92,22 +92,19 @@ async function handleEvent(url, origin, ctx) {
   }
   const eventId = parseInt(eventIdStr, 10);
   // Fetch event from RPH
-  let eventData;
+  let event;
   try {
-    eventData = await fetchWithCache(
+    event = await fetchWithCache(
       `event:${eventId}`,
-      () => rphFetch(`${RPH_BASE}/events/?id=${eventId}`),
+      () => rphFetch(`${RPH_BASE}/events/${eventId}/`),
       ctx
     );
   } catch (e) {
+    if (/\b404\b/.test(e.message)) {
+      return errResponse('Event not found', 404, origin);
+    }
     return errResponse(`RPH API error: ${e.message}`, 502, origin);
   }
-
-  const results = eventData.results ?? [];
-  if (results.length === 0) {
-    return errResponse('Event not found', 404, origin);
-  }
-  const event = results[0];
 
   // Find the Swiss phase
   const phases = event.tournament_phases ?? [];
@@ -194,16 +191,15 @@ async function handleAnalyze(request, origin, ctx) {
   }
 
   // Fetch event to determine current round and round IDs
-  let eventData;
+  let event;
   try {
-    eventData = await fetchWithCache(`event:${event_id}`, () => rphFetch(`${RPH_BASE}/events/?id=${event_id}`), ctx);
+    event = await fetchWithCache(`event:${event_id}`, () => rphFetch(`${RPH_BASE}/events/${event_id}/`), ctx);
   } catch (e) {
+    if (/\b404\b/.test(e.message)) {
+      return errResponse('Event not found', 404, origin);
+    }
     return errResponse(`RPH API error: ${e.message}`, 502, origin);
   }
-
-  const results = eventData.results ?? [];
-  if (results.length === 0) return errResponse('Event not found', 404, origin);
-  const event = results[0];
   const playerCount = event.starting_player_count ?? 0;
 
   const phases = event.tournament_phases ?? [];
