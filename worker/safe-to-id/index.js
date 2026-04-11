@@ -337,8 +337,9 @@ async function handleAnalyze(request, origin, ctx) {
   }
 
   function maxPossiblePoints(s) {
-    const pid = s.player?.id;
     const pts = effectivePoints(s);
+    if (isDropped(s)) return pts;
+    const pid = s.player?.id;
     const played = standingsRoundNumber + (matchDone.has(pid) ? 1 : 0);
     return pts + Math.max(0, total_swiss_rounds - played) * 3;
   }
