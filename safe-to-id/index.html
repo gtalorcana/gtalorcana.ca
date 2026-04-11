@@ -435,13 +435,26 @@
   const playerHidden = document.getElementById('playerSelect');
 
   function populatePlayers(players) {
+    const priorId = selectedPlayerId;
     playerData = players;
     playerSearch.disabled = false;
     playerSearch.placeholder = 'Type your name…';
-    selectedPlayerId = null;
-    playerHidden.value = '';
     playerList.innerHTML = '';
     playerList.classList.remove('open');
+
+    // Preserve selection across refetches if the player is still in the list.
+    const stillThere = priorId != null && players.find(p => p.id === priorId);
+    if (stillThere) {
+      selectedPlayerId = stillThere.id;
+      playerHidden.value = stillThere.id;
+      playerSearch.value = stillThere.name;
+      document.getElementById('analyzeBtn').disabled = false;
+    } else {
+      selectedPlayerId = null;
+      playerHidden.value = '';
+      playerSearch.value = '';
+      document.getElementById('analyzeBtn').disabled = true;
+    }
   }
 
   function renderList(query) {
