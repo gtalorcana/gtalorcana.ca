@@ -889,10 +889,29 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       ogw: s.opponent_game_win_percentage ?? 0,
     }));
 
-  // Simulate one combination of unknown match outcomes and return the target's rank.
+  // RPH OMW% formula: average of opponents' match point % = points / (3 × rounds),
+  // floor 0.33. This exactly matches what RPH reports in standings.
+  // Using final simulated points for each opponent so OMW% reflects this scenario.
+  // After the current round completes, each player has played `currentRound` rounds.
+  // (currentRound is the in-progress round number, e.g. 4 for round 4.)
+  const totalRounds = currentRound;
+  function omwOf(pid, ptDelta) {
+    const pastOpps = hist.opps[pid] ?? [];
+    const currOpp = currentRoundOpps[pid];
+    const allOpps = currOpp != null ? [...pastOpps, currOpp] : pastOpps;
+    if (allOpps.length === 0) return standingsMap[pid]?.omw ?? 0;
+    const sum = allOpps.reduce((acc, opp) => {
+      const finalPts = (standingsMap[opp]?.pts ?? 0) + (ptDelta[opp] ?? 0);
+      return acc + Math.max(0.33, finalPts / (3 * totalRounds));
+    }, 0);
+    return sum / allOpps.length;
+  }
+
+  // Apply a combination of unknown-match outcomes on top of a base point-delta map,
+  // then return the full standings sorted by RPH tiebreakers (points → OMW% → GW% → OGW%).
   // outcomes: [{ p1, p2, outcome }]  outcome: 0=draw, 1=p1 wins, 2=p2 wins
-  function simulateScenario(outcomes) {
-    const ptDelta = { ...knownPtDelta };
+  function rankedScenario(outcomes, baseDelta) {
+    const ptDelta = { ...baseDelta };
 
     for (const { p1, p2, outcome } of outcomes) {
       if (outcome === 0) {
@@ -905,28 +924,10 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       }
     }
 
-    // RPH OMW% formula: average of opponents' match point % = points / (3 × rounds),
-    // floor 0.33. This exactly matches what RPH reports in standings.
-    // Using final simulated points for each opponent so OMW% reflects this scenario.
-    // After the current round completes, each player has played `currentRound` rounds.
-    // (currentRound is the in-progress round number, e.g. 4 for round 4.)
-    const totalRounds = currentRound;
-    function omwOf(pid) {
-      const pastOpps = hist.opps[pid] ?? [];
-      const currOpp = currentRoundOpps[pid];
-      const allOpps = currOpp != null ? [...pastOpps, currOpp] : pastOpps;
-      if (allOpps.length === 0) return standingsMap[pid]?.omw ?? 0;
-      const sum = allOpps.reduce((acc, opp) => {
-        const finalPts = (standingsMap[opp]?.pts ?? 0) + (ptDelta[opp] ?? 0);
-        return acc + Math.max(0.33, finalPts / (3 * totalRounds));
-      }, 0);
-      return sum / allOpps.length;
-    }
-
     return allPlayers.map(({ pid, basePoints, gw, ogw }) => ({
       pid,
       pts: basePoints + (ptDelta[pid] ?? 0),
-      omw: omwOf(pid),
+      omw: omwOf(pid, ptDelta),
       gw,
       ogw,
     })).sort((a, b) => {
@@ -936,7 +937,14 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       const gwD = b.gw - a.gw;
       if (Math.abs(gwD) > 0.0001) return gwD;
       return b.ogw - a.ogw;
-    }).findIndex(p => p.pid === targetPlayerId) + 1;
+    });
+  }
+
+  const rankOf = (sorted, pid) => sorted.findIndex(p => p.pid === pid) + 1;
+
+  // Simulate one combination of unknown match outcomes and return the target's rank.
+  function simulateScenario(outcomes) {
+    return rankOf(rankedScenario(outcomes, knownPtDelta), targetPlayerId);
   }
 
   function playerName(pid) {
@@ -1013,6 +1021,96 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     ? parseFloat(((weightedMakesCut / totalWeight) * 100).toFixed(1))
     : 0;
 
+  // ── Conditional breakdown: best/worst rank if the target wins / draws / loses ──
+  // Mirrors the headline simulation but pins the target's own match to each outcome
+  // and tracks both the target's and their opponent's resulting rank. The headline
+  // result assumes the target IDs, so it is equivalent to the `if_draw` branch.
+  const targetOppId = currentRoundOpps[targetPlayerId] ?? null;
+  let outcomeBreakdown;
+  if (targetHasBye) {
+    outcomeBreakdown = { applicable: false, reason: 'bye' };
+  } else if (targetMatchAlreadyDone) {
+    outcomeBreakdown = { applicable: false, reason: 'match_done' };
+  } else if (targetOppId == null) {
+    outcomeBreakdown = { applicable: false, reason: 'no_opponent' };
+  } else {
+    // knownPtDelta bakes in the assumed mutual ID (+1 each). Strip it so each branch
+    // can re-apply its own result for the target and the mirror for the opponent.
+    const baseNoTarget = { ...knownPtDelta };
+    baseNoTarget[targetPlayerId] = (baseNoTarget[targetPlayerId] ?? 0) - 1;
+    baseNoTarget[targetOppId] = (baseNoTarget[targetOppId] ?? 0) - 1;
+
+    const pct = (num, den) => (den > 0 ? parseFloat(((num / den) * 100).toFixed(1)) : 0);
+
+    // tDelta/oDelta = points awarded to the target / opponent for the fixed result.
+    function analyzeBranch(tDelta, oDelta) {
+      const base = { ...baseNoTarget };
+      base[targetPlayerId] = (base[targetPlayerId] ?? 0) + tDelta;
+      base[targetOppId] = (base[targetOppId] ?? 0) + oDelta;
+
+      let yBest = Infinity, yWorst = 0, oBest = Infinity, oWorst = 0;
+      let wYourCut = 0, wOppCut = 0, totWeight = 0;
+
+      const tally = (outcomes, weight) => {
+        const sorted = rankedScenario(outcomes, base);
+        const yr = rankOf(sorted, targetPlayerId);
+        const or = rankOf(sorted, targetOppId);
+        totWeight += weight;
+        if (yr <= topCut) wYourCut += weight;
+        if (or <= topCut) wOppCut += weight;
+        if (yr < yBest) yBest = yr;
+        if (yr > yWorst) yWorst = yr;
+        if (or < oBest) oBest = or;
+        if (or > oWorst) oWorst = or;
+      };
+
+      if (isExhaustive) {
+        const total = Math.pow(3, N);
+        for (let combo = 0; combo < total; combo++) {
+          const outcomes = unknownMatches.map((m, i) => ({
+            p1: m.p1, p2: m.p2,
+            outcome: Math.floor(combo / Math.pow(3, i)) % 3,
+          }));
+          let weight = 1;
+          for (let i = 0; i < unknownMatches.length; i++) {
+            const idp = unknownMatches[i].idProbability;
+            weight *= outcomes[i].outcome === 0 ? idp : (1 - idp) * 0.5;
+          }
+          tally(outcomes, weight);
+        }
+      } else {
+        for (let i = 0; i < MONTE_CARLO_SAMPLES; i++) {
+          const outcomes = unknownMatches.map(m => {
+            const roll = Math.random();
+            let outcome;
+            if (roll < m.idProbability) outcome = 0;
+            else if (roll < m.idProbability + (1 - m.idProbability) * 0.5) outcome = 1;
+            else outcome = 2;
+            return { p1: m.p1, p2: m.p2, outcome };
+          });
+          tally(outcomes, 1);
+        }
+      }
+
+      return {
+        your_best_rank: yBest === Infinity ? null : yBest,
+        your_worst_rank: yWorst === 0 ? null : yWorst,
+        your_makes_cut_pct: pct(wYourCut, totWeight),
+        opp_best_rank: oBest === Infinity ? null : oBest,
+        opp_worst_rank: oWorst === 0 ? null : oWorst,
+        opp_makes_cut_pct: pct(wOppCut, totWeight),
+      };
+    }
+
+    outcomeBreakdown = {
+      applicable: true,
+      opponent_name: playerName(targetOppId),
+      if_win: analyzeBranch(3, 0),
+      if_draw: analyzeBranch(1, 1),
+      if_loss: analyzeBranch(0, 3),
+    };
+  }
+
   return {
     simulation_mode: isExhaustive ? 'exhaustive' : 'monte_carlo',
     total_scenarios: isExhaustive ? Math.pow(3, N) : MONTE_CARLO_SAMPLES,
@@ -1025,5 +1123,6 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     unknown_results: N,
     best_scenario: isExhaustive ? bestScenario : null,
     worst_scenario: isExhaustive ? worstScenario : null,
+    outcome_breakdown: outcomeBreakdown,
   };
 }

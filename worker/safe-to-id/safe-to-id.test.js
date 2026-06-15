@@ -56,6 +56,23 @@
 // test('exhaustive simulation weights scenarios by probability', () => { ... });
 // test('weighted makes_cut_pct differs from unweighted count for same input', () => { ... });
 
+// ── Outcome breakdown (if win / draw / loss) ─────────────────────────────────
+
+// TODO: simulation.outcome_breakdown pins the target's own match to each result
+// and reports best/worst rank + makes-cut % for both the target and the opponent.
+//
+// Invariants verified manually with a deterministic 5-player fixture:
+//   - if_draw.your_* equals the headline best_rank/worst_rank/makes_cut_pct
+//     (headline assumes an ID, which is the draw branch)
+//   - winning is never worse than losing for the target (ranks and cut %)
+//   - the opponent's result mirrors the target's (you win ⇒ they lose)
+//
+// test('outcome_breakdown if_draw matches headline simulation result', () => { ... });
+// test('outcome_breakdown: winning never yields a worse rank than losing', () => { ... });
+// test('outcome_breakdown opponent ranks mirror the target outcome', () => { ... });
+// test('outcome_breakdown applicable:false when target has a bye', () => { ... });
+// test('outcome_breakdown applicable:false when target match already reported', () => { ... });
+
 // ── Danger count / expected danger ───────────────────────────────────────────
 
 // TODO: simple mode danger count — player with max_possible_points < threshold

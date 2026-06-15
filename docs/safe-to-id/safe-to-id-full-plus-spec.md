@@ -294,6 +294,53 @@ extremes are not the true best/worst.
 
 ---
 
+## Outcome Breakdown — "If I play it out"
+
+The headline simulation assumes the target **IDs** their own match (+1). The
+`simulation.outcome_breakdown` object answers the follow-up question: *if I
+actually play it out, what's my best/worst case for each result — and what does
+that do to my opponent?*
+
+It pins the target's own match to each of win / draw(ID) / loss in turn and
+re-runs the same enumeration over every **other** unknown match, tracking both
+the target's and the current-round opponent's resulting rank. The opponent's
+result is the mirror of the target's (you win ⇒ they lose, you ID ⇒ they ID, you
+lose ⇒ they win), so a single pass per branch covers both.
+
+Because the headline assumes an ID, `if_draw.your_*` is identical to the
+top-level `best_rank` / `worst_rank` / `makes_cut_pct` by construction.
+
+```json
+"outcome_breakdown": {
+  "applicable": true,
+  "opponent_name": "🦈Dale",
+  "if_win":  { "your_best_rank": 4,  "your_worst_rank": 9,  "your_makes_cut_pct": 100,
+               "opp_best_rank": 12, "opp_worst_rank": 22, "opp_makes_cut_pct": 8 },
+  "if_draw": { "your_best_rank": 5,  "your_worst_rank": 11, "your_makes_cut_pct": 88,
+               "opp_best_rank": 8,  "opp_worst_rank": 16, "opp_makes_cut_pct": 41 },
+  "if_loss": { "your_best_rank": 7,  "your_worst_rank": 14, "your_makes_cut_pct": 52,
+               "opp_best_rank": 5,  "opp_worst_rank": 10, "opp_makes_cut_pct": 79 }
+}
+```
+
+**Not applicable** (`{ "applicable": false, "reason": ... }`) when:
+- `"bye"` — the target has a bye this round (auto-win, no result to choose)
+- `"match_done"` — the target's match is already reported (result is a fact, not a hypothetical)
+- `"no_opponent"` — no current-round opponent could be identified in the pairings
+
+**Implementation:** `knownPtDelta` bakes in the assumed mutual ID (+1 each), so
+the breakdown strips that delta (`baseNoTarget`) and re-applies each branch's
+points to the target and the mirror to the opponent. The exhaustive / Monte
+Carlo strategy and per-scenario probability weighting are identical to the
+headline simulation.
+
+**Performance:** the breakdown runs the enumeration three more times (once per
+branch), so a Full-mode response is ~4× the headline simulation cost. At the
+exhaustive threshold (N=12 non-target unknowns) this is the worst case;
+final-round top tables typically have far fewer unknown bubble matches.
+
+---
+
 ## Performance Budget
 
 | Tournament size | Players | Unknown matches (N) | Strategy | Est. time |

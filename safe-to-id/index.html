@@ -130,6 +130,28 @@
       font-size: .8rem; color: var(--text);
     }
 
+    .outcome-breakdown { margin-top: .85rem; }
+    .ob-table {
+      width: 100%; border-collapse: collapse;
+      font-size: .8rem; font-variant-numeric: tabular-nums;
+    }
+    .ob-table th, .ob-table td {
+      padding: .35rem .4rem; text-align: right;
+      border-bottom: 1px solid var(--border);
+    }
+    .ob-table th:first-child, .ob-table td:first-child { text-align: left; }
+    .ob-table thead th {
+      color: var(--text-muted); font-weight: 600;
+      font-size: .72rem; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .ob-table tbody tr:last-child td { border-bottom: none; }
+    .ob-table td:first-child { color: var(--text); }
+    .ob-table .ob-you { color: var(--gold); font-weight: 600; }
+    .ob-table small { color: var(--text-muted); font-size: .68rem; }
+    .ob-note {
+      margin-top: .4rem; font-size: .68rem; color: var(--text-muted); font-style: italic;
+    }
+
     /* ── ADVANCED SETTINGS ───────────────────────────────── */
     /* ── PROGRESS BAR ────────────────────────────────────── */
     .sim-progress { margin-bottom: .6rem; }
@@ -835,6 +857,32 @@
         }
       }
       html += `</div>`;
+    }
+
+    const ob = fp.outcome_breakdown;
+    if (ob && ob.applicable) {
+      const opp = esc(ob.opponent_name || 'Opponent');
+      const rng = (b, w) => (b == null ? '—' : (b === w ? `R${b}` : `R${b}–${w}`));
+      const cell = (best, worst, pct, cls = '') =>
+        `<td class="${cls}">${rng(best, worst)}<br><small>${pct}% cut</small></td>`;
+      const row = (label, br) =>
+        `<tr><td>${label}</td>`
+        + cell(br.your_best_rank, br.your_worst_rank, br.your_makes_cut_pct, 'ob-you')
+        + cell(br.opp_best_rank, br.opp_worst_rank, br.opp_makes_cut_pct)
+        + `</tr>`;
+      html += `
+        <div class="outcome-breakdown">
+          <div class="root-for-label">If you play it out…</div>
+          <table class="ob-table">
+            <thead><tr><th></th><th>You</th><th>${opp}</th></tr></thead>
+            <tbody>
+              ${row('Win', ob.if_win)}
+              ${row('Draw (ID)', ob.if_draw)}
+              ${row('Lose', ob.if_loss)}
+            </tbody>
+          </table>
+          <div class="ob-note">Best–worst rank and chance of making top ${topCut}, for each result of your match.</div>
+        </div>`;
     }
 
     if (isMC) {
