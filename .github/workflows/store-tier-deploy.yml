@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'worker/store-tier/**'
+  workflow_dispatch:
 
 jobs:
   deploy:
