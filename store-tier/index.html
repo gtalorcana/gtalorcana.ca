@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:title" content="Store Tier Tracker — GTA Lorcana" />
+  <meta property="og:description" content="How is your local store tracking against Ravensburger's store tier targets?" />
+  <meta property="og:image" content="https://www.gtalorcana.ca/gtalorcana-logo.svg" />
+  <title>Store Tier Tracker — GTA Lorcana</title>
+  <link rel="icon" type="image/svg+xml" href="/gtalorcana-logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/shared.css" />
+  <link rel="stylesheet" href="/tools.css" />
+  <style>
+    .card.wide { max-width: 720px; }
+
+    /* ── DATE INPUTS ─────────────────────────────────────── */
+    input[type="date"] {
+      font-family: 'Lora', serif; font-size: 16px;
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: .65rem .9rem; width: 100%;
+      outline: none; min-height: 48px;
+      -webkit-appearance: none; appearance: none;
+    }
+    input[type="date"]:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(212,168,67,0.15);
+    }
+    [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.8) sepia(1) saturate(3) hue-rotate(5deg); }
+    .date-row { display: flex; gap: .6rem; align-items: flex-end; }
+    .date-row .field { flex: 1; margin-bottom: 0; }
+    #customDates { display: none; margin-top: 1rem; }
+    #customDates.visible { display: block; }
+
+    /* ── STORE SEARCH ────────────────────────────────────── */
+    .store-search { position: relative; }
+    .store-results {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; max-height: 260px; overflow-y: auto; display: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    .store-results.open { display: block; }
+    .store-result {
+      padding: .6rem .9rem; cursor: pointer; border-bottom: 1px solid var(--border);
+      font-size: .85rem;
+    }
+    .store-result:last-child { border-bottom: none; }
+    .store-result:hover, .store-result.active { background: rgba(212,168,67,0.12); }
+    .store-result-name { color: var(--text); display: block; }
+    .store-result-addr { color: var(--text-muted); font-size: .75rem; }
+
+    .store-chip {
+      display: none; flex-direction: column; gap: .2rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: .75rem .9rem; margin-top: .6rem;
+    }
+    .store-chip.visible { display: flex; }
+    .store-chip-name { font-family: 'Cinzel', serif; font-size: .9rem; color: var(--heading); }
+    .store-chip-meta { font-size: .78rem; color: var(--text-muted); }
+    .store-chip-clear {
+      background: none; border: none; color: var(--gold); cursor: pointer;
+      font-family: 'Cinzel', serif; font-size: .7rem; letter-spacing: .08em;
+      text-transform: uppercase; padding: 0; margin-top: .3rem; text-align: left;
+    }
+
+    .hint { font-size: .76rem; color: var(--text-muted); margin-top: .4rem; line-height: 1.5; }
+    .hint a { color: var(--gold); }
+
+    /* ── PROGRESS ────────────────────────────────────────── */
+    #progress { display: none; text-align: center; }
+    #progress.visible { display: block; }
+    .progress-text { font-size: .82rem; color: var(--text-muted); margin-top: .8rem; }
+    .progress-track {
+      height: 6px; background: var(--surface2); border-radius: 3px;
+      overflow: hidden; margin-top: .6rem;
+    }
+    .progress-track > div {
+      height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+      width: 0; transition: width .25s;
+    }
+
+    /* ── RESULTS ─────────────────────────────────────────── */
+    #results { display: none; width: 100%; max-width: 720px; }
+    #results.visible { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+
+    .metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; }
+    @media (max-width: 520px) { .metrics { grid-template-columns: 1fr; } }
+
+    .metric {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: .9rem 1rem;
+    }
+    .metric.met { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(212,168,67,.25); }
+    .metric-head {
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: 'Cinzel', serif; font-size: .7rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--text-muted);
+    }
+    .metric-check { color: var(--gold); font-size: .9rem; }
+    .metric-value {
+      font-family: 'Cinzel Decorative', serif; font-size: 1.7rem;
+      color: var(--heading); line-height: 1.2; margin-top: .3rem;
+    }
+    .metric-target { font-family: 'Lora', serif; font-size: .95rem; color: var(--text-muted); }
+    .metric-gap { font-size: .76rem; color: var(--text-muted); margin-top: .4rem; }
+    .metric-gap.met { color: var(--gold); }
+
+    .bar {
+      position: relative; height: 8px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 4px;
+      overflow: hidden; margin-top: .5rem;
+    }
+    .bar-fill {
+      height: 100%; width: 0;
+      background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+      transition: width .5s ease-out;
+    }
+    .bar-marker {
+      position: absolute; top: -2px; bottom: -2px; width: 2px;
+      background: var(--text-muted); opacity: .8;
+    }
+
+    /* ── EVENT TABLE ─────────────────────────────────────── */
+    .event-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+    .event-table th {
+      font-family: 'Cinzel', serif; font-size: .68rem; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--text-muted);
+      text-align: left; padding: .4rem .5rem; border-bottom: 1px solid var(--border);
+    }
+    .event-table td {
+      padding: .5rem; border-bottom: 1px solid var(--border); vertical-align: top;
+    }
+    .event-table tr:last-child td { border-bottom: none; }
+    .event-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .event-table td.date { white-space: nowrap; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .event-table a { color: var(--text); text-decoration: none; border-bottom: 1px dotted var(--border); }
+    .event-table a:hover { color: var(--gold); }
+    .tag {
+      display: inline-block; font-size: .62rem; letter-spacing: .08em;
+      text-transform: uppercase; padding: .1rem .35rem; border-radius: 4px;
+      border: 1px solid var(--border); color: var(--gold); margin-left: .35rem;
+      vertical-align: middle;
+    }
+    .row-zero td { opacity: .5; }
+    .table-scroll { overflow-x: auto; }
+
+    details.excluded { margin-top: .8rem; }
+    details.excluded summary {
+      font-size: .78rem; color: var(--text-muted); cursor: pointer;
+      font-family: 'Cinzel', serif; letter-spacing: .06em;
+    }
+    details.excluded ul { margin: .5rem 0 0 1rem; font-size: .78rem; color: var(--text-muted); }
+    details.excluded li { margin-bottom: .2rem; }
+
+    /* ── DISCLAIMER ──────────────────────────────────────── */
+    .disclaimer {
+      width: 100%; max-width: 720px;
+      background: rgba(212,168,67,.07); border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      border-radius: 8px; padding: .8rem 1rem;
+      font-size: .78rem; color: var(--text-muted); line-height: 1.6;
+    }
+    .disclaimer strong { color: var(--gold); }
+
+    .checkbox-row {
+      display: flex; align-items: flex-start; gap: .5rem;
+      font-size: .8rem; color: var(--text-muted); margin-top: .8rem; line-height: 1.5;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 18px; height: 18px; accent-color: var(--gold);
+      margin-top: .1rem; flex-shrink: 0; cursor: pointer;
+    }
+    .checkbox-row label {
+      font-family: 'Lora', serif; font-size: .8rem; letter-spacing: 0;
+      text-transform: none; color: var(--text-muted); cursor: pointer;
+    }
+
+    .summary-line {
+      font-size: .84rem; color: var(--text-muted); text-align: center; line-height: 1.6;
+    }
+    .summary-line strong { color: var(--heading); font-family: 'Cinzel', serif; }
+    .verdict {
+      text-align: center; font-size: .92rem; color: var(--text);
+      margin-top: .7rem; padding: .6rem .8rem; line-height: 1.5;
+      background: rgba(212,168,67,.08); border: 1px solid var(--border); border-radius: 8px;
+    }
+    .verdict strong {
+      font-family: 'Cinzel', serif; color: var(--gold);
+      letter-spacing: .06em; text-transform: uppercase; font-size: .88rem;
+    }
+    .btn-row { display: flex; gap: .6rem; width: 100%; max-width: 720px; }
+    .btn-row .btn { flex: 1; }
+  </style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-nav">Skip to content</a>
+
+<!-- Starfield -->
+<div id="stars"></div>
+
+<!-- Nav -->
+<nav>
+  <a class="nav-logo" href="/">
+    <img src="/gtalorcana-logo.svg" alt="GTA Lorcana" onerror="this.style.display='none'" />
+    <span class="nav-title">GTA Lorcana</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-back" href="/">← Home</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-label">Light</span>
+    </button>
+  </div>
+</nav>
+
+<main id="main-content">
+  <div class="page-header">
+    <h1>🏪 Store Tier Tracker</h1>
+    <p>How is your local store tracking against Ravensburger's tier targets?</p>
+  </div>
+
+  <!-- ── INPUT ───────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">Store</div>
+
+    <div class="field store-search">
+      <label for="storeInput">Store name or Play Hub store ID</label>
+      <input type="text" id="storeInput" autocomplete="off" placeholder="Start typing a store name…" />
+      <div class="store-results" id="storeResults"></div>
+    </div>
+
+    <div class="store-chip" id="storeChip">
+      <span class="store-chip-name" id="storeChipName">—</span>
+      <span class="store-chip-meta" id="storeChipMeta">—</span>
+      <button class="store-chip-clear" onclick="clearStore()">Change store</button>
+    </div>
+
+    <p class="hint">
+      Can't find it? Open the store on
+      <a href="https://tcg.ravensburgerplay.com/stores/search" target="_blank" rel="noopener">Ravensburger Play</a>
+      and paste the ID from the end of the URL.
+    </p>
+
+    <hr class="divider" />
+
+    <div class="card-title">Window</div>
+
+    <div class="radio-group" id="windowPresets">
+      <div class="radio-option">
+        <input type="radio" name="window" id="win-quick" value="quick" checked />
+        <label for="win-quick">Quick Launch</label>
+      </div>
+      <div class="radio-option">
+        <input type="radio" name="window" id="win-full" value="full" />
+        <label for="win-full">Full Program</label>
+      </div>
+      <div class="radio-option">
+        <input type="radio" name="window" id="win-custom" value="custom" />
+        <label for="win-custom">Custom</label>
+      </div>
+    </div>
+
+    <p class="hint" id="windowHint"></p>
+
+    <div id="customDates">
+      <div class="date-row">
+        <div class="field">
+          <label for="dateFrom">From</label>
+          <input type="date" id="dateFrom" />
+        </div>
+        <div class="field">
+          <label for="dateTo">To (exclusive)</label>
+          <input type="date" id="dateTo" />
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <hr class="divider" />
+
+    <button class="btn btn-primary" id="runBtn" onclick="run()">Check Store</button>
+  </div>
+
+  <!-- ── PROGRESS ────────────────────────────────────────── -->
+  <div class="card" id="progress">
+    <div class="spinner"></div>
+    <div class="progress-track"><div id="progressBar"></div></div>
+    <div class="progress-text" id="progressText">Loading events…</div>
+  </div>
+
+  <!-- ── RESULTS ─────────────────────────────────────────── -->
+  <div id="results">
+
+    <div class="disclaimer">
+      <strong>Unofficial.</strong> These numbers are counted from public Ravensburger Play Hub data
+      by GTA Lorcana. They are not Ravensburger's official tier tally and may differ from what your
+      store rep sees. Targets are based on information available as of August 2026 and may change.
+    </div>
+
+    <div class="card wide">
+      <div class="card-title" id="resultsTitle">Progress</div>
+      <p class="summary-line" id="resultsSubtitle"></p>
+      <p class="verdict" id="verdict"></p>
+
+      <div class="metrics" id="metrics" style="margin-top:1rem;"></div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="countEmpty" onchange="renderResults()" />
+        <label for="countEmpty">Count events with 0 registrations</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="prereleaseOverride" onchange="renderResults()" />
+        <label for="prereleaseOverride">
+          A prerelease is scheduled (tick this if yours isn't named "Prerelease" — we match on event name)
+        </label>
+      </div>
+    </div>
+
+    <div class="card wide">
+      <div class="card-title">Events counted</div>
+      <div class="table-scroll">
+        <table class="event-table" id="eventTable"></table>
+      </div>
+      <details class="excluded" id="excludedBox">
+        <summary></summary>
+        <ul id="excludedList"></ul>
+      </details>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="copySummary()" id="copyBtn">Copy Summary</button>
+      <button class="btn btn-secondary" onclick="startOver()">Start Over</button>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-logo">GTA Lorcana</div>
+  <p>Greater Toronto Area's Disney Lorcana Community</p>
+  <p style="margin-top:.5rem">
+    <a href="https://discord.gg/sNyzVMnTs6" target="_blank">Discord</a>
+    &nbsp;·&nbsp;
+    <a href="https://www.disneylorcana.com" target="_blank">Disney Lorcana Official</a>
+  </p>
+  <p style="margin-top:1rem;">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger's Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
+</footer>
+
+<script src="/shared.js"></script>
+<script>
+  // ── Config ──────────────────────────────────────────────
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  const WORKER = isLocal ? 'http://localhost:8787' : 'https://api.gtalorcana.ca';
+
+  const CHUNK_SIZE = 20;   // must match MAX_TICKET_EVENTS in the worker
+  const STORE_KEY  = 'gta-lorcana-store-tier-store';
+
+  // Tier targets. Quick Launch is a fixed qualifying window; the full program runs over
+  // 4 sets (~1 year) with two tiers.
+  const QUICK = {
+    label: 'Quick Launch',
+    from: '2026-09-01',
+    to: '2026-11-01',
+    tiers: [{ name: 'Quick Launch', events: 8, fans: 8, tickets: 80, prerelease: true }],
+  };
+  const FULL_TIERS = [
+    { name: 'Standard',  events: 25, fans: 25, tickets: 250, prerelease: false },
+    { name: 'Legendary', events: 50, fans: 50, tickets: 500, prerelease: false },
+  ];
+
+  // ── State ───────────────────────────────────────────────
+  let selectedStore = null;
+  let lastRun = null;   // { store, window, events: [...with tickets], excluded, tiers }
+
+  // ── Store search ────────────────────────────────────────
+  const storeInput   = document.getElementById('storeInput');
+  const storeResults = document.getElementById('storeResults');
+  let searchTimer = null;
+
+  storeInput.addEventListener('input', () => {
+    const q = storeInput.value.trim();
+    clearTimeout(searchTimer);
+    if (q.length < 2) { closeResults(); return; }
+    searchTimer = setTimeout(() => searchStores(q), 250);
+  });
+
+  storeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeResults();
+    if (e.key === 'Enter') {
+      const first = storeResults.querySelector('.store-result');
+      if (first) { e.preventDefault(); first.click(); }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.store-search')) closeResults();
+  });
+
+  function closeResults() { storeResults.classList.remove('open'); }
+
+  async function searchStores(q) {
+    try {
+      const res = await fetch(`${WORKER}/store-tier/stores?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Search failed');
+      renderStoreResults(data.stores || []);
+    } catch (err) {
+      renderStoreResults([]);
+      console.error(err);
+    }
+  }
+
+  function renderStoreResults(stores) {
+    storeResults.innerHTML = '';
+    if (!stores.length) {
+      storeResults.innerHTML = '<div class="store-result"><span class="store-result-addr">No stores found</span></div>';
+      storeResults.classList.add('open');
+      return;
+    }
+    for (const s of stores) {
+      const div = document.createElement('div');
+      div.className = 'store-result';
+      div.innerHTML = `<span class="store-result-name"></span><span class="store-result-addr"></span>`;
+      div.querySelector('.store-result-name').textContent = s.name || `Store ${s.store_id}`;
+      div.querySelector('.store-result-addr').textContent = s.address || '';
+      div.onclick = () => selectStore(s);
+      storeResults.appendChild(div);
+    }
+    storeResults.classList.add('open');
+  }
+
+  function selectStore(store) {
+    selectedStore = store;
+    closeResults();
+    storeInput.value = '';
+    document.getElementById('storeChipName').textContent = store.name || `Store ${store.store_id}`;
+    document.getElementById('storeChipMeta').textContent = store.address || '';
+    document.getElementById('storeChip').classList.add('visible');
+    document.querySelector('.store-search').style.display = 'none';
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch {}
+  }
+
+  function clearStore() {
+    selectedStore = null;
+    document.getElementById('storeChip').classList.remove('visible');
+    document.querySelector('.store-search').style.display = '';
+    storeInput.focus();
+    try { localStorage.removeItem(STORE_KEY); } catch {}
+  }
+
+  // ── Window presets ──────────────────────────────────────
+  document.querySelectorAll('input[name="window"]').forEach(r => {
+    r.addEventListener('change', onWindowChange);
+  });
+
+  function todayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function addDays(iso, days) {
+    const d = new Date(iso + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function currentWindow() {
+    const mode = document.querySelector('input[name="window"]:checked').value;
+    if (mode === 'quick') {
+      return { mode, from: QUICK.from, to: QUICK.to, label: QUICK.label, tiers: QUICK.tiers };
+    }
+    if (mode === 'full') {
+      const to = addDays(todayISO(), 1);        // include anything happening today
+      const from = addDays(to, -366);
+      return { mode, from, to, label: 'Last 12 months', tiers: FULL_TIERS };
+    }
+    return {
+      mode,
+      from: document.getElementById('dateFrom').value,
+      to: document.getElementById('dateTo').value,
+      label: 'Custom window',
+      tiers: FULL_TIERS,
+    };
+  }
+
+  function onWindowChange() {
+    const w = currentWindow();
+    document.getElementById('customDates').classList.toggle('visible', w.mode === 'custom');
+    const hint = document.getElementById('windowHint');
+    if (w.mode === 'quick') {
+      hint.textContent = 'Sept 1 – Nov 1 2026 · targets 8 events · 8 unique fans · 80 tickets · 1 prerelease';
+    } else if (w.mode === 'full') {
+      hint.textContent = `${w.from} – ${w.to} · Standard 25/25/250 · Legendary 50/50/500`;
+    } else {
+      hint.textContent = 'Tier targets shown against a non-standard window — compare with care.';
+    }
+  }
+
+  // ── Errors ──────────────────────────────────────────────
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+  function clearError() { document.getElementById('errorMsg').classList.remove('visible'); }
+
+  // ── Progress ────────────────────────────────────────────
+  function setProgress(done, total, text) {
+    document.getElementById('progressBar').style.width = total ? `${Math.round(done / total * 100)}%` : '0%';
+    document.getElementById('progressText').textContent = text;
+  }
+
+  // ── Run ─────────────────────────────────────────────────
+  async function run() {
+    clearError();
+
+    const storeRef = selectedStore ? (selectedStore.game_store_id || String(selectedStore.store_id)) : storeInput.value.trim();
+    if (!storeRef) { showError('Pick a store first.'); return; }
+
+    const w = currentWindow();
+    if (!w.from || !w.to) { showError('Choose both dates.'); return; }
+    if (w.from >= w.to) { showError('The "from" date must be earlier than the "to" date.'); return; }
+
+    document.getElementById('runBtn').disabled = true;
+    document.getElementById('results').classList.remove('visible');
+    document.getElementById('progress').classList.add('visible');
+    setProgress(0, 1, 'Loading events…');
+
+    try {
+      const evRes = await fetch(`${WORKER}/store-tier/events?store=${encodeURIComponent(storeRef)}&from=${w.from}&to=${w.to}`);
+      const evData = await evRes.json();
+      if (!evRes.ok) throw new Error(evData.error || 'Could not load events');
+
+      const events = evData.events || [];
+      if (!events.length) {
+        document.getElementById('progress').classList.remove('visible');
+        document.getElementById('runBtn').disabled = false;
+        showError(`No Disney Lorcana events found for this store between ${w.from} and ${w.to}.`);
+        return;
+      }
+
+      // Chunked ticket counting — each request stays inside the worker's subrequest budget
+      // and gives us a real progress bar instead of one long silent wait.
+      const byId = new Map(events.map(e => [e.id, e]));
+      let done = 0;
+      for (let i = 0; i < events.length; i += CHUNK_SIZE) {
+        const chunk = events.slice(i, i + CHUNK_SIZE);
+        const res = await fetch(`${WORKER}/store-tier/tickets`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: chunk.map(e => ({ id: e.id, past: e.is_past })) }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not count tickets');
+
+        for (const r of data.events) {
+          const ev = byId.get(r.event_id);
+          if (!ev) continue;
+          ev.tickets = r.tickets;
+          ev.user_ids = r.user_ids;
+          ev.guest_tickets = r.guest_tickets;
+          ev.statuses = r.statuses;
+          ev.error = r.error || null;
+        }
+        done += chunk.length;
+        setProgress(done, events.length, `Counting tickets… ${done} / ${events.length} events`);
+      }
+
+      lastRun = { store: evData.store, window: w, events, excluded: evData.excluded };
+
+      // The prerelease heuristic and the empty-event toggle both persist per store.
+      document.getElementById('prereleaseOverride').checked = false;
+      renderResults();
+
+      document.getElementById('progress').classList.remove('visible');
+      document.getElementById('results').classList.add('visible');
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      document.getElementById('progress').classList.remove('visible');
+      showError(err.message || 'Something went wrong.');
+    } finally {
+      document.getElementById('runBtn').disabled = false;
+    }
+  }
+
+  // ── Metrics ─────────────────────────────────────────────
+  function computeTotals() {
+    const countEmpty = document.getElementById('countEmpty').checked;
+    const counted = lastRun.events.filter(e => countEmpty || (e.tickets || 0) > 0);
+    const skipped = lastRun.events.filter(e => !countEmpty && (e.tickets || 0) === 0);
+
+    const fans = new Set();
+    const statuses = {};
+    let tickets = 0, guests = 0;
+    for (const e of counted) {
+      tickets += e.tickets || 0;
+      guests += e.guest_tickets || 0;
+      (e.user_ids || []).forEach(id => fans.add(id));
+      for (const [k, v] of Object.entries(e.statuses || {})) statuses[k] = (statuses[k] || 0) + v;
+    }
+
+    const prereleaseEvent = counted.find(e => e.prerelease_guess) || null;
+    const prerelease = !!prereleaseEvent || document.getElementById('prereleaseOverride').checked;
+
+    return { counted, skipped, events: counted.length, fans: fans.size, tickets, guests, statuses, prerelease, prereleaseEvent };
+  }
+
+  function metricCard(name, value, tiers, key) {
+    const target = tiers[0][key];
+    const stretch = tiers.length > 1 ? tiers[1][key] : null;
+    const met = value >= target;
+    const scaleMax = stretch || target;
+    const pct = Math.min(100, Math.round(value / scaleMax * 100));
+    const markerPct = stretch ? Math.round(target / stretch * 100) : null;
+
+    const gap = !met
+      ? `${target - value} more needed`
+      : (stretch
+          ? (value >= stretch ? `${tiers[1].name} met` : `${stretch - value} more for ${tiers[1].name}`)
+          : 'Target met');
+
+    return `
+      <div class="metric ${met ? 'met' : ''}">
+        <div class="metric-head"><span>${name}</span><span class="metric-check">${met ? '✓' : ''}</span></div>
+        <div class="metric-value">${value} <span class="metric-target">/ ${target}${stretch ? ` · ${stretch}` : ''}</span></div>
+        <div class="bar">
+          <div class="bar-fill" style="width:${pct}%"></div>
+          ${markerPct !== null ? `<div class="bar-marker" style="left:${markerPct}%"></div>` : ''}
+        </div>
+        <div class="metric-gap ${met ? 'met' : ''}">${gap}</div>
+      </div>`;
+  }
+
+  /** Which tier the store currently clears, and what is still missing above it. */
+  function verdict(t, tiers) {
+    const misses = (tier) => {
+      const m = [];
+      if (t.events < tier.events) m.push(`${tier.events - t.events} more event${tier.events - t.events === 1 ? '' : 's'}`);
+      if (t.fans < tier.fans) m.push(`${tier.fans - t.fans} more unique fan${tier.fans - t.fans === 1 ? '' : 's'}`);
+      if (t.tickets < tier.tickets) m.push(`${tier.tickets - t.tickets} more ticket${tier.tickets - t.tickets === 1 ? '' : 's'}`);
+      if (tier.prerelease && !t.prerelease) m.push('a prerelease event');
+      return m;
+    };
+
+    for (let i = tiers.length - 1; i >= 0; i--) {
+      if (misses(tiers[i]).length === 0) {
+        const next = tiers[i + 1];
+        return next
+          ? `<strong>${tiers[i].name} met</strong> — needs ${misses(next).join(', ')} for ${next.name}`
+          : `<strong>${tiers[i].name} met</strong> — all targets cleared`;
+      }
+    }
+    return `Needs ${misses(tiers[0]).join(', ')} to reach <strong>${tiers[0].name}</strong>`;
+  }
+
+  function renderResults() {
+    if (!lastRun) return;
+    const t = computeTotals();
+    const tiers = lastRun.window.tiers;
+    const store = lastRun.store;
+
+    document.getElementById('resultsTitle').textContent = store.name || `Store ${store.store_id}`;
+    document.getElementById('resultsSubtitle').innerHTML =
+      `<strong>${lastRun.window.label}</strong> · ${lastRun.window.from} → ${lastRun.window.to}` +
+      (store.timezone ? ` · dates in ${store.timezone}` : '');
+
+    document.getElementById('verdict').innerHTML = verdict(t, tiers);
+
+    const preTarget = tiers[0].prerelease;
+    const preCard = `
+      <div class="metric ${t.prerelease ? 'met' : ''}">
+        <div class="metric-head"><span>Prerelease</span><span class="metric-check">${t.prerelease ? '✓' : ''}</span></div>
+        <div class="metric-value">${t.prerelease ? 'Yes' : 'No'}</div>
+        <div class="metric-gap ${t.prerelease ? 'met' : ''}">
+          ${t.prereleaseEvent
+            ? `${t.prereleaseEvent.local_date} — ${escapeHtml(t.prereleaseEvent.name)}`
+            : (t.prerelease ? 'Confirmed manually' : (preTarget ? 'None found in window' : 'Not required for this tier'))}
+        </div>
+      </div>`;
+
+    document.getElementById('metrics').innerHTML =
+      metricCard('Events', t.events, tiers, 'events') +
+      metricCard('Unique Fans', t.fans, tiers, 'fans') +
+      metricCard('Event Tickets', t.tickets, tiers, 'tickets') +
+      preCard;
+
+    // ── Event table ──
+    const rows = t.counted.map(e => `
+      <tr class="${(e.tickets || 0) === 0 ? 'row-zero' : ''}">
+        <td class="date">${e.local_date}</td>
+        <td>
+          <a href="${e.url}" target="_blank" rel="noopener">${escapeHtml(e.name)}</a>
+          ${e.prerelease_guess ? '<span class="tag">Prerelease</span>' : ''}
+          ${e.online ? '<span class="tag">Online</span>' : ''}
+          ${!e.is_past ? '<span class="tag">Upcoming</span>' : ''}
+        </td>
+        <td class="num">${e.error ? '—' : (e.tickets || 0)}</td>
+      </tr>`).join('');
+
+    document.getElementById('eventTable').innerHTML =
+      `<thead><tr><th>Date</th><th>Event</th><th style="text-align:right">Tickets</th></tr></thead>` +
+      `<tbody>${rows || '<tr><td colspan="3">No events counted.</td></tr>'}</tbody>`;
+
+    // ── Excluded ──
+    const ex = lastRun.excluded || {};
+    const items = [];
+    if (t.skipped.length) items.push(`${t.skipped.length} Lorcana event(s) with 0 registrations — ${t.skipped.map(e => escapeHtml(e.name)).join(', ')}`);
+    if (ex.non_lorcana) items.push(`${ex.non_lorcana} event(s) for another game`);
+    if (ex.out_of_window) items.push(`${ex.out_of_window} Lorcana event(s) outside the date window`);
+    if (ex.test_or_template) items.push(`${ex.test_or_template} test or template event(s)`);
+    if (t.guests) items.push(`${t.guests} guest registration(s) counted as tickets but not as unique fans`);
+
+    // COMPLETE and ELIMINATED are normal registration states. Anything else is worth
+    // showing, since we count every registration as a ticket regardless of status.
+    const oddStatuses = Object.entries(t.statuses)
+      .filter(([k]) => k !== 'COMPLETE' && k !== 'ELIMINATED')
+      .map(([k, v]) => `${v} ${k}`);
+    if (oddStatuses.length) items.push(`Counted as tickets despite status: ${oddStatuses.join(', ')}`);
+
+    const box = document.getElementById('excludedBox');
+    if (items.length) {
+      box.style.display = '';
+      box.querySelector('summary').textContent = `Excluded (${items.length})`;
+      document.getElementById('excludedList').innerHTML = items.map(i => `<li>${i}</li>`).join('');
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ── Copy summary ────────────────────────────────────────
+  function copySummary() {
+    if (!lastRun) return;
+    const t = computeTotals();
+    const tier = lastRun.window.tiers[0];
+    const store = lastRun.store;
+    const mark = (v, target) => `${v}/${target}${v >= target ? ' ✓' : ''}`;
+
+    const text =
+      `${store.name || 'Store ' + store.store_id} — ${lastRun.window.label} (${lastRun.window.from} → ${lastRun.window.to})\n` +
+      `Events ${mark(t.events, tier.events)} · Unique Fans ${mark(t.fans, tier.fans)} · Tickets ${mark(t.tickets, tier.tickets)} · Prerelease ${t.prerelease ? '✓' : '✗'}\n` +
+      `${verdict(t, lastRun.window.tiers).replace(/<[^>]+>/g, '')}\n` +
+      `Unofficial — counted from public Play Hub data · gtalorcana.ca/store-tier`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = original; }, 1800);
+    }).catch(() => showError('Could not copy to clipboard.'));
+  }
+
+  function startOver() {
+    lastRun = null;
+    document.getElementById('results').classList.remove('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Init ────────────────────────────────────────────────
+  (function init() {
+    onWindowChange();
+    document.getElementById('dateFrom').value = QUICK.from;
+    document.getElementById('dateTo').value = QUICK.to;
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (saved && saved.store_id) selectStore(saved);
+    } catch {}
+  })();
+</script>
+
+</body>
+</html>
