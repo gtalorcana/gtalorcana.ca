@@ -265,6 +265,11 @@
       </div>
     </div>
 
+    <div class="field" id="setSpanField" style="display:none; margin-top:1rem;">
+      <label for="setSpan">Which 4 sets</label>
+      <select id="setSpan" onchange="onWindowChange()"></select>
+    </div>
+
     <p class="hint" id="windowHint"></p>
 
     <div id="customDates">
@@ -504,27 +509,52 @@
   }
 
   /**
-   * The current 4-set program window: starts at the release of the 4th-most-recent set and
-   * runs until the next set lands. Returns the cycle end so the UI can show how much runway
-   * is left, and a staleness flag when no set has released in over 5 months (the cadence is
-   * ~3 months, so that means LORCANA_SETS needs updating).
+   * Every consecutive 4-set span, newest first.
+   *
+   * A span is COMPLETE once the set *after* it has released — only then have all four of its
+   * sets finished their cycle. The newest span is usually IN PROGRESS: its last set is still
+   * the current set, so it holds three full cycles plus however much of the current one has
+   * happened. Both are legitimate reads (a closed window is comparable; the live one shows
+   * where you stand right now), so the UI offers both rather than picking silently.
+   *
+   * Spans are numbered by mainline set number — Fabled is 9, Wilds Unknown is 12 — matching
+   * how players refer to them.
    */
-  function setCycle() {
+  function setSpans() {
+    const today = todayISO();
+    const spans = [];
+
+    for (let i = LORCANA_SETS.length - SETS_IN_WINDOW; i >= 0; i--) {
+      const sets = LORCANA_SETS.slice(i, i + SETS_IN_WINDOW);
+      if (sets[SETS_IN_WINDOW - 1].release > today) continue;   // last set hasn't landed yet
+
+      const after = LORCANA_SETS[i + SETS_IN_WINDOW] || null;   // the set that closes this span
+      const endsOn = after ? after.release : null;
+      const complete = !!endsOn && endsOn <= today;
+
+      spans.push({
+        first: i + 1,
+        last: i + SETS_IN_WINDOW,
+        sets,
+        from: sets[0].release,
+        // A complete span is bounded by the next set's release; a live one runs to today.
+        to: complete ? endsOn : addDays(today, 1),
+        complete,
+        endsOn,
+        closingSet: after,
+        daysLeft: endsOn && !complete ? Math.round((new Date(endsOn) - new Date(today)) / 86400000) : null,
+        label: `Sets ${i + 1}–${i + SETS_IN_WINDOW}: ${sets[0].name} → ${sets[SETS_IN_WINDOW - 1].name}`,
+      });
+    }
+    return spans;
+  }
+
+  /** True when no set has released in 150 days — LORCANA_SETS probably needs updating. */
+  function setsLookStale() {
     const today = todayISO();
     const released = LORCANA_SETS.filter(s => s.release <= today);
-    const window = released.slice(-SETS_IN_WINDOW);
-    const next = LORCANA_SETS.find(s => s.release > today) || null;
     const latest = released[released.length - 1];
-
-    return {
-      from: window[0].release,
-      sets: window,
-      label: window.length > 1 ? `${window[0].name} → ${window[window.length - 1].name}` : window[0].name,
-      end: next ? next.release : null,
-      nextSet: next,
-      daysLeft: next ? Math.round((new Date(next.release) - new Date(today)) / 86400000) : null,
-      stale: latest ? (new Date(today) - new Date(latest.release)) / 86400000 > 150 : true,
-    };
+    return latest ? (new Date(today) - new Date(latest.release)) / 86400000 > 150 : true;
   }
 
   function currentWindow() {
@@ -533,14 +563,15 @@
       return { mode, from: QUICK.from, to: QUICK.to, label: QUICK.label, tiers: QUICK.tiers };
     }
     if (mode === 'full') {
-      const c = setCycle();
+      const spans = setSpans();
+      const picked = spans[document.getElementById('setSpan').selectedIndex] || spans[0];
       return {
         mode,
-        from: c.from,
-        to: addDays(todayISO(), 1),   // progress to date; include anything happening today
-        label: '4-Set Window',
+        from: picked.from,
+        to: picked.to,
+        label: `Sets ${picked.first}–${picked.last}`,
         tiers: FULL_TIERS,
-        cycle: c,
+        span: picked,
       };
     }
     return {
@@ -553,18 +584,24 @@
   }
 
   function onWindowChange() {
+    const mode = document.querySelector('input[name="window"]:checked').value;
+    document.getElementById('setSpanField').style.display = mode === 'full' ? '' : 'none';
+
     const w = currentWindow();
     document.getElementById('customDates').classList.toggle('visible', w.mode === 'custom');
     const hint = document.getElementById('windowHint');
     if (w.mode === 'quick') {
       hint.textContent = 'Sept 1 – Nov 1 2026 · targets 8 events · 8 unique fans · 80 tickets · 1 prerelease';
     } else if (w.mode === 'full') {
-      const c = w.cycle;
+      const s = w.span;
       hint.innerHTML =
-        `${c.label} · since ${c.from}` +
-        (c.nextSet ? ` · ${c.daysLeft} days until ${escapeHtml(c.nextSet.name)} starts the next cycle` : '') +
+        `${s.from} → ${s.to}` +
+        (s.complete
+          ? ` · complete 4-set window`
+          : ` · <strong>in progress</strong> — ${escapeHtml(s.sets[SETS_IN_WINDOW - 1].name)} is the current set` +
+            (s.closingSet ? `, ${s.daysLeft} days until ${escapeHtml(s.closingSet.name)} closes it` : '')) +
         `<br>Standard 25/25/250 · Legendary 50/50/500` +
-        (c.stale ? `<br>⚠️ Set list may be out of date — check for a newer release.` : '');
+        (setsLookStale() ? `<br>⚠️ Set list may be out of date — check for a newer release.` : '');
     } else {
       hint.textContent = 'Tier targets shown against a non-standard window — compare with care.';
     }
@@ -734,12 +771,17 @@
     const store = lastRun.store;
 
     document.getElementById('resultsTitle').textContent = store.name || `Store ${store.store_id}`;
-    const cyc = lastRun.window.cycle;
+    const span = lastRun.window.span;
     document.getElementById('resultsSubtitle').innerHTML =
       `<strong>${lastRun.window.label}</strong> · ${lastRun.window.from} → ${lastRun.window.to}` +
       (store.timezone ? ` · dates in ${store.timezone}` : '') +
-      (cyc ? `<br>${escapeHtml(cyc.label)}` +
-             (cyc.nextSet ? ` · ${cyc.daysLeft} days left before ${escapeHtml(cyc.nextSet.name)}` : '') : '');
+      (span
+        ? `<br>${escapeHtml(span.sets[0].name)} → ${escapeHtml(span.sets[SETS_IN_WINDOW - 1].name)} · ` +
+          (span.complete
+            ? 'complete window'
+            : `<strong>in progress</strong>` +
+              (span.closingSet ? ` · ${span.daysLeft} days left` : ''))
+        : '');
 
     document.getElementById('verdict').innerHTML = verdict(t, tiers);
 
@@ -838,6 +880,15 @@
 
   // ── Init ────────────────────────────────────────────────
   (function init() {
+    // Default to the newest COMPLETE 4-set window — a partial current set makes the totals
+    // look worse than the store's actual pace, so it should be an opt-in, not the default.
+    const spans = setSpans();
+    const select = document.getElementById('setSpan');
+    select.innerHTML = spans.map(s =>
+      `<option>${s.label}${s.complete ? '' : ' — in progress'}</option>`).join('');
+    const firstComplete = spans.findIndex(s => s.complete);
+    select.selectedIndex = firstComplete >= 0 ? firstComplete : 0;
+
     onWindowChange();
     document.getElementById('dateFrom').value = QUICK.from;
     document.getElementById('dateTo').value = QUICK.to;

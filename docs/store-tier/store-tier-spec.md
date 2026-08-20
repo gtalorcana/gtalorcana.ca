@@ -241,15 +241,29 @@ guest tickets** across a year, which is why unique fans (64) sits so far below t
 The program measures over **4 sets (~1 year)**, which is not the same as 365 days — Lorcana ships
 roughly every 3 months, so 4 sets is 11–12 months and the boundaries move.
 
-**Rule:** the window starts at the **wide release date of the 4th-most-recent set** and runs to
-today. The next set's release date is shown as the cycle end so a store knows its runway.
+**A span is COMPLETE once the set after it has released** — only then have all four of its sets
+finished their cycle. The newest span is normally *in progress*: three finished sets plus however
+much of the current set has happened so far, which reads worse than the store's actual pace.
 
-As of 2026-08-19 that is `2025-11-14 → today`, covering Whispers in the Well → Attack of the Vine!,
-with 65 days until Hyperia City starts the next cycle.
+Both are legitimate — a complete window is comparable and closed, a live one shows where you stand
+today — so the UI offers a **dropdown of every 4-set span**, newest first, and **defaults to the
+newest complete one**. In-progress spans are labelled as such and run to today.
 
-This is not cosmetic. Face to Face Games reads **Legendary met** on a rolling 365 days but
-**Standard met, 5 events / 3 fans / 127 tickets short of Legendary** on the real 4-set window,
-because the window starts ~3 months later. The flat-year version was flattering and wrong.
+Spans are numbered by mainline set number (Fabled is 9, Wilds Unknown is 12), matching how players
+refer to them.
+
+As of 2026-08-20 the default is `Sets 9–12: Fabled → Wilds Unknown`, `2025-08-29 → 2026-07-24`.
+
+Window choice moves the numbers a lot. Face to Face Games:
+
+| Window | Events | Fans | Tickets | Verdict |
+|--------|--------|------|---------|---------|
+| Rolling 365 days | 62 | 72 | 519 | Legendary met |
+| Sets 9–12 (complete) | 55 | 71 | 469 | Standard met — 31 tickets short of Legendary |
+| Sets 10–13 (in progress) | 45 | 47 | 373 | Standard met — 5 events / 3 fans / 127 tickets short |
+
+The rolling year was flattering and wrong; the in-progress span understates a store mid-cycle. The
+complete span is the honest default.
 
 **Set dates are hardcoded** in `LORCANA_SETS` in `store-tier/index.html`. RPH exposes no set or
 season data — `/sets/`, `/seasons/`, `/payout-seasons/`, and `/products/` all 404, `?search=` is
