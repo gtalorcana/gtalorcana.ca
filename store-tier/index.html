@@ -257,7 +257,7 @@
       </div>
       <div class="radio-option">
         <input type="radio" name="window" id="win-full" value="full" />
-        <label for="win-full">Full Program</label>
+        <label for="win-full">4-Set Window</label>
       </div>
       <div class="radio-option">
         <input type="radio" name="window" id="win-custom" value="custom" />
@@ -375,6 +375,38 @@
     { name: 'Legendary', events: 50, fans: 50, tickets: 500, prerelease: false },
   ];
 
+  /**
+   * Mainline Lorcana set releases, used to build the real 4-set program window instead of a
+   * flat 365 days. Dates are WIDE RELEASE dates, not prerelease weekends — several published
+   * set lists conflate the two (Winterspell prereleased Feb 13 2026 and released Feb 20).
+   *
+   * Illumineer's Quest standalones (Deep Trouble, Palace Heist, The Great Hunny Rescue) are
+   * deliberately excluded — they are not part of the set cadence.
+   *
+   * MAINTENANCE: this list is hardcoded. RPH exposes no set or season endpoint (checked
+   * /sets/, /seasons/, /payout-seasons/, /products/ — all 404, and payout_active_seasons is
+   * empty on every event). Add each new set as it is announced; the UI warns when the list
+   * looks stale.
+   */
+  const LORCANA_SETS = [
+    { name: 'The First Chapter',     release: '2023-08-18' },
+    { name: 'Rise of the Floodborn', release: '2023-11-17' },
+    { name: 'Into the Inklands',     release: '2024-02-23' },
+    { name: "Ursula's Return",       release: '2024-05-17' },
+    { name: 'Shimmering Skies',      release: '2024-08-09' },
+    { name: 'Azurite Sea',           release: '2024-11-14' },
+    { name: "Archazia's Island",     release: '2025-03-07' },
+    { name: 'Reign of Jafar',        release: '2025-05-30' },
+    { name: 'Fabled',                release: '2025-08-29' },
+    { name: 'Whispers in the Well',  release: '2025-11-14', prerelease: '2025-11-07' },
+    { name: 'Winterspell',           release: '2026-02-20', prerelease: '2026-02-13' },
+    { name: 'Wilds Unknown',         release: '2026-05-15', prerelease: '2026-05-08' },
+    { name: 'Attack of the Vine!',   release: '2026-07-24', prerelease: '2026-07-17' },
+    { name: 'Hyperia City',          release: '2026-10-23', prerelease: '2026-10-16' },
+  ];
+
+  const SETS_IN_WINDOW = 4;   // the program measures over 4 sets (~1 year)
+
   // ── State ───────────────────────────────────────────────
   let selectedStore = null;
   let lastRun = null;   // { store, window, events: [...with tickets], excluded, tiers }
@@ -471,15 +503,45 @@
     return d.toISOString().slice(0, 10);
   }
 
+  /**
+   * The current 4-set program window: starts at the release of the 4th-most-recent set and
+   * runs until the next set lands. Returns the cycle end so the UI can show how much runway
+   * is left, and a staleness flag when no set has released in over 5 months (the cadence is
+   * ~3 months, so that means LORCANA_SETS needs updating).
+   */
+  function setCycle() {
+    const today = todayISO();
+    const released = LORCANA_SETS.filter(s => s.release <= today);
+    const window = released.slice(-SETS_IN_WINDOW);
+    const next = LORCANA_SETS.find(s => s.release > today) || null;
+    const latest = released[released.length - 1];
+
+    return {
+      from: window[0].release,
+      sets: window,
+      label: window.length > 1 ? `${window[0].name} → ${window[window.length - 1].name}` : window[0].name,
+      end: next ? next.release : null,
+      nextSet: next,
+      daysLeft: next ? Math.round((new Date(next.release) - new Date(today)) / 86400000) : null,
+      stale: latest ? (new Date(today) - new Date(latest.release)) / 86400000 > 150 : true,
+    };
+  }
+
   function currentWindow() {
     const mode = document.querySelector('input[name="window"]:checked').value;
     if (mode === 'quick') {
       return { mode, from: QUICK.from, to: QUICK.to, label: QUICK.label, tiers: QUICK.tiers };
     }
     if (mode === 'full') {
-      const to = addDays(todayISO(), 1);        // include anything happening today
-      const from = addDays(to, -366);
-      return { mode, from, to, label: 'Last 12 months', tiers: FULL_TIERS };
+      const c = setCycle();
+      return {
+        mode,
+        from: c.from,
+        to: addDays(todayISO(), 1),   // progress to date; include anything happening today
+        label: '4-Set Window',
+        tiers: FULL_TIERS,
+        cycle: c,
+      };
     }
     return {
       mode,
@@ -497,7 +559,12 @@
     if (w.mode === 'quick') {
       hint.textContent = 'Sept 1 – Nov 1 2026 · targets 8 events · 8 unique fans · 80 tickets · 1 prerelease';
     } else if (w.mode === 'full') {
-      hint.textContent = `${w.from} – ${w.to} · Standard 25/25/250 · Legendary 50/50/500`;
+      const c = w.cycle;
+      hint.innerHTML =
+        `${c.label} · since ${c.from}` +
+        (c.nextSet ? ` · ${c.daysLeft} days until ${escapeHtml(c.nextSet.name)} starts the next cycle` : '') +
+        `<br>Standard 25/25/250 · Legendary 50/50/500` +
+        (c.stale ? `<br>⚠️ Set list may be out of date — check for a newer release.` : '');
     } else {
       hint.textContent = 'Tier targets shown against a non-standard window — compare with care.';
     }
@@ -667,9 +734,12 @@
     const store = lastRun.store;
 
     document.getElementById('resultsTitle').textContent = store.name || `Store ${store.store_id}`;
+    const cyc = lastRun.window.cycle;
     document.getElementById('resultsSubtitle').innerHTML =
       `<strong>${lastRun.window.label}</strong> · ${lastRun.window.from} → ${lastRun.window.to}` +
-      (store.timezone ? ` · dates in ${store.timezone}` : '');
+      (store.timezone ? ` · dates in ${store.timezone}` : '') +
+      (cyc ? `<br>${escapeHtml(cyc.label)}` +
+             (cyc.nextSet ? ` · ${cyc.daysLeft} days left before ${escapeHtml(cyc.nextSet.name)}` : '') : '');
 
     document.getElementById('verdict').innerHTML = verdict(t, tiers);
 

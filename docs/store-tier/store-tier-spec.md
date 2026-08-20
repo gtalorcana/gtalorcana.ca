@@ -236,6 +236,38 @@ An unknown state surfaces rather than silently changing a number.
 separately so the number is explainable. These are real and not rare: Face to Face Games had **23
 guest tickets** across a year, which is why unique fans (64) sits so far below tickets (493).
 
+### The 4-set window
+
+The program measures over **4 sets (~1 year)**, which is not the same as 365 days — Lorcana ships
+roughly every 3 months, so 4 sets is 11–12 months and the boundaries move.
+
+**Rule:** the window starts at the **wide release date of the 4th-most-recent set** and runs to
+today. The next set's release date is shown as the cycle end so a store knows its runway.
+
+As of 2026-08-19 that is `2025-11-14 → today`, covering Whispers in the Well → Attack of the Vine!,
+with 65 days until Hyperia City starts the next cycle.
+
+This is not cosmetic. Face to Face Games reads **Legendary met** on a rolling 365 days but
+**Standard met, 5 events / 3 fans / 127 tickets short of Legendary** on the real 4-set window,
+because the window starts ~3 months later. The flat-year version was flattering and wrong.
+
+**Set dates are hardcoded** in `LORCANA_SETS` in `store-tier/index.html`. RPH exposes no set or
+season data — `/sets/`, `/seasons/`, `/payout-seasons/`, and `/products/` all 404, `?search=` is
+ignored on `/events/`, and `payout_active_seasons` is empty on every event checked. The list must be
+updated by hand as sets are announced; the UI shows a staleness warning when no set has released in
+over 150 days.
+
+Two things to watch when adding a set:
+
+1. **Use wide release dates, not prerelease weekends.** Several published set lists conflate them —
+   Winterspell prereleased 2026-02-13 and released 2026-02-20, and at least one widely-cited list
+   records the prerelease date as the release date.
+2. **Exclude Illumineer's Quest standalones** (Deep Trouble, Palace Heist, The Great Hunny Rescue).
+   They are not part of the set cadence and would shorten the window if counted.
+
+Whether Ravensburger bounds its own window on release dates, prerelease dates, or something else
+entirely is unknown — see open question 5.
+
 ### Timezone
 
 `start_datetime` is UTC. The store's local timezone is in `store.timezone`
@@ -386,7 +418,7 @@ Cinzel/Lora, `.card` / `.btn` / `.field` patterns). Add the page to the tools na
    Accepts a pasted Play Hub store UUID directly. Selected store shown as a chip with its address.
 2. **Window** — preset buttons plus a custom range:
    - **Quick Launch** (Sept 1 – Nov 1 2026) — *default*, targets 8 / 8 / 80 / 1 prerelease
-   - **Full Program** (rolling 12 months ending today) — targets 25 / 25 / 250 and 50 / 50 / 500
+   - **4-Set Window** — the real program window (see below) — targets 25 / 25 / 250 and 50 / 50 / 500
    - **Custom** — two date inputs; tier targets shown but flagged as non-standard window
 3. **Run** button.
 
@@ -525,8 +557,10 @@ relevant rather than pretending they are settled.
    per-store-ID count over-reports.
 4. **Does "prerelease scheduled" mean scheduled, or run?** Spec assumes *scheduled in the window*,
    matching the wording. A scheduled-but-cancelled prerelease would still count under our rule.
-5. **Is the 4-set window fixed or rolling?** We implement rolling-12-months plus custom. If RB uses
-   fixed set-release boundaries, add a set-based preset once set dates are known.
+5. **Where exactly does the 4-set window start?** We use the wide release date of the 4th-most-recent
+   set. RB could just as well bound it on prerelease weekends (a week earlier each time) or on
+   internal quarters. Prerelease dates are in `LORCANA_SETS` where known, so switching the boundary
+   is a one-line change if we learn otherwise.
 6. **Online events** — `event_is_online` exists on the payload. Currently counted. Unclear whether
    RB counts them toward a physical store's tier.
 
