@@ -246,8 +246,12 @@ finished their cycle. The newest span is normally *in progress*: three finished 
 much of the current set has happened so far, which reads worse than the store's actual pace.
 
 Both are legitimate — a complete window is comparable and closed, a live one shows where you stand
-today — so the UI offers a **dropdown of every 4-set span**, newest first, and **defaults to the
-newest complete one**. In-progress spans are labelled as such and run to today.
+today — so the UI offers **exactly two**: the newest complete span and the one running now. It
+**defaults to the complete one**; the in-progress one is labelled and runs to today.
+
+Older spans are deliberately not offered. The tier program does not look further back than the
+current window, so neither does the tool. The pair rolls forward automatically — when Hyperia City
+releases on 2026-10-23, Sets 10–13 becomes the complete window and Sets 11–14 becomes the live one.
 
 Spans are numbered by mainline set number (Fabled is 9, Wilds Unknown is 12), matching how players
 refer to them.
@@ -258,7 +262,7 @@ Window choice moves the numbers a lot. Face to Face Games:
 
 | Window | Events | Fans | Tickets | Verdict |
 |--------|--------|------|---------|---------|
-| Rolling 365 days | 62 | 72 | 519 | Legendary met |
+| Rolling 365 days *(removed)* | 62 | 72 | 519 | Legendary met |
 | Sets 9–12 (complete) | 55 | 71 | 469 | Standard met — 31 tickets short of Legendary |
 | Sets 10–13 (in progress) | 45 | 47 | 373 | Standard met — 5 events / 3 fans / 127 tickets short |
 

@@ -546,7 +546,11 @@
         label: `Sets ${i + 1}–${i + SETS_IN_WINDOW}: ${sets[0].name} → ${sets[SETS_IN_WINDOW - 1].name}`,
       });
     }
-    return spans;
+
+    // Only two windows matter: the last complete one and the one running now. The tier
+    // program doesn't look further back, so neither do we. Complete goes first — it is
+    // the default.
+    return [spans.find(s => s.complete), spans.find(s => !s.complete)].filter(Boolean);
   }
 
   /** True when no set has released in 150 days — LORCANA_SETS probably needs updating. */
