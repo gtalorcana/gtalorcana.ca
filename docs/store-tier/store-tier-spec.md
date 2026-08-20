@@ -434,10 +434,15 @@ Cinzel/Lora, `.card` / `.btn` / `.field` patterns). Add the page to the tools na
 
 1. **Store** — text input with typeahead against `/store-tier/stores`, showing name + city.
    Accepts a pasted Play Hub store UUID directly. Selected store shown as a chip with its address.
-2. **Window** — preset buttons plus a custom range:
+2. **Window** — two presets, no free-form dates:
    - **Quick Launch** (Sept 1 – Nov 1 2026) — *default*, targets 8 / 8 / 80 / 1 prerelease
-   - **4-Set Window** — the real program window (see below) — targets 25 / 25 / 250 and 50 / 50 / 500
-   - **Custom** — two date inputs; tier targets shown but flagged as non-standard window
+   - **4-Set Window** — the real program window (see below) — targets 25 / 25 / 250 and 50 / 50 / 500,
+     with a dropdown to pick the complete or in-progress span
+
+   A custom date range was deliberately removed. Every window the tier program recognises is now a
+   preset, and tier targets rendered against an arbitrary range is the one combination in this tool
+   that can actively mislead. Arbitrary ranges are still available on the worker for verification —
+   `/store-tier/events?store=&from=&to=` accepts any dates.
 3. **Run** button.
 
 Remember the last store in `localStorage` — this is a tool people will check repeatedly.
