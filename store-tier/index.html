@@ -283,7 +283,7 @@
         <input type="checkbox" id="countEmpty" onchange="renderResults()" />
         <label for="countEmpty">Count events with 0 registrations</label>
       </div>
-      <div class="checkbox-row">
+      <div class="checkbox-row" id="prereleaseOverrideRow">
         <input type="checkbox" id="prereleaseOverride" onchange="renderResults()" />
         <label for="prereleaseOverride">
           A prerelease is scheduled (tick this if yours isn't named "Prerelease" — we match on event name)
@@ -743,17 +743,22 @@
 
     document.getElementById('verdict').innerHTML = verdict(t, tiers);
 
-    const preTarget = tiers[0].prerelease;
-    const preCard = `
+    // Only Quick Launch requires a prerelease. Standard and Legendary are 25/25/250 and
+    // 50/50/500 with no prerelease condition, so showing a ticked Prerelease card there
+    // would read as a target that doesn't exist. The event table still tags prereleases.
+    const preRequired = tiers.some(x => x.prerelease);
+    const preCard = !preRequired ? '' : `
       <div class="metric ${t.prerelease ? 'met' : ''}">
         <div class="metric-head"><span>Prerelease</span><span class="metric-check">${t.prerelease ? '✓' : ''}</span></div>
         <div class="metric-value">${t.prerelease ? 'Yes' : 'No'}</div>
         <div class="metric-gap ${t.prerelease ? 'met' : ''}">
           ${t.prereleaseEvent
             ? `${t.prereleaseEvent.local_date} — ${escapeHtml(t.prereleaseEvent.name)}`
-            : (t.prerelease ? 'Confirmed manually' : (preTarget ? 'None found in window' : 'Not required for this tier'))}
+            : (t.prerelease ? 'Confirmed manually' : 'None found in window')}
         </div>
       </div>`;
+
+    document.getElementById('prereleaseOverrideRow').style.display = preRequired ? '' : 'none';
 
     document.getElementById('metrics').innerHTML =
       metricCard('Events', t.events, tiers, 'events') +
@@ -818,7 +823,8 @@
 
     const text =
       `${store.name || 'Store ' + store.store_id} — ${lastRun.window.label} (${lastRun.window.from} → ${lastRun.window.to})\n` +
-      `Events ${mark(t.events, tier.events)} · Unique Fans ${mark(t.fans, tier.fans)} · Tickets ${mark(t.tickets, tier.tickets)} · Prerelease ${t.prerelease ? '✓' : '✗'}\n` +
+      `Events ${mark(t.events, tier.events)} · Unique Fans ${mark(t.fans, tier.fans)} · Tickets ${mark(t.tickets, tier.tickets)}` +
+      (tier.prerelease ? ` · Prerelease ${t.prerelease ? '✓' : '✗'}` : '') + `\n` +
       `${verdict(t, lastRun.window.tiers).replace(/<[^>]+>/g, '')}\n` +
       `Unofficial — counted from public Play Hub data · gtalorcana.ca/store-tier`;
 

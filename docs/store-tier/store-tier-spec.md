@@ -474,6 +474,12 @@ than two sets of cards.
 **Prerelease card** is boolean: the matched event name and date, or "None found in window" with the
 manual override.
 
+It appears **only for Quick Launch**, which is the one tier with a prerelease condition. Standard
+and Legendary are 25/25/250 and 50/50/500 with no prerelease requirement, so the card and its
+override are hidden on the 4-set window, and the copy summary drops the prerelease field there —
+a ticked card would advertise a target that does not exist. Prerelease events are still tagged in
+the event table, so the information is not lost, just not scored.
+
 **Event table** below — the receipts, so a store can audit our math:
 
 | Date | Event | Tickets | |
