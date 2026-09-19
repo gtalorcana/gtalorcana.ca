@@ -144,7 +144,9 @@ Returns per player: `rank`, `record`, `points` (use this), `match_points` (ignor
 
 **Match history for a round (Full mode only):**
 ```
-GET https://api.cloudflare.ravensburgerplay.com/hydraproxy/api/v2/tournament-rounds/{round_id}/matches
+GET https://api.cloudflare.ravensburgerplay.com/hydraproxy/api/v2/tournament-rounds/{round_id}/matches/paginated/?page={n}&page_size=100
+
+The unpaginated `/matches` endpoint now returns 401 — use `/matches/paginated` and follow `next_page_number`.
 ```
 Returns per match: `games_won_by_winner`, `games_won_by_loser`, `winning_player`, `match_is_bye`, `match_is_intentional_draw`, `match_is_unintentional_draw`, `players: [id1, id2]`
 
@@ -192,6 +194,7 @@ If `player_count <= top_cut`, set `all_players_advance: true` and all verdicts t
     - winning player: games_won += games_won_by_winner
     - losing player:  games_won += games_won_by_loser
     - both players:   games_played += games_won_by_winner + games_won_by_loser
+    - both players:   games_won += games_drawn / 3, games_played += games_drawn
   Byes (match_is_bye == true): count as 2-0 win (games_won += 2, games_played += 2)
   Draws (intentional or unintentional): skip — no game wins attributed
   gw_pct = max(0.33, games_won / games_played)

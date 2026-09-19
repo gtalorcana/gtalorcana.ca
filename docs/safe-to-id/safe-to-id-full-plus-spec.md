@@ -68,8 +68,7 @@ tiebreaker calculations:
 
 **Match points:** +1 to each player (same as each other, different from win/loss)
 
-**GW%:** Both draw types **are included** — game data is present even for draws.
-`players[0]` is credited with `games_won_by_winner` games won and `players[1]` with `games_won_by_loser` games won; both players add `games_won_by_winner + games_won_by_loser` to games played. In practice, draws are almost always 1-1, so each player gets 1 win and 2 played.
+**GW%:** Both draw types **are included**. `players[0]` is credited with `games_won_by_winner` games won and `players[1]` with `games_won_by_loser`; both add `games_won_by_winner + games_won_by_loser` to games played. Drawn games (`games_drawn`) count for both players at 1/3 of a win each, since RPH scores GW% as game points / (3 × games). An intentional draw is recorded as 0-0-3, i.e. three drawn games and no decisive ones.
 
 **OMW%:** RPH uses a points-based formula: each opponent's MW% = `opponent_points / (3 × rounds_played)`, floored at 0.33. A draw gives 1pt out of 3 possible, so it counts as 1/3 of a win — distinct from the MTG approach (0 wins) and the 0.5-win approach. See "OMW% Formula" section below for the derivation and verification.
 
@@ -201,8 +200,11 @@ For each combination of unknown match outcomes:
     - `opp_final_pts` = opponent's standings points + their point delta in this scenario
     - This exactly matches RPH's formula — verified round-by-round (see "OMW% Formula" section)
 
-3. GW% and OGW% are not recalculated per scenario — too expensive and
-   the within-round shift is small. Use values computed in Step 1.
+3. Recompute GW% and OGW% for every player in this scenario:
+    - A scenario win adds 2 games won to the winner; a scenario ID adds three drawn games (1/3 each) to both players
+    - `ogw(pid) = avg over all opponents of that opponent's scenario GW%`
+    - The game score of an unreported win is unknown, so each scenario is ranked twice, once with 2-0 and once with 2-1, and the target's **worse** rank is kept
+    - Leaving these frozen is wrong: a bubble player's stale GW% decides ties it no longer would (see "Regression: frozen tiebreakers" below)
 
 4. Re-rank all players: points DESC → OMW% DESC → GW% DESC → OGW% DESC
 
@@ -235,7 +237,9 @@ Fetch raw match data for all completed rounds. For each player:
 ```
 For each completed match:
   - If match_is_bye:
-      skip — game data not meaningful for byes
+      counts as a 2-0 win: games_won += 2, games_played += 2
+      (RPH leaves games_won_by_winner / games_won_by_loser null for byes)
+  - Every match, first: each player gets games_drawn / 3 won and games_drawn played
   - If match_is_intentional_draw OR match_is_unintentional_draw (or winning_player == null):
       players[0] gets games_won_by_winner won, players[1] gets games_won_by_loser won
       both players add games_won_by_winner + games_won_by_loser to games_played
@@ -667,3 +671,42 @@ POST /safe-to-id/analyze
 Actual result: ryanfan finished **rank 4** (top 8 cut). Simulation now predicts
 `best_rank: 4, worst_rank: 4` (deterministic since all round 5 results were known).
 This was the bug that prompted the OMW% investigation — previously predicted rank 5.
+---
+
+## Regression: frozen tiebreakers (2026-09-19)
+
+**Event 804567, round 4, top 8.** The simulation reported the target at rank 7
+in all 9 scenarios. He finished **8th**.
+
+Both players ended on 6 points with identical OMW% (56.08) and GW% (50.00); OGW%
+separated them, 53.25 to 51.50. The scenario that happened was one the sim had
+ranked 7th. Cause: each scenario recomputed points and OMW% but reused the GW%
+and OGW% from before the round. The rival's GW% was still at the 0.33 floor, so
+the sim had the target winning a tiebreak that his 2-0 win had already flipped.
+
+Fix: recompute GW% and OGW% inside every scenario, and rank each scenario twice
+(unreported win as 2-0 and as 2-1), keeping the target's worse rank.
+
+## Verification: event 755724, round 4 (2026-09-19)
+
+11 players, 4 Swiss rounds. Snapshots were captured mid-round (`snapshot.mjs`),
+a full table was predicted for each possible result of the last open match, and
+the prediction was compared with RPH's final standings once it reported.
+
+| | Result |
+|---|---|
+| Predicted table vs RPH final | **0/11 players differ** — rank, points, OMW%, GW%, OGW% all exact |
+| Same prediction before the bye fix | 11/11 differ on GW%/OGW% (ranks were still right) |
+| Rank ranges from both snapshots | every player whose own match was done finished inside their range |
+
+The two players who finished below their predicted range (Michael, QReys) both
+played their match out and lost; a range assumes the player takes the ID.
+
+**The bug it caught:** a bye counts as a 2-0 game win, but RPH leaves the bye
+match's `games_won_by_winner` / `games_won_by_loser` null, and the worker skipped
+byes entirely. Every player with a bye carried a low GW%, which then dragged
+their opponents' OGW% off. It changed no rank in this event, but GW% is the
+tiebreaker that decided the 804567 case above.
+
+Raw data, per-player worker responses and the cross-check output are committed
+under `worker/safe-to-id/fixtures/event-755724/`.

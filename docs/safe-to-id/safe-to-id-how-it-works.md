@@ -88,8 +88,10 @@ The 33% floor prevents a string of opponents with losing records from dragging y
 Your own percentage of individual games won across all matches.
 
 ```
-GW% = max(33%, games you won ÷ total games played)
+GW% = max(33%, game points ÷ (3 × games played))
 ```
+
+A won game is worth 3 points and a drawn game 1, so a drawn game counts as a third of a win. An intentional draw is recorded by RPH as three drawn games (0-0-3). A **bye counts as a 2-0 win**, even though RPH leaves its game fields null.
 
 Note: `game_win_percentage` is not reported in RPH standings — the tool computes it from raw match data.
 
@@ -143,8 +145,10 @@ Each exhaustive scenario is weighted by the product of its individual outcome pr
 For each combination of outcomes, the tool recomputes:
 1. Final points for every player
 2. OMW% for every player using the simulated final points
-3. GW% (taken from match history; not recomputed per scenario)
-4. OGW% (from standings; not recomputed per scenario)
+3. GW% for every player, including the games won in this scenario
+4. OGW% for every player, averaged from the scenario's GW% values
+
+A scenario's unreported win could be 2-0 or 2-1, which changes GW%. The tool tries both and keeps your **worse** rank, so a verdict never rests on the friendlier game score.
 
 Players are ranked by points → OMW% → GW% → OGW%. The tool records whether you land inside the top cut.
 
@@ -168,6 +172,6 @@ If your round result is already recorded before you run the tool, the simulation
 
 - **Skill is ignored.** Win probability is 50/50 for all players.
 - **ID rates are estimates.** The 90% locked and 3% bubble rates are based on typical tournament behaviour, not observed data for this specific event.
-- **Tiebreakers shift.** GW% and OGW% values reflect the last completed round. They update on refresh as the current round finishes.
+- **Tiebreakers shift.** The OMW% and OGW% shown in *your tiebreakers* reflect the last completed round; they update on refresh as the current round finishes. The simulation itself does recompute every tiebreaker per scenario.
 - **Multi-phase (DLC) events** are not fully supported. The tool analyses the primary Swiss phase only.
 - **This is a probability estimate, not a guarantee.** Use it as one input among many — your read of specific matchups and player tendencies matters too.
