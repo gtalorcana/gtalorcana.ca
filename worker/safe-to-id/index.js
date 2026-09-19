@@ -525,8 +525,16 @@ async function handleAnalyze(request, origin, ctx) {
   // Helper: apply a single completed match's game data into gamesWon/gamesPlayed.
   // RPH scores GW% as game points / (3 × games): a drawn game is worth 1/3 of a win,
   // so each drawn game adds 1/3 to gamesWon and 1 to gamesPlayed. An ID is 0-0-3.
+  // A bye counts as a 2-0 win, though RPH leaves its game fields null.
   function applyGameData(match) {
-    if (match.match_is_bye) return;
+    if (match.match_is_bye) {
+      const pid = (match.players ?? [])[0];
+      if (pid != null) {
+        gamesWon[pid] = (gamesWon[pid] ?? 0) + 2;
+        gamesPlayed[pid] = (gamesPlayed[pid] ?? 0) + 2;
+      }
+      return;
+    }
     const ww = match.games_won_by_winner;
     const wl = match.games_won_by_loser;
     if (ww == null || wl == null) return;
