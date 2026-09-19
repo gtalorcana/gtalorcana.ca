@@ -1,0 +1,371 @@
+{
+  "status": 200,
+  "body": {
+    "standings": [
+      {
+        "player": {
+          "id": 37502,
+          "best_identifier": "Ervin S"
+        },
+        "user_event_status": {
+          "id": 5470993,
+          "matches_won": 3,
+          "matches_drawn": 1,
+          "matches_lost": 0,
+          "total_match_points": 10,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/bb98db58-51d.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=71cd079701b307809d97a7f62f41ad4d634d79903b38641397c3413ec2df949a8d48cafafc3a0540cdd346386c550f41ec56adaa4337a284c89a76e6688146c0ffa6a7f851c6f08bb47c2cc5a4470b77f3ada391b5302f84b13240ff26569c83452b72be41e3d3c6bf1d26676af78b6a1b2a66d4d5e7418673ee1f1beebc9cc0bab84709743a0fb083cb07a74396fb94b56cb6fa022d88f0ed9d270296cf9f6ec0514a0f44063382fd4d059d0b5b737e1b36c5bec8996dd19d2d97145a72a661fd31288be3d67fb6fc40996be8af158a5a76ece07c8a147e5c812f7e8fea3c8f1cc9c75d7d4d53c08315c19da5b7f73a71b8c04908fb441a11027f916c053ee9",
+          "registration_status": "COMPLETE",
+          "best_identifier": "BlazinAzn 🦈",
+          "is_guest": false,
+          "user": {
+            "id": 37502,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 37502,
+        "rank": 1,
+        "record": "3-0-1",
+        "match_record": "3-0-1",
+        "match_points": 10,
+        "opponent_match_win_percentage": 0.625,
+        "game_win_percentage": 0.7,
+        "opponent_game_win_percentage": 0.57178933,
+        "points": 10
+      },
+      {
+        "player": {
+          "id": 37381,
+          "best_identifier": "Ryan F"
+        },
+        "user_event_status": {
+          "id": 5500600,
+          "matches_won": 3,
+          "matches_drawn": 1,
+          "matches_lost": 0,
+          "total_match_points": 10,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/bb98db58-51d.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=71cd079701b307809d97a7f62f41ad4d634d79903b38641397c3413ec2df949a8d48cafafc3a0540cdd346386c550f41ec56adaa4337a284c89a76e6688146c0ffa6a7f851c6f08bb47c2cc5a4470b77f3ada391b5302f84b13240ff26569c83452b72be41e3d3c6bf1d26676af78b6a1b2a66d4d5e7418673ee1f1beebc9cc0bab84709743a0fb083cb07a74396fb94b56cb6fa022d88f0ed9d270296cf9f6ec0514a0f44063382fd4d059d0b5b737e1b36c5bec8996dd19d2d97145a72a661fd31288be3d67fb6fc40996be8af158a5a76ece07c8a147e5c812f7e8fea3c8f1cc9c75d7d4d53c08315c19da5b7f73a71b8c04908fb441a11027f916c053ee9",
+          "registration_status": "COMPLETE",
+          "best_identifier": "Ryan",
+          "is_guest": false,
+          "user": {
+            "id": 37381,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 37381,
+        "rank": 2,
+        "record": "3-0-1",
+        "match_record": "3-0-1",
+        "match_points": 10,
+        "opponent_match_win_percentage": 0.5,
+        "game_win_percentage": 0.63636364,
+        "opponent_game_win_percentage": 0.52589286,
+        "points": 10
+      },
+      {
+        "player": {
+          "id": 37198,
+          "best_identifier": "Aaron B"
+        },
+        "user_event_status": {
+          "id": 4692196,
+          "matches_won": 2,
+          "matches_drawn": 0,
+          "matches_lost": 1,
+          "total_match_points": 6,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/AmethystSteel.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=935542c7a01e01e6c8f408f1751ee0bf928ccf30ead6925bf4b57421870345a7f40ec3f5c9655dcbe65b7e31d2634b622b7c22551792a21da20a32d43e4fa2a14e9d52f2535ab81b6c1c292d4167e27c6065d379facf81525f30ced96ac06dc188bac834514e47fd4ff047e28aa356f24c288293174cc39d275a75a1ec4cdfe4a8e94a200aecec508985d89a1ae30850db96d1e25e29e9a7a5a6ac1ff71555379d96ec693a98d6adae9962c8553f7c88a12238e0105e51e67e574baf53d81015e46d4f21d7b9f17daf30b87ef68e79a5c8ac8e644f04e7b5aa9730a91235d7b3b86345e0f04a10f8e300508d01862479efc07c528d3312ce8f24075e5a1bd654",
+          "registration_status": "COMPLETE",
+          "best_identifier": "TeddyWestside 👀",
+          "is_guest": false,
+          "user": {
+            "id": 37198,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 37198,
+        "rank": 3,
+        "record": "2-1-0",
+        "match_record": "2-1-0",
+        "match_points": 6,
+        "opponent_match_win_percentage": 0.75,
+        "game_win_percentage": 0.66666667,
+        "opponent_game_win_percentage": 0.6,
+        "points": 6
+      },
+      {
+        "player": {
+          "id": 19724,
+          "best_identifier": "Kamil G"
+        },
+        "user_event_status": {
+          "id": 5506871,
+          "matches_won": 1,
+          "matches_drawn": 0,
+          "matches_lost": 2,
+          "total_match_points": 3,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/EmeraldSapphire.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=c92ec1069ee06a0da4df2e2fc973c1bc3fc7710a0c65b953600053618e7089aca0931ed9b11dc2aa8b4ec0a91b2f3726c727673d5183a1f9d3d27930f27a54cddd00d158f218b0a89025e52a16062c2645d6f255441d4531e39d977f5323d6e8847df6ffca4f8992289a4b78660d12f57d2d82933324f1d6d1908385aa97a447a9cc61e91d0a6b95cc367064de858b4c44291d3e099053d2551a5f1415aff877e5b3127db009ccad283b4addea80dbe595cefeba87b6c210f4ccef7ad397a6c722e97904ab035f9c07cd548f9f7db8964b59fc5f0a78f88004df2442cfcee620b39b850f532a6dc69b7c7a8e650842fa292143696be5297d6e36f85a6c67aa05",
+          "registration_status": "COMPLETE",
+          "best_identifier": "Whysper",
+          "is_guest": false,
+          "user": {
+            "id": 19724,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 19724,
+        "rank": 4,
+        "record": "1-2-0",
+        "match_record": "2-2-0",
+        "match_points": 6,
+        "opponent_match_win_percentage": 0.5,
+        "game_win_percentage": 0.6,
+        "opponent_game_win_percentage": 0.47997836,
+        "points": 6
+      },
+      {
+        "player": {
+          "id": 86190,
+          "best_identifier": "Michael B"
+        },
+        "user_event_status": {
+          "id": 4942113,
+          "matches_won": 2,
+          "matches_drawn": 0,
+          "matches_lost": 1,
+          "total_match_points": 6,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/Ruby.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=9a79590c06f86ccc66594b64fe7dff06dee5c89a6c4d1c5c1bbd7433f4f8e3714cf454cc3d1b7e2c7b02d5afa6233c305cf38b5350a5536f8edd37f06aa28f2446e66b3199c7060172a989b7ec123b770e6515f2cc32878263b6633576eab6695f09a4fe03dd1d0bda685d067dd09ea3783ac20ad716be6671555f47b80f2087398a3147b2adb15a2982302a51ba75832dd674ef97b3e737193ef10b06763fda518ad9d6f0e900d9997739073caf6af40b96fc26004259132d3c6e9f2891a5eb3080ae4557a08eda611ddd67fdbc7c73345149a6d1b16f0029cfb9754996dd3aef8d040cf8f73ac53ea2f148e3641f2110ce21127974a0265d8d44d7994f5699",
+          "registration_status": "COMPLETE",
+          "best_identifier": "Michael",
+          "is_guest": false,
+          "user": {
+            "id": 86190,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 86190,
+        "rank": 5,
+        "record": "2-1-0",
+        "match_record": "2-1-0",
+        "match_points": 6,
+        "opponent_match_win_percentage": 0.5,
+        "game_win_percentage": 0.55555556,
+        "opponent_game_win_percentage": 0.50648148,
+        "points": 6
+      },
+      {
+        "player": {
+          "id": 22985,
+          "best_identifier": "Ryan S"
+        },
+        "user_event_status": {
+          "id": 5457707,
+          "matches_won": 2,
+          "matches_drawn": 0,
+          "matches_lost": 1,
+          "total_match_points": 6,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/RubySteel.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=588c66896a9f4e11ea97e7bc3ff1a9dc50055f2b9f4572145e82c6e49744d6758f7cfa18b062a09424d50a5448936a67ecd8a429caa282e6c7cbdafb662c84ef0d6bd80dfd438a20e56c58a0b469032ff672ef075ba74e9729e62601149266fa8987b50cf415ec399b3eb66ee41fcb977a1756f2787be978c4a37b4bb15e6fb05598336c6541379360358688b75d194aa9c3f3a19242c43c56aac799f9a7722d9a3ec0c4d5f2c9df32503e4102319be90f1f8e2a257e0b049d51b0793d368a4391c6d9addfbcf3e797cd4cb1917cdb79f318061813a4c4fa942b52bd42ef8f2a919d9253ec63f29eec20f1c7f4eebd7ce1dcc33f34310f9079a272f3971917a8",
+          "registration_status": "COMPLETE",
+          "best_identifier": "RyanCNS",
+          "is_guest": false,
+          "user": {
+            "id": 22985,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 22985,
+        "rank": 6,
+        "record": "2-1-0",
+        "match_record": "2-1-0",
+        "match_points": 6,
+        "opponent_match_win_percentage": 0.44444444,
+        "game_win_percentage": 0.5,
+        "opponent_game_win_percentage": 0.51322751,
+        "points": 6
+      },
+      {
+        "player": {
+          "id": 486378,
+          "best_identifier": "Giovanni p"
+        },
+        "user_event_status": {
+          "id": 5506688,
+          "matches_won": 1,
+          "matches_drawn": 0,
+          "matches_lost": 2,
+          "total_match_points": 3,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/AmberSapphire.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=88d1046d303d6169b103b2e73cbbfb8ff080541178e9dfead614538606e9f96315d781373ebaea971365742a07a41bbccf294a7017ffacff90aa4ebbfdd82b93539377b140ac628e5ff023e2fa56655666ffc772acd7da9d6501cf2c3a8f0804655db299720b18a8b25f92b4ef9e09b5f90677462d5519b4a711c1970fcb6cf3e4a8099ba426cba9a075cb21132d7e40e5155c18fb598703538e73d4d046444b54af70daff878176290cb0c74973d3c4ab0d42cc760ee61a05404d935f284ea6ddc5f44d0c0560c391fcad9295de33d931132210063216fa0d617854d9e4776cb2233c9172687d39ff34c853395cd612d4939bbc3970e9d8a33335faca667a02",
+          "registration_status": "COMPLETE",
+          "best_identifier": "Beerhunt",
+          "is_guest": false,
+          "user": {
+            "id": 486378,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 486378,
+        "rank": 7,
+        "record": "1-2-0",
+        "match_record": "1-2-0",
+        "match_points": 3,
+        "opponent_match_win_percentage": 0.66666667,
+        "game_win_percentage": 0.375,
+        "opponent_game_win_percentage": 0.5973064,
+        "points": 3
+      },
+      {
+        "player": {
+          "id": 42417,
+          "best_identifier": "Michael R"
+        },
+        "user_event_status": {
+          "id": 5407527,
+          "matches_won": 1,
+          "matches_drawn": 0,
+          "matches_lost": 2,
+          "total_match_points": 3,
+          "full_profile_picture_url": "https://storage.googleapis.com/cardeio-images/defaults/lorcana/profile/24.webp",
+          "registration_status": "COMPLETE",
+          "best_identifier": "M_friend_E",
+          "is_guest": false,
+          "user": {
+            "id": 42417,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 42417,
+        "rank": 8,
+        "record": "1-2-0",
+        "match_record": "1-2-0",
+        "match_points": 3,
+        "opponent_match_win_percentage": 0.66666666,
+        "game_win_percentage": 0.42857143,
+        "opponent_game_win_percentage": 0.58831169,
+        "points": 3
+      },
+      {
+        "player": {
+          "id": 79025,
+          "best_identifier": "Nicholas M"
+        },
+        "user_event_status": {
+          "id": 5499821,
+          "matches_won": 1,
+          "matches_drawn": 0,
+          "matches_lost": 2,
+          "total_match_points": 3,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/AmberEmerald.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=024eba2b9b04da3af18a89d3182ce14cff67a11571ef97991abd8a61034517f9c0f48859da8e358810a6700befc4b94f5e0bd80400220e73b17144481377632ac20c616308b074c56b7b9694546103bdf23ec2e1ef1505c352a829c222e6da3f97bf38b73f7460a54872f7c2574c558dab695abd4e6b1dd31997f78cab48f863d0ea142822f6eccf325dc44790cf39d2a129bb478c14ec12c60dde8c1ef82512d838bed3002468c18caf37aea092103754fd29ae46795c50f4462bae26eef2806ccf1cce8c9637a65e05ad834cbd9937fa6b15fe3b8c541c869dc031d9fecb064173db4b3ba9ee7f7258897ab1319a65db2fd4b748c2c35315c2dc3acc3c8c3d",
+          "registration_status": "COMPLETE",
+          "best_identifier": "Underworld Stitch",
+          "is_guest": false,
+          "user": {
+            "id": 79025,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 79025,
+        "rank": 9,
+        "record": "1-2-0",
+        "match_record": "1-2-0",
+        "match_points": 3,
+        "opponent_match_win_percentage": 0.58333334,
+        "game_win_percentage": 0.42857143,
+        "opponent_game_win_percentage": 0.55,
+        "points": 3
+      },
+      {
+        "player": {
+          "id": 64817,
+          "best_identifier": "Neil I"
+        },
+        "user_event_status": {
+          "id": 4965937,
+          "matches_won": 1,
+          "matches_drawn": 0,
+          "matches_lost": 2,
+          "total_match_points": 3,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/1-IlluminaryGoldIconRoyalPurple.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=1e8da66c7a030a971450f1c3dd5e8a5ac37adffdb967451e7bb1249a486715134bda57e3f8ca18a76f4d713a1ffc560627bfdffa0bf93aaddaad20992bec4e411b1bc563733383500d2664c0458897cac80b7b2ec010260bda7641acc10139e558ed19889dc3983cbb4b756cc13620fd1f26b11ae89b52c0429b3005713a76c27cee246d5915e51fc9d6672b3e77b76114fae21c3cb48382c9dc0d088f6c3470346cf2830fb966f02ecc69733a7e3a5691d081e6070eb24356b122a13efef9b6b4c420aedae1b4a77d286117e02488022b4566cbdec60476665d718dcc6b02a1a7257c1c8efa455083c42e307bae0f7ead475427cb3832b45e4cc3dfaa9cf1a1",
+          "registration_status": "COMPLETE",
+          "best_identifier": "Neil",
+          "is_guest": false,
+          "user": {
+            "id": 64817,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 64817,
+        "rank": 10,
+        "record": "1-2-0",
+        "match_record": "1-2-0",
+        "match_points": 3,
+        "opponent_match_win_percentage": 0.55555556,
+        "game_win_percentage": 0.44444444,
+        "opponent_game_win_percentage": 0.494709,
+        "points": 3
+      },
+      {
+        "player": {
+          "id": 156531,
+          "best_identifier": "Quillan R"
+        },
+        "user_event_status": {
+          "id": 5506781,
+          "matches_won": 1,
+          "matches_drawn": 0,
+          "matches_lost": 2,
+          "total_match_points": 3,
+          "full_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/1-IlluminaryGoldIconRoyalPurple.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184442Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=1e8da66c7a030a971450f1c3dd5e8a5ac37adffdb967451e7bb1249a486715134bda57e3f8ca18a76f4d713a1ffc560627bfdffa0bf93aaddaad20992bec4e411b1bc563733383500d2664c0458897cac80b7b2ec010260bda7641acc10139e558ed19889dc3983cbb4b756cc13620fd1f26b11ae89b52c0429b3005713a76c27cee246d5915e51fc9d6672b3e77b76114fae21c3cb48382c9dc0d088f6c3470346cf2830fb966f02ecc69733a7e3a5691d081e6070eb24356b122a13efef9b6b4c420aedae1b4a77d286117e02488022b4566cbdec60476665d718dcc6b02a1a7257c1c8efa455083c42e307bae0f7ead475427cb3832b45e4cc3dfaa9cf1a1",
+          "registration_status": "COMPLETE",
+          "best_identifier": "QReys",
+          "is_guest": false,
+          "user": {
+            "id": 156531,
+            "pronouns": null,
+            "country_code": null
+          },
+          "deck_defining_card": null
+        },
+        "round_number": 4,
+        "id": 156531,
+        "rank": 11,
+        "record": "1-2-0",
+        "match_record": "1-2-0",
+        "match_points": 3,
+        "opponent_match_win_percentage": 0.33333333,
+        "game_win_percentage": 0.42857143,
+        "opponent_game_win_percentage": 0.43650793,
+        "points": 3
+      }
+    ],
+    "round_number": 4
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "request": {
+    "event_id": 755724,
+    "total_swiss_rounds": 4,
+    "top_cut": 4,
+    "player_id": 22985,
+    "depth": "simple"
+  },
+  "status": 200,
+  "body": {
+    "player_name": "RyanCNS",
+    "current_record": "3-1-0",
+    "current_points": 9,
+    "rounds_remaining": 0,
+    "target_match_done": true,
+    "top_cut": 4,
+    "depth": "simple",
+    "all_players_advance": false,
+    "id_one_round": {
+      "points_if_id": 9,
+      "danger_count": 1,
+      "expected_danger": 3,
+      "verdict": "risky",
+      "verdict_source": "expected"
+    },
+    "id_two_rounds": null,
+    "id_two_rounds_note": "Only 1 round remaining — double ID not applicable.",
+    "opponent": {
+      "name": "M_friend_E",
+      "current_points": 3,
+      "points_if_id": 4,
+      "expected_danger": 7,
+      "verdict": "unsafe",
+      "will_accept_id": false
+    },
+    "danger_players": [
+      {
+        "name": "BlazinAzn 🦈",
+        "current_points": 10,
+        "max_possible_points": 10,
+        "tiebreaker_vs_you": "unknown",
+        "match_done": true
+      },
+      {
+        "name": "Ryan",
+        "current_points": 10,
+        "max_possible_points": 10,
+        "tiebreaker_vs_you": "unknown",
+        "match_done": true
+      },
+      {
+        "name": "TeddyWestside 👀",
+        "current_points": 9,
+        "max_possible_points": 9,
+        "tiebreaker_vs_you": "unknown",
+        "match_done": true
+      }
+    ]
+  }
+}

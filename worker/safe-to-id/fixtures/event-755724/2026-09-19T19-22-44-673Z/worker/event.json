@@ -1,0 +1,79 @@
+{
+  "status": 200,
+  "body": {
+    "event_id": 755724,
+    "event_name": "Gotham's Attack of the Vine! Set Championship",
+    "player_count": 11,
+    "total_swiss_rounds": 4,
+    "current_round": 4,
+    "event_lifecycle_status": "EVENT_IN_PROGRESS",
+    "rounds": [
+      {
+        "id": 1415968,
+        "round_number": 1,
+        "status": "COMPLETE"
+      },
+      {
+        "id": 1415969,
+        "round_number": 2,
+        "status": "COMPLETE"
+      },
+      {
+        "id": 1415970,
+        "round_number": 3,
+        "status": "COMPLETE"
+      },
+      {
+        "id": 1415971,
+        "round_number": 4,
+        "status": "IN_PROGRESS"
+      }
+    ],
+    "players": [
+      {
+        "id": 486378,
+        "name": "Beerhunt"
+      },
+      {
+        "id": 37502,
+        "name": "BlazinAzn 🦈"
+      },
+      {
+        "id": 42417,
+        "name": "M_friend_E"
+      },
+      {
+        "id": 86190,
+        "name": "Michael"
+      },
+      {
+        "id": 64817,
+        "name": "Neil"
+      },
+      {
+        "id": 156531,
+        "name": "QReys"
+      },
+      {
+        "id": 37381,
+        "name": "Ryan"
+      },
+      {
+        "id": 22985,
+        "name": "RyanCNS"
+      },
+      {
+        "id": 37198,
+        "name": "TeddyWestside 👀"
+      },
+      {
+        "id": 79025,
+        "name": "Underworld Stitch"
+      },
+      {
+        "id": 19724,
+        "name": "Whysper"
+      }
+    ]
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "request": {
+    "event_id": 755724,
+    "total_swiss_rounds": 4,
+    "top_cut": 4,
+    "player_id": 19724,
+    "depth": "full"
+  },
+  "status": 200,
+  "body": {
+    "player_name": "Whysper",
+    "current_record": "2-2-0",
+    "current_points": 6,
+    "rounds_remaining": 0,
+    "target_match_done": true,
+    "top_cut": 4,
+    "depth": "full",
+    "all_players_advance": false,
+    "id_one_round": {
+      "points_if_id": 6,
+      "danger_count": 3,
+      "expected_danger": 7,
+      "verdict": "unsafe",
+      "verdict_source": "simulation",
+      "makes_cut_pct": 0
+    },
+    "id_two_rounds": null,
+    "id_two_rounds_note": "Only 1 round remaining — double ID not applicable.",
+    "your_tiebreakers": {
+      "omw_pct": 0.55555555,
+      "gw_pct": 0.5,
+      "ogw_pct": 0.51785714
+    },
+    "danger_players": [
+      {
+        "name": "BlazinAzn 🦈",
+        "current_points": 10,
+        "max_possible_points": 10,
+        "omw_pct": 0.55555556,
+        "gw_pct": 0.8571428571428571,
+        "ogw_pct": 0.55026455,
+        "tiebreaker_vs_you": "wins",
+        "match_done": true
+      },
+      {
+        "name": "Ryan",
+        "current_points": 10,
+        "max_possible_points": 10,
+        "omw_pct": 0.33333333,
+        "gw_pct": 0.75,
+        "ogw_pct": 0.43452381,
+        "tiebreaker_vs_you": "loses",
+        "match_done": true
+      },
+      {
+        "name": "TeddyWestside 👀",
+        "current_points": 9,
+        "max_possible_points": 9,
+        "omw_pct": 0.83333334,
+        "gw_pct": 0.5,
+        "ogw_pct": 0.67857143,
+        "tiebreaker_vs_you": "wins",
+        "match_done": true
+      },
+      {
+        "name": "RyanCNS",
+        "current_points": 9,
+        "max_possible_points": 9,
+        "omw_pct": 0.44444444,
+        "gw_pct": 0.5,
+        "ogw_pct": 0.51322751,
+        "tiebreaker_vs_you": "loses",
+        "match_done": true
+      },
+      {
+        "name": "Beerhunt",
+        "current_points": 6,
+        "max_possible_points": 6,
+        "omw_pct": 0.66666667,
+        "gw_pct": 0.375,
+        "ogw_pct": 0.60185185,
+        "tiebreaker_vs_you": "wins",
+        "match_done": true
+      },
+      {
+        "name": "Michael",
+        "current_points": 6,
+        "max_possible_points": 6,
+        "omw_pct": 0.55555555,
+        "gw_pct": 0.5555555555555556,
+        "ogw_pct": 0.55886243,
+        "tiebreaker_vs_you": "wins",
+        "match_done": true
+      },
+      {
+        "name": "Underworld Stitch",
+        "current_points": 6,
+        "max_possible_points": 6,
+        "omw_pct": 0.5,
+        "gw_pct": 0.33,
+        "ogw_pct": 0.5,
+        "tiebreaker_vs_you": "loses",
+        "match_done": true
+      }
+    ],
+    "caveat": "Tiebreakers will shift as the current round completes.",
+    "pairings_available": true,
+    "simulation": {
+      "simulation_mode": "exhaustive",
+      "total_scenarios": 1,
+      "makes_cut_scenarios": 0,
+      "makes_cut_pct": 0,
+      "margin_of_error_pct": 0,
+      "best_rank": 5,
+      "worst_rank": 5,
+      "known_results": 6,
+      "unknown_results": 0,
+      "best_scenario": [],
+      "worst_scenario": [],
+      "outcome_breakdown": {
+        "applicable": false,
+        "reason": "bye"
+      }
+    }
+  }
+}

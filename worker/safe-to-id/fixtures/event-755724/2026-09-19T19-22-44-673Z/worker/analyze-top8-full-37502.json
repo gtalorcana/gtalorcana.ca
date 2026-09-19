@@ -1,0 +1,74 @@
+{
+  "request": {
+    "event_id": 755724,
+    "total_swiss_rounds": 4,
+    "top_cut": 8,
+    "player_id": 37502,
+    "depth": "full"
+  },
+  "status": 200,
+  "body": {
+    "player_name": "BlazinAzn 🦈",
+    "current_record": "3-0-1",
+    "current_points": 10,
+    "rounds_remaining": 0,
+    "target_match_done": true,
+    "top_cut": 8,
+    "depth": "full",
+    "all_players_advance": false,
+    "id_one_round": {
+      "points_if_id": 10,
+      "danger_count": 1,
+      "expected_danger": 1,
+      "verdict": "safe",
+      "verdict_source": "simulation",
+      "makes_cut_pct": 100
+    },
+    "id_two_rounds": null,
+    "id_two_rounds_note": "Only 1 round remaining — double ID not applicable.",
+    "opponent": {
+      "name": "Ryan",
+      "current_points": 10,
+      "points_if_id": 11,
+      "expected_danger": 0,
+      "verdict": "safe",
+      "will_accept_id": true
+    },
+    "your_tiebreakers": {
+      "omw_pct": 0.55555556,
+      "gw_pct": 0.7,
+      "ogw_pct": 0.55026455
+    },
+    "danger_players": [
+      {
+        "name": "Ryan",
+        "current_points": 10,
+        "max_possible_points": 10,
+        "omw_pct": 0.33333333,
+        "gw_pct": 0.75,
+        "ogw_pct": 0.43452381,
+        "tiebreaker_vs_you": "loses",
+        "match_done": true
+      }
+    ],
+    "caveat": "Tiebreakers will shift as the current round completes.",
+    "pairings_available": true,
+    "simulation": {
+      "simulation_mode": "exhaustive",
+      "total_scenarios": 1,
+      "makes_cut_scenarios": 1,
+      "makes_cut_pct": 100,
+      "margin_of_error_pct": 0,
+      "best_rank": 1,
+      "worst_rank": 1,
+      "known_results": 6,
+      "unknown_results": 0,
+      "best_scenario": [],
+      "worst_scenario": [],
+      "outcome_breakdown": {
+        "applicable": false,
+        "reason": "match_done"
+      }
+    }
+  }
+}

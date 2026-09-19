@@ -1,0 +1,95 @@
+
+=== 1. Final RPH standings (the reference) ===
+ 1. BlazinAzn 🦈       10pts  OMW  60.33  GW  70.00  OGW  55.08
+ 2. Ryan               10pts  OMW  54.08  GW  63.64  OGW  53.86
+ 3. TeddyWestside 👀    9pts  OMW  69.44  GW  66.67  OGW  58.18
+ 4. RyanCNS             9pts  OMW  47.75  GW  54.55  OGW  50.97
+ 5. Whysper             6pts  OMW  61.11  GW  60.00  OGW  54.88
+ 6. Michael             6pts  OMW  60.33  GW  50.00  OGW  55.95
+ 7. Beerhunt            6pts  OMW  54.08  GW  45.45  OGW  53.83
+ 8. Underworld Stitch   6pts  OMW  52.67  GW  55.56  OGW  49.29
+ 9. M_friend_E          3pts  OMW  68.67  GW  40.00  OGW  55.38
+10. Neil                3pts  OMW  52.00  GW  41.67  OGW  45.83
+11. QReys               3pts  OMW  38.67  GW  33.33  OGW  45.74
+
+=== 2. Prediction made mid-round (BEFORE bye fix) vs actual ===
+! BlazinAzn 🦈       rank 1/1 pts 10/10 OMW  60.33/ 60.33 GW  70.00/ 70.00 OGW  52.69/ 55.08  OGW
+! Ryan               rank 2/2 pts 10/10 OMW  54.08/ 54.08 GW  63.64/ 63.64 OGW  51.36/ 53.86  OGW
+! TeddyWestside 👀   rank 3/3 pts 9/9 OMW  69.44/ 69.44 GW  57.14/ 66.67 OGW  58.18/ 58.18  GW
+! RyanCNS            rank 4/4 pts 9/9 OMW  47.75/ 47.75 GW  54.55/ 54.55 OGW  45.42/ 50.97  OGW
+! Whysper            rank 5/5 pts 6/6 OMW  61.11/ 61.11 GW  50.00/ 60.00 OGW  50.65/ 54.88  GW,OGW
+! Michael            rank 6/6 pts 6/6 OMW  60.33/ 60.33 GW  50.00/ 50.00 OGW  53.57/ 55.95  OGW
+! Beerhunt           rank 7/7 pts 6/6 OMW  54.08/ 54.08 GW  45.45/ 45.45 OGW  51.33/ 53.83  OGW
+! Underworld Stitch  rank 8/8 pts 6/6 OMW  52.67/ 52.67 GW  42.86/ 55.56 OGW  45.85/ 49.29  GW,OGW
+! M_friend_E         rank 9/9 pts 3/3 OMW  68.67/ 68.67 GW  40.00/ 40.00 OGW  55.30/ 55.38  OGW
+! Neil               rank 10/10 pts 3/3 OMW  52.00/ 52.00 GW  41.67/ 41.67 OGW  45.75/ 45.83  OGW
+! QReys              rank 11/11 pts 3/3 OMW  38.67/ 38.67 GW  33.00/ 33.33 OGW  41.51/ 45.74  GW,OGW
+  → 11/11 players differ
+
+=== 2. Prediction made mid-round (AFTER bye fix) vs actual ===
+  BlazinAzn 🦈       rank 1/1 pts 10/10 OMW  60.33/ 60.33 GW  70.00/ 70.00 OGW  55.08/ 55.08  
+  Ryan               rank 2/2 pts 10/10 OMW  54.08/ 54.08 GW  63.64/ 63.64 OGW  53.86/ 53.86  
+  TeddyWestside 👀   rank 3/3 pts 9/9 OMW  69.44/ 69.44 GW  66.67/ 66.67 OGW  58.18/ 58.18  
+  RyanCNS            rank 4/4 pts 9/9 OMW  47.75/ 47.75 GW  54.55/ 54.55 OGW  50.97/ 50.97  
+  Whysper            rank 5/5 pts 6/6 OMW  61.11/ 61.11 GW  60.00/ 60.00 OGW  54.88/ 54.88  
+  Michael            rank 6/6 pts 6/6 OMW  60.33/ 60.33 GW  50.00/ 50.00 OGW  55.95/ 55.95  
+  Beerhunt           rank 7/7 pts 6/6 OMW  54.08/ 54.08 GW  45.45/ 45.45 OGW  53.83/ 53.83  
+  Underworld Stitch  rank 8/8 pts 6/6 OMW  52.67/ 52.67 GW  55.56/ 55.56 OGW  49.29/ 49.29  
+  M_friend_E         rank 9/9 pts 3/3 OMW  68.67/ 68.67 GW  40.00/ 40.00 OGW  55.38/ 55.38  
+  Neil               rank 10/10 pts 3/3 OMW  52.00/ 52.00 GW  41.67/ 41.67 OGW  45.83/ 45.83  
+  QReys              rank 11/11 pts 3/3 OMW  38.67/ 38.67 GW  33.33/ 33.33 OGW  45.74/ 45.74  
+  → 0/11 players differ
+
+=== 3. Rank ranges from snapshot 18:44 (4 matches open) vs final rank ===
+  Beerhunt           predicted 7-9   actual 7  (sim assumed they ID)
+  BlazinAzn 🦈       predicted 1-1   actual 1  (their match was done)
+  M_friend_E         predicted 7-9   actual 9  (sim assumed they ID)
+! Michael            predicted 4-5   actual 6  (sim assumed they ID)
+  Neil               predicted 8-10  actual 10  (sim assumed they ID)
+  QReys              predicted 9-11  actual 11  (sim assumed they ID)
+  Ryan               predicted 2-2   actual 2  (their match was done)
+  RyanCNS            predicted 4-5   actual 4  (sim assumed they ID)
+  TeddyWestside 👀   predicted 3-4   actual 3  (sim assumed they ID)
+  Underworld Stitch  predicted 8-10  actual 8  (sim assumed they ID)
+  Whysper            predicted 5-7   actual 5  (their match was done)
+
+=== 3. Rank ranges from snapshot 19:18 (1 match open) vs final rank ===
+  Beerhunt           predicted 7-7   actual 7  (their match was done)
+  BlazinAzn 🦈       predicted 1-1   actual 1  (their match was done)
+  M_friend_E         predicted 9-10  actual 9  (their match was done)
+  Michael            predicted 5-6   actual 6  (their match was done)
+  Neil               predicted 10-11 actual 10  (their match was done)
+! QReys              predicted 9-9   actual 11  (sim assumed they ID)
+  Ryan               predicted 2-2   actual 2  (their match was done)
+  RyanCNS            predicted 4-4   actual 4  (their match was done)
+  TeddyWestside 👀   predicted 3-3   actual 3  (their match was done)
+  Underworld Stitch  predicted 8-8   actual 8  (sim assumed they ID)
+  Whysper            predicted 5-6   actual 5  (their match was done)
+
+=== 4. Deployed worker output (snapshot 19:22, all results in) vs actual ===
+! Beerhunt           OMW  66.67/ 54.08 GW  45.45/ 45.45 OGW  60.19/ 53.83  OMW,OGW
+! BlazinAzn 🦈       OMW  55.56/ 60.33 GW  70.00/ 70.00 OGW  55.03/ 55.08  OMW,OGW
+! M_friend_E         OMW  77.78/ 68.67 GW  40.00/ 40.00 OGW  67.86/ 55.38  OMW,OGW
+! Michael            OMW  55.56/ 60.33 GW  50.00/ 50.00 OGW  55.89/ 55.95  OMW,OGW
+! Neil               OMW  55.56/ 52.00 GW  41.67/ 41.67 OGW  49.47/ 45.83  OMW,OGW
+! QReys              OMW  33.33/ 38.67 GW  33.00/ 33.33 OGW  43.65/ 45.74  OMW,GW,OGW
+! Ryan               OMW  33.33/ 54.08 GW  63.64/ 63.64 OGW  43.45/ 53.86  OMW,OGW
+! RyanCNS            OMW  44.44/ 47.75 GW  54.55/ 54.55 OGW  51.32/ 50.97  OMW,OGW
+! TeddyWestside 👀   OMW  83.33/ 69.44 GW  57.14/ 66.67 OGW  67.86/ 58.18  OMW,GW,OGW
+! Underworld Stitch  OMW  50.00/ 52.67 GW  42.86/ 55.56 OGW  50.00/ 49.29  OMW,GW,OGW
+! Whysper            OMW  55.56/ 61.11 GW  50.00/ 60.00 OGW  51.79/ 54.88  OMW,GW,OGW
+  → 11/11 players differ (prod still lacks the bye fix)
+
+=== Notes ===
+Section 2: the only code change between BEFORE and AFTER is counting a bye as a
+2-0 game win. Ranks were already right; the bye bug moved GW%/OGW% only.
+
+Section 3: a range is only a prediction for a player who takes the ID the sim
+assumes. Michael (18:44) and QReys (19:18) both played their match out and lost,
+so they finished below their range. Every player whose match was already done
+landed inside its range.
+
+Section 4: OMW%/OGW% there come from the last COMPLETE round (round 3) by design
+-- the worker's own caveat says tiebreakers shift as the round completes -- so
+only the GW% column is comparable. Its four misses (TeddyWestside, Whysper,
+Underworld Stitch, QReys) are exactly the four players with a bye.

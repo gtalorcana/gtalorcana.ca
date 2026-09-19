@@ -1,0 +1,555 @@
+[
+  {
+    "status": 200,
+    "body": {
+      "page_size": 100,
+      "count": 6,
+      "total": 6,
+      "current_page_number": 1,
+      "next_page_number": null,
+      "next": null,
+      "previous": null,
+      "previous_page_number": null,
+      "results": [
+        {
+          "id": 8012245,
+          "player_match_relationships": [
+            {
+              "id": 15409795,
+              "player_order": 1,
+              "is_starting_player": false,
+              "player": {
+                "id": 156531,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Quillan R",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/1-IlluminaryGoldIconRoyalPurple.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=2f6d38e4ef78a0c94691dba9e30329ee9eebff157ba0647f0a5cc4a23fc20cb5257dcbc17cf6ab056d7f5864e61d0c46f6dc4b288a0ad998ee355e32357f939cbb7bad192a42a6e55a61f6cbd3a4fcb60ab03486244ed2e10bdd9dd08dcd9f2b5d396973e690e21d1b64a61e0fbcee450786e990c5b9b1f0e741dcc9d4538ad9438c2002907baa47ea3ca2026daa57090f28503b217a9b4a8b133ab8a3cc9653cfe54a8e64700f582c3adcf2f5d821eb363874f7e19a863065a8132e4f28e72b3a7e84a805f8d4cafc041935c585741371d0b52f0c29bd684f5e5c703dc351a575aaa10be2ac4be327a178f25d1bdbf308806849fb53bb0fce0f8a8d1c2a9adb"
+              },
+              "user_event_status": {
+                "id": 5506781,
+                "best_identifier": "QReys",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 1,
+                "matches_lost": 2,
+                "matches_drawn": 0,
+                "total_match_points": 3,
+                "user": {
+                  "id": 156531,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Quillan R",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/1-IlluminaryGoldIconRoyalPurple.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=2f6d38e4ef78a0c94691dba9e30329ee9eebff157ba0647f0a5cc4a23fc20cb5257dcbc17cf6ab056d7f5864e61d0c46f6dc4b288a0ad998ee355e32357f939cbb7bad192a42a6e55a61f6cbd3a4fcb60ab03486244ed2e10bdd9dd08dcd9f2b5d396973e690e21d1b64a61e0fbcee450786e990c5b9b1f0e741dcc9d4538ad9438c2002907baa47ea3ca2026daa57090f28503b217a9b4a8b133ab8a3cc9653cfe54a8e64700f582c3adcf2f5d821eb363874f7e19a863065a8132e4f28e72b3a7e84a805f8d4cafc041935c585741371d0b52f0c29bd684f5e5c703dc351a575aaa10be2ac4be327a178f25d1bdbf308806849fb53bb0fce0f8a8d1c2a9adb"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            },
+            {
+              "id": 15409796,
+              "player_order": 2,
+              "is_starting_player": false,
+              "player": {
+                "id": 42417,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Michael R",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/cardeio-images/defaults/lorcana/profile/24.webp"
+              },
+              "user_event_status": {
+                "id": 5407527,
+                "best_identifier": "M_friend_E",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 1,
+                "matches_lost": 2,
+                "matches_drawn": 0,
+                "total_match_points": 3,
+                "user": {
+                  "id": 42417,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Michael R",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/cardeio-images/defaults/lorcana/profile/24.webp"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            }
+          ],
+          "created_at": "2026-09-19T16:05:23+00:00",
+          "updated_at": "2026-09-19T16:48:38+00:00",
+          "team_event_match": null,
+          "table_number": 1,
+          "order": 0,
+          "status": "COMPLETE",
+          "pod_number": null,
+          "match_is_intentional_draw": false,
+          "match_is_unintentional_draw": false,
+          "match_is_bye": false,
+          "match_is_loss": false,
+          "reports_are_in_conflict": false,
+          "games_drawn": 0,
+          "games_won_by_winner": 2,
+          "games_won_by_loser": 0,
+          "is_ghost_match": false,
+          "is_feature_match": false,
+          "deck_check_started": false,
+          "deck_check_completed": false,
+          "time_extension_seconds": 0,
+          "tournament_round": 1415968,
+          "reporting_player": null,
+          "winning_player": 42417,
+          "assigned_judge": null,
+          "players": [
+            156531,
+            42417
+          ]
+        },
+        {
+          "id": 8012246,
+          "player_match_relationships": [
+            {
+              "id": 15409797,
+              "player_order": 1,
+              "is_starting_player": false,
+              "player": {
+                "id": 22985,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Ryan S",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/RubySteel.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=6f081b613717d512c3d7df00bac50f7d54710a4e9270ddd36301333dc003d41eaded1bce1b76a21a48dcd1a3d0aeca5f056b4bb47f56a33bb7b64efcc09a47e1c022194a0901197ffa39a7519e79575c8547df5c16f85b0e8b186e3f7c53189108dc09058d1ebadea0b037473fa4f40ad08e0249e27c8d995fb5d95693131a63f1fa538773d81ad706c92c902c2047859b7028d0a52368d5dae18d4c5d27e50ecd439a36b2a8aed5d359a662d9d955b7e9d15560404ee63ba2bf529f248975795bb6cda6deaba3f107ec9fabfabde02a7779b118b01cba83bd5af0ce312a9f4c6c2fed1a31f93907e5dfffb4d42ae7c64bf69a817df4dcdb94b0ec65e3ae84ff"
+              },
+              "user_event_status": {
+                "id": 5457707,
+                "best_identifier": "RyanCNS",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 2,
+                "matches_lost": 1,
+                "matches_drawn": 0,
+                "total_match_points": 6,
+                "user": {
+                  "id": 22985,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Ryan S",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/RubySteel.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=6f081b613717d512c3d7df00bac50f7d54710a4e9270ddd36301333dc003d41eaded1bce1b76a21a48dcd1a3d0aeca5f056b4bb47f56a33bb7b64efcc09a47e1c022194a0901197ffa39a7519e79575c8547df5c16f85b0e8b186e3f7c53189108dc09058d1ebadea0b037473fa4f40ad08e0249e27c8d995fb5d95693131a63f1fa538773d81ad706c92c902c2047859b7028d0a52368d5dae18d4c5d27e50ecd439a36b2a8aed5d359a662d9d955b7e9d15560404ee63ba2bf529f248975795bb6cda6deaba3f107ec9fabfabde02a7779b118b01cba83bd5af0ce312a9f4c6c2fed1a31f93907e5dfffb4d42ae7c64bf69a817df4dcdb94b0ec65e3ae84ff"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            },
+            {
+              "id": 15409798,
+              "player_order": 2,
+              "is_starting_player": false,
+              "player": {
+                "id": 64817,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Neil I",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/1-IlluminaryGoldIconRoyalPurple.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=2f6d38e4ef78a0c94691dba9e30329ee9eebff157ba0647f0a5cc4a23fc20cb5257dcbc17cf6ab056d7f5864e61d0c46f6dc4b288a0ad998ee355e32357f939cbb7bad192a42a6e55a61f6cbd3a4fcb60ab03486244ed2e10bdd9dd08dcd9f2b5d396973e690e21d1b64a61e0fbcee450786e990c5b9b1f0e741dcc9d4538ad9438c2002907baa47ea3ca2026daa57090f28503b217a9b4a8b133ab8a3cc9653cfe54a8e64700f582c3adcf2f5d821eb363874f7e19a863065a8132e4f28e72b3a7e84a805f8d4cafc041935c585741371d0b52f0c29bd684f5e5c703dc351a575aaa10be2ac4be327a178f25d1bdbf308806849fb53bb0fce0f8a8d1c2a9adb"
+              },
+              "user_event_status": {
+                "id": 4965937,
+                "best_identifier": "Neil",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 1,
+                "matches_lost": 2,
+                "matches_drawn": 0,
+                "total_match_points": 3,
+                "user": {
+                  "id": 64817,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Neil I",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/1-IlluminaryGoldIconRoyalPurple.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=2f6d38e4ef78a0c94691dba9e30329ee9eebff157ba0647f0a5cc4a23fc20cb5257dcbc17cf6ab056d7f5864e61d0c46f6dc4b288a0ad998ee355e32357f939cbb7bad192a42a6e55a61f6cbd3a4fcb60ab03486244ed2e10bdd9dd08dcd9f2b5d396973e690e21d1b64a61e0fbcee450786e990c5b9b1f0e741dcc9d4538ad9438c2002907baa47ea3ca2026daa57090f28503b217a9b4a8b133ab8a3cc9653cfe54a8e64700f582c3adcf2f5d821eb363874f7e19a863065a8132e4f28e72b3a7e84a805f8d4cafc041935c585741371d0b52f0c29bd684f5e5c703dc351a575aaa10be2ac4be327a178f25d1bdbf308806849fb53bb0fce0f8a8d1c2a9adb"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            }
+          ],
+          "created_at": "2026-09-19T16:05:23+00:00",
+          "updated_at": "2026-09-19T16:44:31+00:00",
+          "team_event_match": null,
+          "table_number": 2,
+          "order": 1,
+          "status": "COMPLETE",
+          "pod_number": null,
+          "match_is_intentional_draw": false,
+          "match_is_unintentional_draw": false,
+          "match_is_bye": false,
+          "match_is_loss": false,
+          "reports_are_in_conflict": false,
+          "games_drawn": 0,
+          "games_won_by_winner": 2,
+          "games_won_by_loser": 1,
+          "is_ghost_match": false,
+          "is_feature_match": false,
+          "deck_check_started": false,
+          "deck_check_completed": false,
+          "time_extension_seconds": 0,
+          "tournament_round": 1415968,
+          "reporting_player": null,
+          "winning_player": 22985,
+          "assigned_judge": null,
+          "players": [
+            22985,
+            64817
+          ]
+        },
+        {
+          "id": 8012247,
+          "player_match_relationships": [
+            {
+              "id": 15409799,
+              "player_order": 1,
+              "is_starting_player": false,
+              "player": {
+                "id": 19724,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Kamil G",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/EmeraldSapphire.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=175b3ff536aa2648f5ca25b48042d3a2fd0dddaf17222d8a84066c7bd87efbe3ee0171f5e678fed59bea16395a000c7875ee7f309789bebc095848a93ffb5b0e439602714493a1da56d610a6ae179f6b5e6210d21cc4404ed4f1d5992c9f9496c63abc329d4d80ca074d46ffbb4194380bf2624c57da8c27dd8582ab28372faa1ee101cf3e98cd7962b09fec89074cf4a0ad4934546c3e5c25ad67788f7e591410f277666f8c8078f01ea19ba43b5ae9acc24e56a3c66a9e9f80253e038127bc6b381ef92fdf70fcac59a8cbe9f228af4356cc0dac9af314273efcc385a5010478a077af40ab93837ebd3bfb1aec6db0c2192bd04ae4161b2495173bf92621b1"
+              },
+              "user_event_status": {
+                "id": 5506871,
+                "best_identifier": "Whysper",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 1,
+                "matches_lost": 2,
+                "matches_drawn": 0,
+                "total_match_points": 3,
+                "user": {
+                  "id": 19724,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Kamil G",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/EmeraldSapphire.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=175b3ff536aa2648f5ca25b48042d3a2fd0dddaf17222d8a84066c7bd87efbe3ee0171f5e678fed59bea16395a000c7875ee7f309789bebc095848a93ffb5b0e439602714493a1da56d610a6ae179f6b5e6210d21cc4404ed4f1d5992c9f9496c63abc329d4d80ca074d46ffbb4194380bf2624c57da8c27dd8582ab28372faa1ee101cf3e98cd7962b09fec89074cf4a0ad4934546c3e5c25ad67788f7e591410f277666f8c8078f01ea19ba43b5ae9acc24e56a3c66a9e9f80253e038127bc6b381ef92fdf70fcac59a8cbe9f228af4356cc0dac9af314273efcc385a5010478a077af40ab93837ebd3bfb1aec6db0c2192bd04ae4161b2495173bf92621b1"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            },
+            {
+              "id": 15409800,
+              "player_order": 2,
+              "is_starting_player": false,
+              "player": {
+                "id": 79025,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Nicholas M",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/AmberEmerald.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=c9f7c11bba536e88b10c545569380141e27cec051de7b5b64e65d46a88b45657b37b56468072818e7ef634c499086f5eddf1a2912e9d1394a64c3a779249672940959d6e9ce3ee654b8ad131b05db66841e8e8b1e7498c5a8039efd1b12c140f480aee93d8a9d82d124e8b55f5ab4e5e54b0899d3606c087428976927eb156a34dbc4721ff0201d559764535366fb737034b11ad88810b3105a917fe90b3746ba9e43bace06756df225e85146b74dadd8f8f2766c22ea5cbf0e6b7b88447eb13839afaaf9a57ceed92672536d4b1fa4c64554ca528bcee196134ecba8ea71e44ab19074b1ca261be11c1365b2cc08ee0f3fd53483362964bbc1bbf4b1528fe5a"
+              },
+              "user_event_status": {
+                "id": 5499821,
+                "best_identifier": "Underworld Stitch",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 1,
+                "matches_lost": 2,
+                "matches_drawn": 0,
+                "total_match_points": 3,
+                "user": {
+                  "id": 79025,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Nicholas M",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/AmberEmerald.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=c9f7c11bba536e88b10c545569380141e27cec051de7b5b64e65d46a88b45657b37b56468072818e7ef634c499086f5eddf1a2912e9d1394a64c3a779249672940959d6e9ce3ee654b8ad131b05db66841e8e8b1e7498c5a8039efd1b12c140f480aee93d8a9d82d124e8b55f5ab4e5e54b0899d3606c087428976927eb156a34dbc4721ff0201d559764535366fb737034b11ad88810b3105a917fe90b3746ba9e43bace06756df225e85146b74dadd8f8f2766c22ea5cbf0e6b7b88447eb13839afaaf9a57ceed92672536d4b1fa4c64554ca528bcee196134ecba8ea71e44ab19074b1ca261be11c1365b2cc08ee0f3fd53483362964bbc1bbf4b1528fe5a"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            }
+          ],
+          "created_at": "2026-09-19T16:05:23+00:00",
+          "updated_at": "2026-09-19T16:40:23+00:00",
+          "team_event_match": null,
+          "table_number": 3,
+          "order": 2,
+          "status": "COMPLETE",
+          "pod_number": null,
+          "match_is_intentional_draw": false,
+          "match_is_unintentional_draw": false,
+          "match_is_bye": false,
+          "match_is_loss": false,
+          "reports_are_in_conflict": false,
+          "games_drawn": 0,
+          "games_won_by_winner": 2,
+          "games_won_by_loser": 0,
+          "is_ghost_match": false,
+          "is_feature_match": false,
+          "deck_check_started": false,
+          "deck_check_completed": false,
+          "time_extension_seconds": 0,
+          "tournament_round": 1415968,
+          "reporting_player": null,
+          "winning_player": 19724,
+          "assigned_judge": null,
+          "players": [
+            19724,
+            79025
+          ]
+        },
+        {
+          "id": 8012248,
+          "player_match_relationships": [
+            {
+              "id": 15409801,
+              "player_order": 1,
+              "is_starting_player": false,
+              "player": {
+                "id": 86190,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Michael B",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/Ruby.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=0550161dc0acc385db2e067a846cead97506ba4af392c0cec495b015a06fef2562ed6717f4a17a440f8a93d8f78125cc79f90aef2227ab046680a724e102ad7385f34cc52f85202668736a6b35cf81d731fcbd31ff3f0643d33395024e03b17ca8f4ee6fba6986f00dbea97393c7c17b618402fbac2df3196eab354a244f959b4ccf5a1afa9fbae2bf76edf5b3b5e8c802aa54faf6b89cef7269ff198d15eadaca5dacf3e4ba409bd119efc4a158dce1a036e34276106250a6103b077565fa4044474bcd6ed8ea68d6c7d6859090a9af2861ea4cdef307816accc1bc97e3633f53c5cb895464cbdb4628c3c031d9cc618e320d3817cf2a07bdb877fb696916b5"
+              },
+              "user_event_status": {
+                "id": 4942113,
+                "best_identifier": "Michael",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 2,
+                "matches_lost": 1,
+                "matches_drawn": 0,
+                "total_match_points": 6,
+                "user": {
+                  "id": 86190,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Michael B",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/Ruby.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=0550161dc0acc385db2e067a846cead97506ba4af392c0cec495b015a06fef2562ed6717f4a17a440f8a93d8f78125cc79f90aef2227ab046680a724e102ad7385f34cc52f85202668736a6b35cf81d731fcbd31ff3f0643d33395024e03b17ca8f4ee6fba6986f00dbea97393c7c17b618402fbac2df3196eab354a244f959b4ccf5a1afa9fbae2bf76edf5b3b5e8c802aa54faf6b89cef7269ff198d15eadaca5dacf3e4ba409bd119efc4a158dce1a036e34276106250a6103b077565fa4044474bcd6ed8ea68d6c7d6859090a9af2861ea4cdef307816accc1bc97e3633f53c5cb895464cbdb4628c3c031d9cc618e320d3817cf2a07bdb877fb696916b5"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            },
+            {
+              "id": 15409802,
+              "player_order": 2,
+              "is_starting_player": false,
+              "player": {
+                "id": 37502,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Ervin S",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/bb98db58-51d.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=60dd2f2057f8612739c3b7e422e6f6fb48f37776ed2170e5b0a67ebb41c109e074479f6c37c0ecaa6fc585fe960bd2ea855b41829b155f7a94810e6aadf5d06082f88fd92dcf633a774f21de823571a2d963f6bb8c7a2814f3bb4ce683050bed206bf4f5dc9d724d0deb0c48a3d0c1563bea2a08f740811ffc4abc930172a9c3d2aadbe317b0ab2e2a93588bdb42da466fcbaa0bf43cdc26f105d7381a843744171eb0241a04af0e8188d15cb797c972b9b4724c3fa4241bb5a99873f57bd99e4a4eb7142a76edb2ef5f3515491a60108cfdc3022c09398a1c7c16c7fb1d89669a298b49e9ea2e2ebad9f1678d964d29c349a65f1ab3da14616238fd0f925d64"
+              },
+              "user_event_status": {
+                "id": 5470993,
+                "best_identifier": "BlazinAzn 🦈",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 3,
+                "matches_lost": 0,
+                "matches_drawn": 1,
+                "total_match_points": 10,
+                "user": {
+                  "id": 37502,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Ervin S",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/bb98db58-51d.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=60dd2f2057f8612739c3b7e422e6f6fb48f37776ed2170e5b0a67ebb41c109e074479f6c37c0ecaa6fc585fe960bd2ea855b41829b155f7a94810e6aadf5d06082f88fd92dcf633a774f21de823571a2d963f6bb8c7a2814f3bb4ce683050bed206bf4f5dc9d724d0deb0c48a3d0c1563bea2a08f740811ffc4abc930172a9c3d2aadbe317b0ab2e2a93588bdb42da466fcbaa0bf43cdc26f105d7381a843744171eb0241a04af0e8188d15cb797c972b9b4724c3fa4241bb5a99873f57bd99e4a4eb7142a76edb2ef5f3515491a60108cfdc3022c09398a1c7c16c7fb1d89669a298b49e9ea2e2ebad9f1678d964d29c349a65f1ab3da14616238fd0f925d64"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            }
+          ],
+          "created_at": "2026-09-19T16:05:23+00:00",
+          "updated_at": "2026-09-19T16:42:20+00:00",
+          "team_event_match": null,
+          "table_number": 4,
+          "order": 3,
+          "status": "COMPLETE",
+          "pod_number": null,
+          "match_is_intentional_draw": false,
+          "match_is_unintentional_draw": false,
+          "match_is_bye": false,
+          "match_is_loss": false,
+          "reports_are_in_conflict": false,
+          "games_drawn": 0,
+          "games_won_by_winner": 2,
+          "games_won_by_loser": 1,
+          "is_ghost_match": false,
+          "is_feature_match": false,
+          "deck_check_started": false,
+          "deck_check_completed": false,
+          "time_extension_seconds": 0,
+          "tournament_round": 1415968,
+          "reporting_player": null,
+          "winning_player": 37502,
+          "assigned_judge": null,
+          "players": [
+            86190,
+            37502
+          ]
+        },
+        {
+          "id": 8012249,
+          "player_match_relationships": [
+            {
+              "id": 15409803,
+              "player_order": 1,
+              "is_starting_player": false,
+              "player": {
+                "id": 37381,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Ryan F",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/bb98db58-51d.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=60dd2f2057f8612739c3b7e422e6f6fb48f37776ed2170e5b0a67ebb41c109e074479f6c37c0ecaa6fc585fe960bd2ea855b41829b155f7a94810e6aadf5d06082f88fd92dcf633a774f21de823571a2d963f6bb8c7a2814f3bb4ce683050bed206bf4f5dc9d724d0deb0c48a3d0c1563bea2a08f740811ffc4abc930172a9c3d2aadbe317b0ab2e2a93588bdb42da466fcbaa0bf43cdc26f105d7381a843744171eb0241a04af0e8188d15cb797c972b9b4724c3fa4241bb5a99873f57bd99e4a4eb7142a76edb2ef5f3515491a60108cfdc3022c09398a1c7c16c7fb1d89669a298b49e9ea2e2ebad9f1678d964d29c349a65f1ab3da14616238fd0f925d64"
+              },
+              "user_event_status": {
+                "id": 5500600,
+                "best_identifier": "Ryan",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 3,
+                "matches_lost": 0,
+                "matches_drawn": 1,
+                "total_match_points": 10,
+                "user": {
+                  "id": 37381,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Ryan F",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/bb98db58-51d.png?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=60dd2f2057f8612739c3b7e422e6f6fb48f37776ed2170e5b0a67ebb41c109e074479f6c37c0ecaa6fc585fe960bd2ea855b41829b155f7a94810e6aadf5d06082f88fd92dcf633a774f21de823571a2d963f6bb8c7a2814f3bb4ce683050bed206bf4f5dc9d724d0deb0c48a3d0c1563bea2a08f740811ffc4abc930172a9c3d2aadbe317b0ab2e2a93588bdb42da466fcbaa0bf43cdc26f105d7381a843744171eb0241a04af0e8188d15cb797c972b9b4724c3fa4241bb5a99873f57bd99e4a4eb7142a76edb2ef5f3515491a60108cfdc3022c09398a1c7c16c7fb1d89669a298b49e9ea2e2ebad9f1678d964d29c349a65f1ab3da14616238fd0f925d64"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            },
+            {
+              "id": 15409804,
+              "player_order": 2,
+              "is_starting_player": false,
+              "player": {
+                "id": 486378,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Giovanni p",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/AmberSapphire.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=315784bfa7950e211fce3848c41b87c474787ce08b001cea10ca5b70a37ff048440a0e3511e81ac3f6bb5f12bd296b8af7095ebbf0073c9bf4de28f336421317cc1b7c13ce11946e96da812b2dc9b2d27d83d7178f6f172114c74af2aa98247b8fa107fa3965da1fce1e3f07979112920bec6da32473265ffc29d32fe9ad05feb6ad275ffbb670f5e9776504f623f345f535df9e1dff22a5f46b72276f31c634d4eb8de29203c3d274ecb745ad4aacd8600245112ab15716c8045a8ff0f0158d7e8222bafac2cb5c0caab459ddf89560ec8288c6e4f9c247ba5c1b143840ebfc581102c4173d4980efc77a275a9e1bd7391a442a88e753ae2a416806cf2730fa"
+              },
+              "user_event_status": {
+                "id": 5506688,
+                "best_identifier": "Beerhunt",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 1,
+                "matches_lost": 2,
+                "matches_drawn": 0,
+                "total_match_points": 3,
+                "user": {
+                  "id": 486378,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Giovanni p",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/AmberSapphire.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=315784bfa7950e211fce3848c41b87c474787ce08b001cea10ca5b70a37ff048440a0e3511e81ac3f6bb5f12bd296b8af7095ebbf0073c9bf4de28f336421317cc1b7c13ce11946e96da812b2dc9b2d27d83d7178f6f172114c74af2aa98247b8fa107fa3965da1fce1e3f07979112920bec6da32473265ffc29d32fe9ad05feb6ad275ffbb670f5e9776504f623f345f535df9e1dff22a5f46b72276f31c634d4eb8de29203c3d274ecb745ad4aacd8600245112ab15716c8045a8ff0f0158d7e8222bafac2cb5c0caab459ddf89560ec8288c6e4f9c247ba5c1b143840ebfc581102c4173d4980efc77a275a9e1bd7391a442a88e753ae2a416806cf2730fa"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            }
+          ],
+          "created_at": "2026-09-19T16:05:23+00:00",
+          "updated_at": "2026-09-19T16:47:48+00:00",
+          "team_event_match": null,
+          "table_number": 5,
+          "order": 4,
+          "status": "COMPLETE",
+          "pod_number": null,
+          "match_is_intentional_draw": false,
+          "match_is_unintentional_draw": false,
+          "match_is_bye": false,
+          "match_is_loss": false,
+          "reports_are_in_conflict": false,
+          "games_drawn": 0,
+          "games_won_by_winner": 2,
+          "games_won_by_loser": 0,
+          "is_ghost_match": false,
+          "is_feature_match": false,
+          "deck_check_started": false,
+          "deck_check_completed": false,
+          "time_extension_seconds": 0,
+          "tournament_round": 1415968,
+          "reporting_player": null,
+          "winning_player": 37381,
+          "assigned_judge": null,
+          "players": [
+            37381,
+            486378
+          ]
+        },
+        {
+          "id": 8012244,
+          "player_match_relationships": [
+            {
+              "id": 15409794,
+              "player_order": null,
+              "is_starting_player": false,
+              "player": {
+                "id": 37198,
+                "pronouns": null,
+                "country_code": null,
+                "best_identifier": "Aaron B",
+                "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/AmethystSteel.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=11119dc6f462847e33ea3fa359b51f4898ea05060367dd193c8b363a5f238ae9a223b70fc03e427ff19c347958de4b0bd513f14c4981863089510ee7f1e49334ccb1d7de4cba62b04fbf1788700e1c762bb075204bb7924199573c7ee8050fcd804f415b70b88eca4093e74558314146315bbf4a5c1ac224b55fb2165d77327feb7d39245c0f714abbc77f51590bf1e613bab09abecf9078e1bafda246ed8803df5a75551059fbb5e869357c6b1a03bc6f75c84a628815bd1fcfc481ef757ad3999218af36578968688fa6b59ddba7b175a0a2bc2388adb3e19d6b3917b4fb490543c317e976fa2d805aa06e59a5dd3e4e7ec949cdebcb17fb5e26680b322095"
+              },
+              "user_event_status": {
+                "id": 4692196,
+                "best_identifier": "TeddyWestside 👀",
+                "is_guest": false,
+                "registration_status": "COMPLETE",
+                "matches_won": 2,
+                "matches_lost": 1,
+                "matches_drawn": 0,
+                "total_match_points": 6,
+                "user": {
+                  "id": 37198,
+                  "pronouns": null,
+                  "country_code": null,
+                  "best_identifier": "Aaron B",
+                  "game_user_profile_picture_url": "https://storage.googleapis.com/spicerack_media/game_images/1_disney-lorcana/profile/AmethystSteel.webp?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=storages-service-account%40counterbalance-381319.iam.gserviceaccount.com%2F20260919%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260919T184441Z&X-Goog-Expires=86400&X-Goog-SignedHeaders=host&X-Goog-Signature=11119dc6f462847e33ea3fa359b51f4898ea05060367dd193c8b363a5f238ae9a223b70fc03e427ff19c347958de4b0bd513f14c4981863089510ee7f1e49334ccb1d7de4cba62b04fbf1788700e1c762bb075204bb7924199573c7ee8050fcd804f415b70b88eca4093e74558314146315bbf4a5c1ac224b55fb2165d77327feb7d39245c0f714abbc77f51590bf1e613bab09abecf9078e1bafda246ed8803df5a75551059fbb5e869357c6b1a03bc6f75c84a628815bd1fcfc481ef757ad3999218af36578968688fa6b59ddba7b175a0a2bc2388adb3e19d6b3917b4fb490543c317e976fa2d805aa06e59a5dd3e4e7ec949cdebcb17fb5e26680b322095"
+                },
+                "deck_defining_card": null,
+                "special_user_identifier": null
+              }
+            }
+          ],
+          "created_at": "2026-09-19T16:05:23+00:00",
+          "updated_at": "2026-09-19T16:05:23+00:00",
+          "team_event_match": null,
+          "table_number": -1,
+          "order": 5,
+          "status": "COMPLETE",
+          "pod_number": null,
+          "match_is_intentional_draw": false,
+          "match_is_unintentional_draw": false,
+          "match_is_bye": true,
+          "match_is_loss": false,
+          "reports_are_in_conflict": false,
+          "games_drawn": null,
+          "games_won_by_winner": null,
+          "games_won_by_loser": null,
+          "is_ghost_match": false,
+          "is_feature_match": false,
+          "deck_check_started": false,
+          "deck_check_completed": false,
+          "time_extension_seconds": 0,
+          "tournament_round": 1415968,
+          "reporting_player": 37198,
+          "winning_player": 37198,
+          "assigned_judge": null,
+          "players": [
+            37198
+          ]
+        }
+      ]
+    }
+  }
+]
