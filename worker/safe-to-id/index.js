@@ -522,13 +522,20 @@ async function handleAnalyze(request, origin, ctx) {
   const gamesPlayed = {};
   let hist = null;
 
-  // Helper: apply a single completed match's game data into gamesWon/gamesPlayed
+  // Helper: apply a single completed match's game data into gamesWon/gamesPlayed.
+  // RPH scores GW% as game points / (3 × games): a drawn game is worth 1/3 of a win,
+  // so each drawn game adds 1/3 to gamesWon and 1 to gamesPlayed. An ID is 0-0-3.
   function applyGameData(match) {
     if (match.match_is_bye) return;
     const ww = match.games_won_by_winner;
     const wl = match.games_won_by_loser;
     if (ww == null || wl == null) return;
+    const gd = match.games_drawn ?? 0;
     const players = match.players ?? [];
+    for (const pid of players) {
+      gamesWon[pid] = (gamesWon[pid] ?? 0) + gd / 3;
+      gamesPlayed[pid] = (gamesPlayed[pid] ?? 0) + gd;
+    }
 
     if (match.match_is_intentional_draw || match.match_is_unintentional_draw || match.winning_player == null) {
       // Draw: players[0] credited with games_won_by_winner, players[1] with games_won_by_loser
@@ -649,6 +656,8 @@ async function handleAnalyze(request, origin, ctx) {
       standings,
       hist,
       gwByPlayer,
+      gamesWon,
+      gamesPlayed,
       currentPairings,
       targetPlayerId: player_id,
       topCut: top_cut,
@@ -722,7 +731,7 @@ function buildMatchHistory(allMatchData) {
   return { wins, played, opps };
 }
 
-function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetPlayerId, topCut, currentRound, lockedIdRate = 0.90, bubbleIdRate = 0.03, monteCarloSamples = 1000 }) {
+function computeFullPlus({ standings, hist, gwByPlayer, gamesWon, gamesPlayed, currentPairings, targetPlayerId, topCut, currentRound, lockedIdRate = 0.90, bubbleIdRate = 0.03, monteCarloSamples = 1000 }) {
   const EXHAUSTIVE_THRESHOLD = 12;
   const MONTE_CARLO_SAMPLES = Math.min(Math.max(Math.floor(monteCarloSamples), 100), 10000);
 
@@ -897,8 +906,6 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     .map(s => ({
       pid: s.player.id,
       basePoints: s.points ?? 0,
-      gw: gwByPlayer[s.player.id] ?? 0.33,
-      ogw: s.opponent_game_win_percentage ?? 0,
     }));
 
   // RPH OMW% formula: average of opponents' match point % = points / (3 × rounds),
@@ -919,10 +926,46 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
     return sum / allOpps.length;
   }
 
+  // GW% and OGW% must move with each scenario too: a player who wins an unreported
+  // match gains games, which changes their GW% and every opponent's OGW%. Without
+  // this, a bubble player's stale GW% decides ties it no longer would.
+  // Unreported wins have an unknown game score, so callers try both 2-0 and 2-1
+  // (loserGames = 0 or 1). IDs are recorded by RPH as 0-0-3.
+  function gwMapFor(outcomes, loserGames, pinnedGames = []) {
+    const won = { ...gamesWon };
+    const played = { ...gamesPlayed };
+    const add = (pid, w, p) => {
+      won[pid] = (won[pid] ?? 0) + w;
+      played[pid] = (played[pid] ?? 0) + p;
+    };
+    for (const { p1, p2, outcome } of [...outcomes, ...pinnedGames]) {
+      if (outcome === 0) {
+        // IDs are recorded as three drawn games, each worth 1/3 of a win
+        add(p1, 1, 3);
+        add(p2, 1, 3);
+        continue;
+      }
+      const [winner, loser] = outcome === 1 ? [p1, p2] : [p2, p1];
+      add(winner, 2, 2 + loserGames);
+      add(loser, loserGames, 2 + loserGames);
+    }
+    const gw = pid => (played[pid] > 0 ? Math.max(0.33, won[pid] / played[pid]) : 0.33);
+    return gw;
+  }
+
+  function ogwOf(pid, gw) {
+    const pastOpps = hist.opps[pid] ?? [];
+    const currOpp = currentRoundOpps[pid];
+    const allOpps = currOpp != null ? [...pastOpps, currOpp] : pastOpps;
+    if (allOpps.length === 0) return standingsMap[pid]?.ogw ?? 0;
+    return allOpps.reduce((acc, opp) => acc + gw(opp), 0) / allOpps.length;
+  }
+
   // Apply a combination of unknown-match outcomes on top of a base point-delta map,
   // then return the full standings sorted by RPH tiebreakers (points → OMW% → GW% → OGW%).
   // outcomes: [{ p1, p2, outcome }]  outcome: 0=draw, 1=p1 wins, 2=p2 wins
-  function rankedScenario(outcomes, baseDelta) {
+  // pinnedGames: results whose points are already in baseDelta but whose games are not.
+  function rankedScenario(outcomes, baseDelta, loserGames = 0, pinnedGames = []) {
     const ptDelta = { ...baseDelta };
 
     for (const { p1, p2, outcome } of outcomes) {
@@ -936,12 +979,13 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       }
     }
 
-    return allPlayers.map(({ pid, basePoints, gw, ogw }) => ({
+    const gw = gwMapFor(outcomes, loserGames, pinnedGames);
+    return allPlayers.map(({ pid, basePoints }) => ({
       pid,
       pts: basePoints + (ptDelta[pid] ?? 0),
       omw: omwOf(pid, ptDelta),
-      gw,
-      ogw,
+      gw: gw(pid),
+      ogw: ogwOf(pid, gw),
     })).sort((a, b) => {
       if (b.pts !== a.pts) return b.pts - a.pts;
       const omwD = b.omw - a.omw;
@@ -955,8 +999,12 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
   const rankOf = (sorted, pid) => sorted.findIndex(p => p.pid === pid) + 1;
 
   // Simulate one combination of unknown match outcomes and return the target's rank.
+  // Takes the worse of the 2-0 and 2-1 game scores so the verdict stays conservative.
   function simulateScenario(outcomes) {
-    return rankOf(rankedScenario(outcomes, knownPtDelta), targetPlayerId);
+    return Math.max(
+      rankOf(rankedScenario(outcomes, knownPtDelta, 0), targetPlayerId),
+      rankOf(rankedScenario(outcomes, knownPtDelta, 1), targetPlayerId),
+    );
   }
 
   function playerName(pid) {
@@ -1063,10 +1111,14 @@ function computeFullPlus({ standings, hist, gwByPlayer, currentPairings, targetP
       let yBest = Infinity, yWorst = 0, oBest = Infinity, oWorst = 0;
       let wYourCut = 0, wOppCut = 0, totWeight = 0;
 
+      // The pinned result's points are in `base`; its games still need counting.
+      const pinned = tDelta === oDelta ? [] : [{ p1: targetPlayerId, p2: targetOppId, outcome: tDelta > oDelta ? 1 : 2 }];
+
       const tally = (outcomes, weight) => {
-        const sorted = rankedScenario(outcomes, base);
-        const yr = rankOf(sorted, targetPlayerId);
-        const or = rankOf(sorted, targetOppId);
+        // Worse of the 2-0 and 2-1 game scores, per player, to stay conservative.
+        const sorts = [0, 1].map(lg => rankedScenario(outcomes, base, lg, pinned));
+        const yr = Math.max(...sorts.map(s => rankOf(s, targetPlayerId)));
+        const or = Math.max(...sorts.map(s => rankOf(s, targetOppId)));
         totWeight += weight;
         if (yr <= topCut) wYourCut += weight;
         if (or <= topCut) wOppCut += weight;
