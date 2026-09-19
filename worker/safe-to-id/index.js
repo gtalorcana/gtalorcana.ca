@@ -43,6 +43,18 @@ async function rphFetch(url) {
   return res.json();
 }
 
+// RPH returns 401 for the plain /matches endpoint; /matches/paginated is still
+// public. Walk every page and return { results } for the whole round.
+async function rphFetchRoundMatches(roundId) {
+  const results = [];
+  for (let page = 1; page; ) {
+    const data = await rphFetch(`${RPH_BASE}/tournament-rounds/${roundId}/matches/paginated/?page=${page}&page_size=100`);
+    results.push(...(data.results ?? []));
+    page = data.next_page_number ?? null;
+  }
+  return { results };
+}
+
 const CACHE_TTL = 10; // seconds — short enough to feel fresh after a standings announcement
 
 async function fetchWithCache(cacheKey, fetchFn, ctx) {
@@ -271,7 +283,7 @@ async function handleAnalyze(request, origin, ctx) {
     try {
       currentPairings = await fetchWithCache(
         `matches:current:${currentPairingsRoundId}`,
-        () => rphFetch(`${RPH_BASE}/tournament-rounds/${currentPairingsRoundId}/matches`),
+        () => rphFetchRoundMatches(currentPairingsRoundId),
         ctx
       );
       pairingMatches = currentPairings?.matches ?? currentPairings?.results ?? [];
@@ -553,7 +565,7 @@ async function handleAnalyze(request, origin, ctx) {
     try {
       allMatchData = await Promise.all(
         roundsForMatches.map(r =>
-          fetchWithCache(`matches:${r.id}`, () => rphFetch(`${RPH_BASE}/tournament-rounds/${r.id}/matches`), ctx)
+          fetchWithCache(`matches:${r.id}`, () => rphFetchRoundMatches(r.id), ctx)
         )
       );
     } catch (e) {
