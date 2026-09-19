@@ -704,8 +704,10 @@
     document.getElementById('resRecord').textContent =
       `${d.current_points} pts · ${d.rounds_remaining} round${d.rounds_remaining !== 1 ? 's' : ''} remaining`;
 
-    // Update labels based on whether target's current match is done
-    if (d.target_match_done && d.rounds_remaining === 0) {
+    // Update labels based on whether target's current match is done.
+    // With no rounds left there is nothing to ID — the verdict is about the cut.
+    const cutOnly = !!d.target_match_done && d.rounds_remaining === 0;
+    if (cutOnly) {
       document.getElementById('verdict1Label').textContent = 'Make top cut?';
       document.getElementById('verdict2Label').textContent = '';
     } else if (d.target_match_done) {
@@ -717,7 +719,7 @@
     }
 
     const matchDone = !!d.target_match_done;
-    renderVerdict('verdict1Badge', 'verdict1Detail', d.id_one_round, d.top_cut, matchDone);
+    renderVerdict('verdict1Badge', 'verdict1Detail', d.id_one_round, d.top_cut, matchDone, cutOnly);
     const v2block = document.getElementById('verdict2Block');
     if (d.id_two_rounds) {
       v2block.style.display = '';
@@ -892,13 +894,15 @@
     document.getElementById('fullPlusBody').innerHTML = html;
   }
 
-  function renderVerdict(badgeId, detailId, scenario, topCut, matchAlreadyDone = false) {
+  function renderVerdict(badgeId, detailId, scenario, topCut, matchAlreadyDone = false, cutOnly = false) {
     const badge = document.getElementById(badgeId);
     const detail = document.getElementById(detailId);
     badge.className = `verdict-badge ${scenario.verdict}`;
 
     const icons = { safe: '✅', risky: '⚠️', unsafe: '❌' };
-    const labels = { safe: 'SAFE', risky: 'RISKY', unsafe: 'UNSAFE' };
+    const labels = cutOnly
+      ? { safe: 'SAFE FOR TOP CUT', risky: 'ON THE BUBBLE', unsafe: 'LIKELY MISSES CUT' }
+      : { safe: 'SAFE TO ID', risky: 'RISKY TO ID', unsafe: 'NOT SAFE TO ID' };
     badge.innerHTML = `<span>${icons[scenario.verdict]}</span><span>${labels[scenario.verdict]}</span>`;
 
     const n = scenario.danger_count;
