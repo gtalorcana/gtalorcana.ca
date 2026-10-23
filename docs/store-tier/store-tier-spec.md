@@ -35,10 +35,19 @@ Measurement window is **4 Lorcana sets — roughly one year**.
 
 ### The quick launch
 
-There is a short qualifying window ahead of the full program:
+There is a short qualifying period ahead of the full program, with two levels on different windows:
 
-- **Window:** Sept 1 2026 → Nov 1 2026
-- **Targets:** 8 events, 8 unique players, 80 event tickets, **1 prerelease event scheduled**
+| Level | Window | Targets |
+|-------|--------|---------|
+| **Standard Quick Launch** | Winterspell prerelease (Feb 13 2026) → Nov 1 2026, inclusive | **4 events with at least 4 players each** — no fan, ticket or prerelease target |
+| **Legendary Quick Launch** | Sept 1 2026 → Nov 1 2026 | 8 events, 8 unique players, 80 event tickets, **1 prerelease event scheduled** |
+
+Standard Quick Launch is Ravensburger's wording (added October 2026): *"In order to be eligible for
+Standard tier as of Into the Inkdark and have access to the first Disney Lorcana TCG collector
+boosters, your store must have run four events with at least four players each in the period of
+Winterspell through Nov 1, 2026."* "The period of Winterspell" is taken to include its prerelease
+weekend, so the window opens Feb 13 rather than the Feb 20 wide release. "Players" is every
+registration on the event, guests included — the same count as Event Tickets.
 
 ### Why this tool exists
 
@@ -434,8 +443,11 @@ Cinzel/Lora, `.card` / `.btn` / `.field` patterns). Add the page to the tools na
 
 1. **Store** — text input with typeahead against `/store-tier/stores`, showing name + city.
    Accepts a pasted Play Hub store UUID directly. Selected store shown as a chip with its address.
-2. **Window** — two presets, no free-form dates:
-   - **Quick Launch** (Sept 1 – Nov 1 2026) — *default*, targets 8 / 8 / 80 / 1 prerelease
+2. **Window** — three presets, no free-form dates:
+   - **Standard Quick Launch** (Feb 13 – Nov 1 2026) — target 4 events with 4+ players each. Shows a
+     single "Events (4+ players)" card; the event table still lists every event, with ones under
+     the floor greyed out and tagged "Under 4"
+   - **Legendary Quick Launch** (Sept 1 – Nov 1 2026) — *default*, targets 8 / 8 / 80 / 1 prerelease
    - **4-Set Window** — the real program window (see below) — targets 25 / 25 / 250 and 50 / 50 / 500,
      with a dropdown to pick the complete or in-progress span
 
@@ -474,7 +486,7 @@ than two sets of cards.
 **Prerelease card** is boolean: the matched event name and date, or "None found in window" with the
 manual override.
 
-It appears **only for Quick Launch**, which is the one tier with a prerelease condition. Standard
+It appears **only for Legendary Quick Launch**, which is the one tier with a prerelease condition. Standard
 and Legendary are 25/25/250 and 50/50/500 with no prerelease requirement, so the card and its
 override are hidden on the 4-set window, and the copy summary drops the prerelease field there —
 a ticked card would advertise a target that does not exist. Prerelease events are still tagged in
@@ -504,7 +516,7 @@ Persistent, above the results, not dismissable:
 
 > **Unofficial.** These numbers are counted from public Ravensburger Play Hub data by GTA Lorcana.
 > They are not Ravensburger's official tier tally and may differ from what your store rep sees.
-> Program targets are based on information available as of August 2026 and may change.
+> Program targets are based on information available as of October 2026 and may change.
 
 ### Share
 
@@ -512,10 +524,22 @@ Persistent, above the results, not dismissable:
 community:
 
 ```
-Enter The Battlefield Oakville — Quick Launch (Sept 1 – Nov 1 2026)
+Enter The Battlefield Oakville — Legendary Quick Launch (2026-09-01 → 2026-11-01)
 Events 1/8 · Unique Fans 6/8 · Tickets 6/80 · Prerelease ✗
 Unofficial — counted from public Play Hub data · gtalorcana.ca/store-tier
 ```
+
+Standard Quick Launch reports only the one metric it is scored on:
+
+```
+Enter The Battlefield Oakville — Standard Quick Launch (2026-02-13 → 2026-11-02)
+Events with 4+ players 5/4 ✓
+Standard Quick Launch met — all targets cleared
+Unofficial — counted from public Play Hub data · gtalorcana.ca/store-tier
+```
+
+The `to` date is the exclusive bound the worker filters on (`[from, to)`), which is why
+"through Nov 1" prints as Nov 2.
 
 ---
 

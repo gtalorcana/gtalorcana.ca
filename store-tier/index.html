@@ -233,8 +233,12 @@
 
     <div class="radio-group" id="windowPresets">
       <div class="radio-option">
+        <input type="radio" name="window" id="win-quick-standard" value="quick-standard" />
+        <label for="win-quick-standard">Standard Quick Launch</label>
+      </div>
+      <div class="radio-option">
         <input type="radio" name="window" id="win-quick" value="quick" checked />
-        <label for="win-quick">Quick Launch</label>
+        <label for="win-quick">Legendary Quick Launch</label>
       </div>
       <div class="radio-option">
         <input type="radio" name="window" id="win-full" value="full" />
@@ -269,7 +273,7 @@
     <div class="disclaimer">
       <strong>Unofficial.</strong> These numbers are counted from public Ravensburger Play Hub data
       by GTA Lorcana. They are not Ravensburger's official tier tally and may differ from what your
-      store rep sees. Targets are based on information available as of August 2026 and may change.
+      store rep sees. Targets are based on information available as of October 2026 and may change.
     </div>
 
     <div class="card wide">
@@ -331,13 +335,23 @@
   const CHUNK_SIZE = 20;   // must match MAX_TICKET_EVENTS in the worker
   const STORE_KEY  = 'gta-lorcana-store-tier-store';
 
-  // Tier targets. Quick Launch is a fixed qualifying window; the full program runs over
-  // 4 sets (~1 year) with two tiers.
+  // Tier targets. Quick Launch is a fixed qualifying period with a Standard and a Legendary
+  // level, each on its own window; the full program runs over 4 sets (~1 year) with two tiers.
   const QUICK = {
-    label: 'Quick Launch',
+    label: 'Legendary Quick Launch',
     from: '2026-09-01',
     to: '2026-11-01',
-    tiers: [{ name: 'Quick Launch', events: 8, fans: 8, tickets: 80, prerelease: true }],
+    tiers: [{ name: 'Legendary Quick Launch', events: 8, fans: 8, tickets: 80, prerelease: true }],
+  };
+  // Standard tier as of Into the Inkdark (and the first collector boosters): 4 events with
+  // at least 4 players each, Winterspell through Nov 1 2026. Only the event count matters —
+  // no fan, ticket or prerelease target. `to` is exclusive, so Nov 2 keeps Nov 1 in.
+  const QUICK_STANDARD = {
+    label: 'Standard Quick Launch',
+    from: '2026-02-13',   // Winterspell prerelease weekend — it counts toward the period
+    to: '2026-11-02',
+    minPlayers: 4,
+    tiers: [{ name: 'Standard Quick Launch', events: 4, prerelease: false }],
   };
   const FULL_TIERS = [
     { name: 'Standard',  events: 25, fans: 25, tickets: 250, prerelease: false },
@@ -530,6 +544,10 @@
     if (mode === 'quick') {
       return { mode, from: QUICK.from, to: QUICK.to, label: QUICK.label, tiers: QUICK.tiers };
     }
+    if (mode === 'quick-standard') {
+      const q = QUICK_STANDARD;
+      return { mode, from: q.from, to: q.to, label: q.label, tiers: q.tiers, minPlayers: q.minPlayers };
+    }
     if (mode === 'full') {
       const spans = setSpans();
       const picked = spans[document.getElementById('setSpan').selectedIndex] || spans[0];
@@ -552,6 +570,9 @@
     const hint = document.getElementById('windowHint');
     if (w.mode === 'quick') {
       hint.textContent = 'Sept 1 – Nov 1 2026 · targets 8 events · 8 unique fans · 80 tickets · 1 prerelease';
+    } else if (w.mode === 'quick-standard') {
+      hint.textContent = 'Winterspell prerelease (Feb 13) through Nov 1 2026 · 4 events with at least 4 players each · ' +
+        'Standard tier as of Into the Inkdark, with access to the first collector boosters';
     } else if (w.mode === 'full') {
       const s = w.span;
       hint.innerHTML =
@@ -671,11 +692,16 @@
     const prereleaseEvent = counted.find(e => e.prerelease_guess) || null;
     const prerelease = !!prereleaseEvent || document.getElementById('prereleaseOverride').checked;
 
-    return { counted, skipped, events: counted.length, fans: fans.size, tickets, guests, statuses, prerelease, prereleaseEvent };
+    // A window with a player floor only counts events that reached it toward Events.
+    const minPlayers = lastRun.window.minPlayers || 0;
+    const qualifying = counted.filter(e => (e.tickets || 0) >= minPlayers).length;
+
+    return { counted, skipped, minPlayers, events: qualifying, fans: fans.size, tickets, guests, statuses, prerelease, prereleaseEvent };
   }
 
   function metricCard(name, value, tiers, key) {
     const target = tiers[0][key];
+    if (target === undefined) return '';   // this window has no target for the metric
     const stretch = tiers.length > 1 ? tiers[1][key] : null;
     const met = value >= target;
     const scaleMax = stretch || target;
@@ -704,7 +730,8 @@
   function verdict(t, tiers) {
     const misses = (tier) => {
       const m = [];
-      if (t.events < tier.events) m.push(`${tier.events - t.events} more event${tier.events - t.events === 1 ? '' : 's'}`);
+      if (t.events < tier.events) m.push(`${tier.events - t.events} more event${tier.events - t.events === 1 ? '' : 's'}` +
+        (t.minPlayers ? ` with ${t.minPlayers}+ players` : ''));
       if (t.fans < tier.fans) m.push(`${tier.fans - t.fans} more unique fan${tier.fans - t.fans === 1 ? '' : 's'}`);
       if (t.tickets < tier.tickets) m.push(`${tier.tickets - t.tickets} more ticket${tier.tickets - t.tickets === 1 ? '' : 's'}`);
       if (tier.prerelease && !t.prerelease) m.push('a prerelease event');
@@ -743,7 +770,7 @@
 
     document.getElementById('verdict').innerHTML = verdict(t, tiers);
 
-    // Only Quick Launch requires a prerelease. Standard and Legendary are 25/25/250 and
+    // Only Legendary Quick Launch requires a prerelease. Standard and Legendary are 25/25/250 and
     // 50/50/500 with no prerelease condition, so showing a ticked Prerelease card there
     // would read as a target that doesn't exist. The event table still tags prereleases.
     const preRequired = tiers.some(x => x.prerelease);
@@ -761,23 +788,27 @@
     document.getElementById('prereleaseOverrideRow').style.display = preRequired ? '' : 'none';
 
     document.getElementById('metrics').innerHTML =
-      metricCard('Events', t.events, tiers, 'events') +
+      metricCard(t.minPlayers ? `Events (${t.minPlayers}+ players)` : 'Events', t.events, tiers, 'events') +
       metricCard('Unique Fans', t.fans, tiers, 'fans') +
       metricCard('Event Tickets', t.tickets, tiers, 'tickets') +
       preCard;
 
     // ── Event table ──
-    const rows = t.counted.map(e => `
-      <tr class="${(e.tickets || 0) === 0 ? 'row-zero' : ''}">
+    const rows = t.counted.map(e => {
+      const short = !e.error && (e.tickets || 0) < t.minPlayers;   // under the player floor
+      return `
+      <tr class="${(e.tickets || 0) === 0 || short ? 'row-zero' : ''}">
         <td class="date">${e.local_date}</td>
         <td>
           <a href="${e.url}" target="_blank" rel="noopener">${escapeHtml(e.name)}</a>
+          ${short ? `<span class="tag">Under ${t.minPlayers}</span>` : ''}
           ${e.prerelease_guess ? '<span class="tag">Prerelease</span>' : ''}
           ${e.online ? '<span class="tag">Online</span>' : ''}
           ${!e.is_past ? '<span class="tag">Upcoming</span>' : ''}
         </td>
         <td class="num">${e.error ? '—' : (e.tickets || 0)}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
 
     document.getElementById('eventTable').innerHTML =
       `<thead><tr><th>Date</th><th>Event</th><th style="text-align:right">Tickets</th></tr></thead>` +
@@ -823,7 +854,9 @@
 
     const text =
       `${store.name || 'Store ' + store.store_id} — ${lastRun.window.label} (${lastRun.window.from} → ${lastRun.window.to})\n` +
-      `Events ${mark(t.events, tier.events)} · Unique Fans ${mark(t.fans, tier.fans)} · Tickets ${mark(t.tickets, tier.tickets)}` +
+      (t.minPlayers
+        ? `Events with ${t.minPlayers}+ players ${mark(t.events, tier.events)}`
+        : `Events ${mark(t.events, tier.events)} · Unique Fans ${mark(t.fans, tier.fans)} · Tickets ${mark(t.tickets, tier.tickets)}`) +
       (tier.prerelease ? ` · Prerelease ${t.prerelease ? '✓' : '✗'}` : '') + `\n` +
       `${verdict(t, lastRun.window.tiers).replace(/<[^>]+>/g, '')}\n` +
       `Unofficial — counted from public Play Hub data · gtalorcana.ca/store-tier`;
