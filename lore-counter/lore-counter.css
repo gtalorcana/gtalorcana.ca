@@ -125,7 +125,7 @@ body.game-active #game-screen {
 
 /* ── PLAYER LABEL (name / win state) ─────────────────────── */
 .player-label {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: clamp(.78rem, 2.5vw, 1rem);
   color: var(--text-muted);
   letter-spacing: .12em;
@@ -148,7 +148,7 @@ body.game-active #game-screen {
 
 /* Override tools.css input styles for name inputs inside panels */
 input.name-input {
-  font-family: 'Lora', serif;
+  font-family: var(--font-body);
   font-size: 16px;
   background: var(--surface2);
   color: var(--text);
@@ -167,7 +167,7 @@ input.name-input {
 
 /* ── SCORE DISPLAY ───────────────────────────────────────── */
 .score-display {
-  font-family: 'Cinzel Decorative', serif;
+  font-family: var(--font-display);
   font-size: clamp(4rem, 16vw, 7rem);
   font-weight: 700;
   color: var(--heading);
@@ -206,7 +206,7 @@ input.name-input {
   transition: transform .12s, box-shadow .12s, opacity .2s;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-weight: 600;
   user-select: none;
   -webkit-user-select: none;
@@ -256,7 +256,7 @@ body.game-active #game-pills { display: flex; }
 
 /* ── PILL BUTTON ─────────────────────────────────────────── */
 #new-game-quick {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .72rem;
   font-weight: 600;
   letter-spacing: .1em;
@@ -281,7 +281,7 @@ body.game-active #game-pills { display: flex; }
 
 /* ── DRAWER BUTTONS (used in win prompt) ─────────────────── */
 .drawer-btn {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .65rem; font-weight: 600;
   letter-spacing: .08em; text-transform: uppercase;
   border: 1px solid var(--border);
@@ -323,7 +323,7 @@ body.game-active #game-pills { display: flex; }
 }
 
 .ph-entry {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .85rem;
   font-size: clamp(.75rem, 2svh, 1rem);
   font-weight: 600;
@@ -347,7 +347,7 @@ body.game-active #game-pills { display: flex; }
 /* ── MATCH STRIP (Bo3) ───────────────────────────────────── */
 .match-strip {
   display: none;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .72rem;
   font-weight: 600;
   letter-spacing: .12em;
@@ -386,7 +386,7 @@ body.game-active #game-pills { display: flex; }
 }
 
 .win-prompt-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: clamp(.9rem, 4vw, 1.1rem);
   font-weight: 600;
   letter-spacing: .06em;
@@ -395,7 +395,7 @@ body.game-active #game-pills { display: flex; }
 }
 
 .win-prompt-score {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .72rem;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -428,13 +428,13 @@ body.game-active #game-pills { display: flex; }
   flex: 1;
 }
 .install-text strong {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .82rem;
   color: var(--gold);
   letter-spacing: .06em;
 }
 .install-text span {
-  font-family: 'Lora', serif;
+  font-family: var(--font-body);
   font-size: .78rem;
   color: var(--text-muted);
   line-height: 1.4;

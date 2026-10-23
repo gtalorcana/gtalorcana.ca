@@ -8,6 +8,11 @@
   --cream:       #f5ead2;
   --mist:        #e8dfc8;
 --transition: 0.4s cubic-bezier(.4,0,.2,1);
+
+  /* Type roles: display = logo/hero, heading = headings and small caps labels, body = text */
+  --font-display: 'Alegreya SC', Georgia, serif;
+  --font-heading: 'Alegreya SC', Georgia, serif;
+  --font-body:    'Alegreya Sans', system-ui, sans-serif;
 }
 
 [data-theme="dark"] {
@@ -45,7 +50,8 @@
 html { scroll-behavior: smooth; background: var(--bg); }
 
 body {
-  font-family: 'Lora', Georgia, serif;
+  font-family: var(--font-body);
+  font-size: 1.0625rem;   /* Alegreya Sans runs small next to Lora; 17px reads like the old 16px */
   background: var(--bg);
   color: var(--text);
   line-height: 1.7;
@@ -115,7 +121,7 @@ nav {
   padding: 2px;
 }
 .nav-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .95rem;
   font-weight: 600;
   color: var(--gold);
@@ -128,7 +134,7 @@ nav {
   list-style: none;
 }
 .nav-links a {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .78rem;
   letter-spacing: .1em;
   text-decoration: none;
@@ -141,7 +147,7 @@ nav {
 /* Sub-pages: right group with back link */
 .nav-right { display: flex; align-items: center; gap: 1rem; }
 .nav-back {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .78rem;
   letter-spacing: .1em;
   text-decoration: none;
@@ -175,7 +181,7 @@ footer {
 }
 footer a { color: var(--gold); text-decoration: none; }
 footer .footer-logo {
-  font-family: 'Cinzel Decorative', serif;
+  font-family: var(--font-display);
   font-size: 1rem;
   color: var(--gold);
   margin-bottom: .5rem;
@@ -190,7 +196,7 @@ footer .footer-logo {
   color: var(--ink);
   padding: .5rem 1rem;
   border-radius: 4px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   font-size: .85rem;
   font-weight: 600;
   z-index: 9999;

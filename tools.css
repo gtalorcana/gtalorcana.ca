@@ -14,7 +14,7 @@ main {
 
 .page-header { text-align: center; margin-bottom: .5rem; }
 .page-header h1 {
-  font-family: 'Cinzel Decorative', serif;
+  font-family: var(--font-display);
   font-size: clamp(1.6rem, 5vw, 2.2rem);
   color: var(--heading);
   letter-spacing: .06em;
@@ -34,7 +34,7 @@ main {
 }
 
 .card-title {
-  font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600;
+  font-family: var(--font-heading); font-size: .8rem; font-weight: 600;
   letter-spacing: .12em; text-transform: uppercase;
   color: var(--gold); margin-bottom: 1rem;
 }
@@ -44,13 +44,13 @@ main {
 .field:last-child { margin-bottom: 0; }
 
 label {
-  font-family: 'Cinzel', serif; font-size: .72rem; font-weight: 600;
+  font-family: var(--font-heading); font-size: .72rem; font-weight: 600;
   letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted);
 }
 
 input[type="text"],
 input[type="number"] {
-  font-family: 'Lora', serif; font-size: 16px; /* prevents iOS zoom */
+  font-family: var(--font-body); font-size: 16px; /* prevents iOS zoom */
   background: var(--surface2); color: var(--text);
   border: 1px solid var(--border); border-radius: 8px;
   padding: .65rem .9rem; width: 100%;
@@ -59,7 +59,7 @@ input[type="number"] {
   -webkit-appearance: none; appearance: none;
 }
 select {
-  font-family: 'Lora', serif; font-size: 16px;
+  font-family: var(--font-body); font-size: 16px;
   background: var(--surface2); color: var(--text);
   border: 1px solid var(--border); border-radius: 8px;
   padding: .65rem .9rem; width: 100%;
@@ -83,7 +83,7 @@ input:disabled, select:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ── BUTTONS ─────────────────────────────────────────────── */
 .btn {
-  font-family: 'Cinzel', serif; font-size: .8rem; font-weight: 600;
+  font-family: var(--font-heading); font-size: .8rem; font-weight: 600;
   letter-spacing: .1em; text-transform: uppercase;
   border: none; border-radius: 8px; cursor: pointer;
   padding: .65rem 1.2rem; min-height: 48px;
@@ -148,7 +148,7 @@ input:disabled, select:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ── SECTION LABEL ───────────────────────────────────────── */
 .section-label {
-  font-family: 'Cinzel', serif; font-size: .72rem; letter-spacing: .12em;
+  font-family: var(--font-heading); font-size: .72rem; letter-spacing: .12em;
   text-transform: uppercase; color: var(--text-muted);
   margin-bottom: .6rem; display: flex; align-items: center; gap: .5rem;
 }

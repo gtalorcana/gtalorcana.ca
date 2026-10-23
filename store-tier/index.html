@@ -10,7 +10,7 @@
   <link rel="icon" type="image/svg+xml" href="/gtalorcana-logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@400;500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/shared.css" />
   <link rel="stylesheet" href="/tools.css" />
   <style>
@@ -40,11 +40,11 @@
       border-radius: 8px; padding: .75rem .9rem; margin-top: .6rem;
     }
     .store-chip.visible { display: flex; }
-    .store-chip-name { font-family: 'Cinzel', serif; font-size: .9rem; color: var(--heading); }
+    .store-chip-name { font-family: var(--font-heading); font-size: .9rem; color: var(--heading); }
     .store-chip-meta { font-size: .78rem; color: var(--text-muted); }
     .store-chip-clear {
       background: none; border: none; color: var(--gold); cursor: pointer;
-      font-family: 'Cinzel', serif; font-size: .7rem; letter-spacing: .08em;
+      font-family: var(--font-heading); font-size: .7rem; letter-spacing: .08em;
       text-transform: uppercase; padding: 0; margin-top: .3rem; text-align: left;
     }
 
@@ -78,15 +78,15 @@
     .metric.met { border-color: var(--gold); box-shadow: 0 0 0 1px rgba(212,168,67,.25); }
     .metric-head {
       display: flex; justify-content: space-between; align-items: center;
-      font-family: 'Cinzel', serif; font-size: .7rem; letter-spacing: .1em;
+      font-family: var(--font-heading); font-size: .7rem; letter-spacing: .1em;
       text-transform: uppercase; color: var(--text-muted);
     }
     .metric-check { color: var(--gold); font-size: .9rem; }
     .metric-value {
-      font-family: 'Cinzel Decorative', serif; font-size: 1.7rem;
+      font-family: var(--font-display); font-size: 1.7rem;
       color: var(--heading); line-height: 1.2; margin-top: .3rem;
     }
-    .metric-target { font-family: 'Lora', serif; font-size: .95rem; color: var(--text-muted); }
+    .metric-target { font-family: var(--font-body); font-size: .95rem; color: var(--text-muted); }
     .metric-gap { font-size: .76rem; color: var(--text-muted); margin-top: .4rem; }
     .metric-gap.met { color: var(--gold); }
 
@@ -108,7 +108,7 @@
     /* ── EVENT TABLE ─────────────────────────────────────── */
     .event-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
     .event-table th {
-      font-family: 'Cinzel', serif; font-size: .68rem; letter-spacing: .1em;
+      font-family: var(--font-heading); font-size: .68rem; letter-spacing: .1em;
       text-transform: uppercase; color: var(--text-muted);
       text-align: left; padding: .4rem .5rem; border-bottom: 1px solid var(--border);
     }
@@ -132,7 +132,7 @@
     details.excluded { margin-top: .8rem; }
     details.excluded summary {
       font-size: .78rem; color: var(--text-muted); cursor: pointer;
-      font-family: 'Cinzel', serif; letter-spacing: .06em;
+      font-family: var(--font-heading); letter-spacing: .06em;
     }
     details.excluded ul { margin: .5rem 0 0 1rem; font-size: .78rem; color: var(--text-muted); }
     details.excluded li { margin-bottom: .2rem; }
@@ -156,21 +156,21 @@
       margin-top: .1rem; flex-shrink: 0; cursor: pointer;
     }
     .checkbox-row label {
-      font-family: 'Lora', serif; font-size: .8rem; letter-spacing: 0;
+      font-family: var(--font-body); font-size: .8rem; letter-spacing: 0;
       text-transform: none; color: var(--text-muted); cursor: pointer;
     }
 
     .summary-line {
       font-size: .84rem; color: var(--text-muted); text-align: center; line-height: 1.6;
     }
-    .summary-line strong { color: var(--heading); font-family: 'Cinzel', serif; }
+    .summary-line strong { color: var(--heading); font-family: var(--font-heading); }
     .verdict {
       text-align: center; font-size: .92rem; color: var(--text);
       margin-top: .7rem; padding: .6rem .8rem; line-height: 1.5;
       background: rgba(212,168,67,.08); border: 1px solid var(--border); border-radius: 8px;
     }
     .verdict strong {
-      font-family: 'Cinzel', serif; color: var(--gold);
+      font-family: var(--font-heading); color: var(--gold);
       letter-spacing: .06em; text-transform: uppercase; font-size: .88rem;
     }
     .btn-row { display: flex; gap: .6rem; width: 100%; max-width: 720px; }
