@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import {
   buildIndex, listScopes, matchesIn, classify, matchupMatrix, deckStats, metaByRound,
   conversion, playerHistory, searchPlayers, dropsByRound, matchWinRate, gameWinRate,
-  deckLabel, deckShort, UNKNOWN,
+  deckLabel, deckShort, UNKNOWN, leadersByDeck,
 } from '../../dlc/stats.js';
 import { slimMatch, slimEvent, inkPair, mergePlayers } from './slim.js';
 import { loadFixture } from './tools/fixture.mjs';
@@ -361,4 +361,26 @@ test('fixture: two players sharing a "First L" name stay separate people', () =>
     const histories = group.map(([id]) => playerHistory(fx, Number(id)));
     assert.equal(new Set(histories.map(h => h.id)).size, group.length);
   }
+});
+
+// ── Best of each ink pair ────────────────────────────────────────────────────
+
+test('leaders: top of each ink pair by standings rank, unknown decks left out', () => {
+  const rows = [
+    { r: 3, p: 2, pts: 3, rec: '1-1-0', omw: 0.5 }, { r: 1, p: 3, pts: 6, rec: '2-0-0', omw: 0.6 },
+    { r: 2, p: 1, pts: 6, rec: '2-0-0', omw: 0.5 }, { r: 4, p: 6, pts: 2, rec: '0-0-2', omw: 0.4 },
+    { r: 5, p: 7, pts: 0, rec: '0-1-0', omw: 0.3 },
+  ];
+  const out = leadersByDeck(ti, rows, 2);
+  assert.deepEqual(out.map(g => [g.deck, g.players]), [[ES, 1], [AE, 3]]);
+  assert.deepEqual(out[1].leaders.map(l => [l.rank, l.handle, l.behind]), [[2, 'alpha', 0], [3, 'Alphabet', 3]]);
+});
+
+test('fixture: every labelled ink pair has a leader, ranked in order', () => {
+  const rows = standings[1582175].rows;
+  const out = leadersByDeck(fx, rows, 3);
+  assert.equal(out.length, 15);
+  assert.equal(out[0].leaders[0].rank, 1);
+  assert.equal(out.reduce((s, g) => s + g.players, 0) + rows.filter(s => !dataset.players[s.p]?.ink).length, 1633);
+  for (const g of out) assert.deepEqual(g.leaders.map(l => l.rank), g.leaders.map(l => l.rank).sort((a, b) => a - b));
 });

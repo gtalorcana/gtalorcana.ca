@@ -7,6 +7,7 @@
 //   --games           matrix shows game win rate instead of match win rate
 //   --player <text>   round-by-round history for the best handle match
 //   --standings <n>   top n of the latest saved standings
+//   --leaders <n>     top n players on each ink pair in the latest saved standings
 //   --json            dump the computed stats as JSON instead of tables
 //
 // Take a fixture first with: node worker/dlc/tools/snapshot.mjs <event_id>
@@ -14,7 +15,7 @@
 import { loadFixture } from './fixture.mjs';
 import {
   buildIndex, listScopes, matchupMatrix, deckStats, metaByRound, conversion, playerHistory,
-  searchPlayers, dropsByRound, matchWinRate, gameWinRate, deckLabel, deckShort, handleOf, deckOf,
+  searchPlayers, dropsByRound, leadersByDeck, matchWinRate, gameWinRate, deckLabel, deckShort, handleOf, deckOf,
 } from '../../../dlc/stats.js';
 
 const args = process.argv.slice(2);
@@ -132,6 +133,21 @@ if (opt('standings')) {
     console.log(`\nSTANDINGS after ${last.label}`);
     for (const s of standings[last.id].rows.slice(0, Number(opt('standings')))) {
       console.log(`${padL(s.r, 5)}  ${pad(handleOf(index, s.p), 26)}${pad(deckShort(deckOf(index, s.p)), 7)}${pad(s.rec, 8)}${padL(s.pts, 3)} pts  OMW ${pctText(s.omw)}  GW ${pctText(s.gw)}  OGW ${pctText(s.ogw)}`);
+    }
+  }
+}
+
+// ── Best of each ink pair ───────────────────────────────────────────────────
+if (opt('leaders')) {
+  const last = [...index.rounds].reverse().find(r => standings[r.id]);
+  if (last) {
+    console.log(`
+BEST OF EACH INK PAIR after ${last.label}`);
+    for (const g of leadersByDeck(index, standings[last.id].rows, Number(opt('leaders')))) {
+      console.log(`${deckLabel(g.deck)} (${g.players} players)`);
+      for (const [i, l] of g.leaders.entries()) {
+        console.log(`  ${pad('#' + l.rank, 7)}${pad(l.handle, 26)}${pad(l.record, 8)}${padL(l.points, 3)} pts  ${l.behind ? '-' + l.behind : i ? 'level' : 'leader'}`);
+      }
     }
   }
 }

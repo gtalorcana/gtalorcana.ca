@@ -354,3 +354,29 @@ export function dropsByRound(index) {
     };
   });
 }
+
+// ── Best of each ink pair ────────────────────────────────────────────────────
+
+// Who leads each ink pair, from one round's standings rows ({ r, p, pts, rec, omw }).
+// Rank order is RPH's, so tiebreakers are already applied.
+//   [{ deck, players, leaders: [{ rank, id, handle, record, points, behind, omw }] }]
+// `behind` is match points behind that ink pair's leader. Ink pairs are ordered
+// by their leader's rank; players with no ink label are left out.
+export function leadersByDeck(index, standingRows, perDeck = 5) {
+  const groups = {};
+  for (const s of [...standingRows].sort((a, b) => a.r - b.r)) {
+    const deck = deckOf(index, s.p);
+    if (deck === UNKNOWN) continue;
+    (groups[deck] ??= []).push(s);
+  }
+  return Object.entries(groups)
+    .map(([deck, rows]) => ({
+      deck,
+      players: rows.length,
+      leaders: rows.slice(0, perDeck).map(s => ({
+        rank: s.r, id: s.p, handle: handleOf(index, s.p), record: s.rec, points: s.pts,
+        behind: rows[0].pts - s.pts, omw: s.omw,
+      })),
+    }))
+    .sort((a, b) => a.leaders[0].rank - b.leaders[0].rank);
+}
