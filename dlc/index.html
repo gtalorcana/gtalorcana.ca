@@ -11,12 +11,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@400;500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/shared.css?v=20261113164904" />
-  <link rel="stylesheet" href="/tools.css?v=20261113164904" />
+  <link rel="stylesheet" href="/shared.css?v=20261113172402" />
+  <link rel="stylesheet" href="/tools.css?v=20261113172402" />
   <style>
     /* ── LAYOUT ──────────────────────────────────────────── */
     .card.wide { max-width: 1180px; }
-    .controls { display: grid; grid-template-columns: 2fr 1.4fr 1fr; gap: 1rem; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .controls .field[hidden] { display: none; }
+    .controls.three { grid-template-columns: 2fr 1.4fr 1fr; }
+    @media (max-width: 640px) { .controls.three { grid-template-columns: 1fr; } }
     .controls .field { margin-bottom: 0; }
     @media (max-width: 640px) { .controls { grid-template-columns: 1fr; } }
 
@@ -202,7 +205,7 @@
         <label for="scopeSel">Show</label>
         <select id="scopeSel" disabled><option>Whole event</option></select>
       </div>
-      <div class="field">
+      <div class="field" id="groupField" hidden>
         <label for="groupSel">Group by</label>
         <select id="groupSel" disabled>
           <option value="ink">Ink pair</option>
@@ -219,7 +222,7 @@
       <button class="tab" role="tab" data-tab="matchups">Matchups</button>
       <button class="tab" role="tab" data-tab="meta">Meta</button>
       <button class="tab" role="tab" data-tab="conversion">Conversion</button>
-      <button class="tab" role="tab" data-tab="archetypes">Archetypes</button>
+      <button class="tab" role="tab" data-tab="archetypes" hidden>Archetypes</button>
       <button class="tab" role="tab" data-tab="bestof">Best of</button>
       <button class="tab" role="tab" data-tab="rounds">Rounds</button>
       <button class="tab" role="tab" data-tab="players">Players</button>
@@ -317,21 +320,25 @@
   <p style="margin-top:1rem;">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger's Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
 </footer>
 
-<script src="/shared.js?v=20261113164904"></script>
+<script src="/shared.js?v=20261113172402"></script>
 <script type="module">
   import {
     buildIndex, listScopes, matchupMatrix, deckStats, metaByRound, conversion, playerHistory,
     searchPlayers, dropsByRound, leadersByDeck, bestOfRace, matchWinRate, gameWinRate, deckLabel, deckShort, deckOf, handleOf, UNKNOWN,
-  } from './stats.js?v=20261113164904';
+  } from './stats.js?v=20261113172402';
   import {
     classifyEvent, mergeDeckChunks, withDeckInks, withArchetypes, splitLabel, DEFAULT_CUT, DEFAULT_MIN_SIZE,
-  } from './archetypes.js?v=20261113164904';
+  } from './archetypes.js?v=20261113172402';
 
   // ── Config ──────────────────────────────────────────────
   const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
   const WORKER = isLocal ? 'http://localhost:8787' : 'https://api.gtalorcana.ca';
   const REFRESH_MS = 2 * 60 * 1000;
   const STANDINGS_STEP = 100;
+  // Archetype grouping (the Group by control and the Archetypes tab) is switched
+  // off while the classification is being worked on. Decklists are still loaded:
+  // they supply ink pairs where the match data has none, and the player page.
+  const SHOW_ARCHETYPES = false;
 
   // Match points needed to reach the phase after a given phase, per event.
   // Play Hub does not publish this rule, so it is recorded here. Events not
@@ -359,6 +366,14 @@
   };
   // index is whichever grouping is on screen; inkIndex is always by ink pair
   // (Best of is an ink-pair race whatever the grouping).
+  if (!SHOW_ARCHETYPES) {
+    state.group = 'ink';
+    if (state.tab === 'archetypes') state.tab = 'matchups';
+  } else {
+    $('groupField').hidden = false;
+    $('groupField').parentElement.classList.add('three');
+    document.querySelector('[data-tab="archetypes"]').hidden = false;
+  }
   let index = null;
   let inkIndex = null;
   let archIndex = null;
@@ -393,7 +408,8 @@
     const event = p.get('event') || state.event;
     state.scope = p.get('scope') || 'all';
     state.tab = p.get('tab') || 'matchups';
-    state.group = p.get('group') === 'archetype' ? 'archetype' : 'ink';
+    state.group = SHOW_ARCHETYPES && p.get('group') === 'archetype' ? 'archetype' : 'ink';
+    if (!SHOW_ARCHETYPES && state.tab === 'archetypes') state.tab = 'matchups';
     state.player = p.get('player') ? Number(p.get('player')) : null;
     if (event !== state.event) {
       state.event = event;
@@ -496,7 +512,7 @@
       try {
         const payload = await api(`/dlc/decks?id=${state.event}`);
         deckData = { event: state.event, complete: !!payload.complete, ...mergeDeckChunks(payload) };
-        arch = classifyEvent(deckData.decks, deckData.cards);
+        arch = SHOW_ARCHETYPES ? classifyEvent(deckData.decks, deckData.cards) : null;
       } catch { /* the page works without them */ }
     }
     // Some events have no ink label in their match data; the decklist has it.
