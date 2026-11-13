@@ -25,3 +25,11 @@ export const fetchMatchesPage = (roundId, page, pageSize) =>
 // Standings pages cap at 1000 rows, ~1.5 KB per row.
 export const fetchStandingsPage = (roundId, page, pageSize) =>
   rphGet(`/tournament-rounds/${roundId}/standings/paginated/?page=${page}&page_size=${pageSize}`);
+
+// Registrations carry each player's deck id once decklists are public (~1.35 KB
+// per row, 250 rows per page at most).
+export const fetchRegistrationsPage = (eventId, page, pageSize) =>
+  rphGet(`/events/${eventId}/registrations/?page=${page}&page_size=${pageSize}`);
+
+// One decklist, ~27 KB.
+export const fetchDeck = deckId => rphGet(`/deckbuilder/decks/${deckId}/`);

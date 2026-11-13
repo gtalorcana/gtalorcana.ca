@@ -4,7 +4,7 @@ compatibility_date = "2025-09-27"
 
 # Local dev (wrangler dev) uses these top-level settings with a simulated KV.
 [vars]
-TRACKED_EVENTS = "1254364,1254365"
+TRACKED_EVENTS = "1254364,1254365,1233041"
 
 [[kv_namespaces]]
 binding = "DLC"
@@ -25,7 +25,7 @@ routes = [
 
 # Comma-separated RPH event IDs to ingest and serve. Add a DLC here and deploy.
 [env.production.vars]
-TRACKED_EVENTS = "1254364,1254365"
+TRACKED_EVENTS = "1254364,1254365,1233041"
 
 # Namespace "production-DLC".
 [[env.production.kv_namespaces]]

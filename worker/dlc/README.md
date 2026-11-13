@@ -8,8 +8,9 @@ Powers `gtalorcana.ca/dlc`: a public breakdown of a Disney Lorcana Challenge eve
 |-------|-------|-----|
 | Worker | `worker/dlc/index.js` | Cron ingest into KV, serves the stored data |
 | Slimming | `worker/dlc/slim.js` | Raw RPH record → small stored record (pure) |
-| RPH client | `worker/dlc/rph.js` | The three endpoints we read, generic User-Agent |
+| RPH client | `worker/dlc/rph.js` | The endpoints we read, generic User-Agent |
 | Stats | `dlc/stats.js` | Every number on the page (pure; shared by page, CLI, tests) |
+| Archetypes | `dlc/archetypes.js` | Groups decklists into archetypes (pure; shared by page, CLI, tests) |
 | Page | `dlc/index.html` | Not linked from the main nav |
 
 The Worker computes no stats. The page downloads one match list per event and filters it in the browser, so every view (single round, a phase, whole event) is the same code over the same data.
@@ -32,7 +33,8 @@ All `GET`, cached at the edge for 30 seconds.
 |-------|---------|
 | `/dlc/events` | Tracked events: `id`, `name`, `start`, `player_count`, `complete`, `rounds_stored` |
 | `/dlc/event?id=` | Event structure plus ingest progress per round |
-| `/dlc/matches?id=` | `{ meta, complete, players, rounds }` — the whole match list |
+| `/dlc/matches?id=` | `{ meta, complete, decklists, players, rounds }` — the whole match list |
+| `/dlc/decks?id=` | `{ complete, cards, chunks }` — every public decklist; 404 until some are stored |
 | `/dlc/standings?id=&round=` | `{ round, rows }` after one completed round |
 
 Errors are `{"error": "..."}`: 400 bad ID, 404 untracked event or nothing stored yet.
@@ -69,11 +71,38 @@ Sized for the Workers **free plan**:
 |-------|-----------|-------------|
 | CPU per run | 10 ms | One 100-match page is ~0.95 MB of JSON to parse |
 | Subrequests per run | 50 | 3 at most |
-| KV writes per day | 1,000 | About 10 per live-round cycle; nothing when no round is live |
+| KV writes per day | 1,000 | About 10 per live-round cycle; one per 15 decklists; one an hour per event while waiting for decklists |
 
 CPU is the tight one: a 200-match page measured 18 ms on Cloudflare, so the page size is 100. If the logs show "exceeded CPU time limit", lower `MATCH_PAGE_SIZE` in `index.js` further. On a paid plan, raise it to 1000 and a round lands in one run.
 
 An 817-match round takes 9 runs (9 minutes) to store. A fresh deploy mid-event has to walk every finished round, so seed it instead (below).
+
+---
+
+## Decklists and archetypes
+
+RPH publishes decklists some time after an event starts. Registrations then carry a `deck_id`, and `/deckbuilder/decks/{id}/` returns the list. The cron looks for them at the lowest priority, so they never delay match data:
+
+1. **Waiting:** read the first registration page once an hour. No deck ids, no work.
+2. **Scan:** read every registration page (250 rows each) and note each player's deck id.
+3. **Fetch:** 15 decklists per run, slimmed from ~27 KB to ~200 bytes each. One KV write per run.
+4. While the event is running, scan again every 3 hours for late lists. A pass that starts after every phase is complete is the last one.
+
+```
+cards   [{ "n": "Aurora - Holding Court", "t": "Character", "c": 3, "ink": ["amber"], "song": 1? }]
+deck    { "ink": "amber,emerald", "cards": [[cardIndex, quantity], ...] }
+```
+
+A card is identified by its full name, so reprints count as one card. Where the match data has no ink label (Bangkok 2026 had none), the page takes the ink pair from the decklist.
+
+**Archetypes are computed in the browser, and nobody labels them.** Inside one ink pair: the distance between two lists is the number of cards they do not share; lists merge closest first (average linkage); merging stops at 35 cards; a group needs 5 lists. An archetype is named after the cards that most set it apart. The 35 comes from Bangkok 2026, where lists in the big ink pairs were either under ~28 cards apart or over 40.
+
+The page's **Group by** control swaps each player's ink pair for their archetype label, so the matrix, meta, conversion and standings all work per archetype with any round filter. Best of stays by ink pair.
+
+```bash
+node worker/dlc/tools/decklists.mjs <event_id>               # save decklists into the fixture folder
+node worker/dlc/tools/archetypes.mjs <event_id> --matrix     # archetypes and their matchup matrix
+```
 
 ---
 
@@ -105,7 +134,7 @@ An 817-match round takes 9 runs (9 minutes) to store. A fresh deploy mid-event h
 
 ```bash
 # tests (stats + slimming, against the saved London fixture)
-node --test worker/dlc/stats.test.js
+node --test worker/dlc/stats.test.js worker/dlc/archetypes.test.js
 
 # stats in the terminal, no network
 node worker/dlc/tools/stats.mjs 1254364
@@ -126,9 +155,11 @@ npx http-server . -p 8000        # from the repo root, then open http://localhos
 node worker/dlc/tools/snapshot.mjs <event_id>
 ```
 
-Re-running refreshes the event; rounds already saved as final are kept as they are. Tests only assert numbers for final rounds.
+Run `tools/decklists.mjs <event_id>` afterwards to add the decklists. Re-running refreshes the event; rounds already saved as final are kept as they are. Tests only assert numbers for final rounds.
 
 ### Seeding KV from a fixture
+
+A finished event should be seeded before its ID is added to `TRACKED_EVENTS`. Otherwise the cron walks all of its rounds first, and finished rounds take priority over a live event's refresh. Saved decklists are seeded too.
 
 ```bash
 node worker/dlc/tools/seed.mjs <event_id>

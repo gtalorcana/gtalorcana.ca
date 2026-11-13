@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: 22
       - name: Test
-        run: node --test worker/dlc/stats.test.js
+        run: node --test worker/dlc/stats.test.js worker/dlc/archetypes.test.js
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -1,0 +1,143 @@
+{
+  "event_id": 1233041,
+  "event_name": "Disney Lorcana TCG Challenge Bangkok 2026 - Main Event",
+  "captured_at": "2026-11-13T20:19:12.223Z",
+  "players": 778,
+  "rounds": [
+    {
+      "phase": "Phase 1",
+      "round": 1,
+      "id": 1561820,
+      "status": "COMPLETE",
+      "matches": 393,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 1",
+      "round": 2,
+      "id": 1561821,
+      "status": "COMPLETE",
+      "matches": 352,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 1",
+      "round": 3,
+      "id": 1561822,
+      "status": "COMPLETE",
+      "matches": 350,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 1",
+      "round": 4,
+      "id": 1561823,
+      "status": "COMPLETE",
+      "matches": 344,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 1",
+      "round": 5,
+      "id": 1561824,
+      "status": "COMPLETE",
+      "matches": 342,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 1",
+      "round": 6,
+      "id": 1561825,
+      "status": "COMPLETE",
+      "matches": 341,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 1",
+      "round": 7,
+      "id": 1561826,
+      "status": "COMPLETE",
+      "matches": 337,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 1",
+      "round": 8,
+      "id": 1561827,
+      "status": "COMPLETE",
+      "matches": 329,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 2",
+      "round": 9,
+      "id": 1564155,
+      "status": "COMPLETE",
+      "matches": 64,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 2",
+      "round": 10,
+      "id": 1564156,
+      "status": "COMPLETE",
+      "matches": 32,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 2",
+      "round": 11,
+      "id": 1564157,
+      "status": "COMPLETE",
+      "matches": 16,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 2",
+      "round": 12,
+      "id": 1564158,
+      "status": "COMPLETE",
+      "matches": 8,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 2",
+      "round": 13,
+      "id": 1564159,
+      "status": "COMPLETE",
+      "matches": 4,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 2",
+      "round": 14,
+      "id": 1564160,
+      "status": "COMPLETE",
+      "matches": 2,
+      "fetched": "yes",
+      "standings": 778
+    },
+    {
+      "phase": "Phase 2",
+      "round": 15,
+      "id": 1564161,
+      "status": "COMPLETE",
+      "matches": 1,
+      "fetched": "yes",
+      "standings": 778
+    }
+  ]
+}

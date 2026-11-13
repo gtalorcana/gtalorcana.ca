@@ -11,12 +11,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@400;500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/shared.css?v=20261113144130" />
-  <link rel="stylesheet" href="/tools.css?v=20261113144130" />
+  <link rel="stylesheet" href="/shared.css?v=20261113164904" />
+  <link rel="stylesheet" href="/tools.css?v=20261113164904" />
   <style>
     /* ── LAYOUT ──────────────────────────────────────────── */
     .card.wide { max-width: 1180px; }
-    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .controls { display: grid; grid-template-columns: 2fr 1.4fr 1fr; gap: 1rem; }
     .controls .field { margin-bottom: 0; }
     @media (max-width: 640px) { .controls { grid-template-columns: 1fr; } }
 
@@ -151,6 +151,17 @@
     .res.D, .res.BYE, .res.LIVE { color: var(--text-muted); }
 
     .lock { margin-left: .3rem; cursor: help; }
+
+    /* ── ARCHETYPES ──────────────────────────────────────── */
+    .arch-name { display: block; font-size: .74rem; color: var(--text-muted); font-weight: 400; letter-spacing: 0; text-transform: none; font-family: var(--font-body); }
+    .deck { text-align: left; }
+    td.wrap { white-space: normal !important; min-width: 16rem; text-align: left !important; }
+    details.cards { margin: .2rem 0 .9rem; font-size: .86rem; }
+    details.cards summary { cursor: pointer; color: var(--text-muted); min-height: 32px; display: flex; align-items: center; gap: .4rem; }
+    details.cards summary:hover { color: var(--gold); }
+    details.cards ul { list-style: none; padding: .4rem 0 0; margin: 0; columns: 16rem auto; column-gap: 1.6rem; }
+    details.cards li { break-inside: avoid; padding: .12rem 0; }
+    details.cards li .q { display: inline-block; min-width: 2.6rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
   </style>
 </head>
 <body>
@@ -191,6 +202,13 @@
         <label for="scopeSel">Show</label>
         <select id="scopeSel" disabled><option>Whole event</option></select>
       </div>
+      <div class="field">
+        <label for="groupSel">Group by</label>
+        <select id="groupSel" disabled>
+          <option value="ink">Ink pair</option>
+          <option value="archetype">Archetype</option>
+        </select>
+      </div>
     </div>
     <div class="status-line" id="status">Loading events…</div>
     <div class="error-msg" id="error" style="margin-top:.8rem"></div>
@@ -201,6 +219,7 @@
       <button class="tab" role="tab" data-tab="matchups">Matchups</button>
       <button class="tab" role="tab" data-tab="meta">Meta</button>
       <button class="tab" role="tab" data-tab="conversion">Conversion</button>
+      <button class="tab" role="tab" data-tab="archetypes">Archetypes</button>
       <button class="tab" role="tab" data-tab="bestof">Best of</button>
       <button class="tab" role="tab" data-tab="rounds">Rounds</button>
       <button class="tab" role="tab" data-tab="players">Players</button>
@@ -227,12 +246,13 @@
         <span>Row deck loses</span><span class="legend-bar"></span><span>Row deck wins</span>
         <span style="margin-left:.8rem"><span class="swatch"></span> mirror (count only)</span>
       </div>
+      <p class="note" id="matrixArchNote" hidden>Lists that fit no archetype, and players with no decklist, are not given a row or column. They still count in "vs field".</p>
       <p class="note">Each cell is the row deck's win rate against the column deck, with the number of matches underneath. Byes and awarded losses are left out. Drawn matches count toward the sample but not the rate. Cells under the fade threshold are too small to trust.</p>
     </section>
 
     <!-- Meta -->
     <section class="panel" id="panel-meta" hidden>
-      <h2 class="sub">Ink pairs</h2>
+      <h2 class="sub" id="metaTitle">Ink pairs</h2>
       <div class="scroll" id="metaWrap"></div>
       <p class="note">Share is of players paired in the selected rounds. Win rates leave out mirrors, byes and awarded losses; draws are listed separately.</p>
       <h2 class="sub">Share by round</h2>
@@ -242,6 +262,11 @@
     <!-- Conversion -->
     <section class="panel" id="panel-conversion" hidden>
       <div id="conversionWrap"></div>
+    </section>
+
+    <!-- Archetypes -->
+    <section class="panel" id="panel-archetypes" hidden>
+      <div id="archWrap"></div>
     </section>
 
     <!-- Best of each ink pair -->
@@ -292,12 +317,15 @@
   <p style="margin-top:1rem;">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger's Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
 </footer>
 
-<script src="/shared.js?v=20261113144130"></script>
+<script src="/shared.js?v=20261113164904"></script>
 <script type="module">
   import {
     buildIndex, listScopes, matchupMatrix, deckStats, metaByRound, conversion, playerHistory,
     searchPlayers, dropsByRound, leadersByDeck, bestOfRace, matchWinRate, gameWinRate, deckLabel, deckShort, deckOf, handleOf, UNKNOWN,
-  } from './stats.js?v=20261113144130';
+  } from './stats.js?v=20261113164904';
+  import {
+    classifyEvent, mergeDeckChunks, withDeckInks, withArchetypes, splitLabel, DEFAULT_CUT, DEFAULT_MIN_SIZE,
+  } from './archetypes.js?v=20261113164904';
 
   // ── Config ──────────────────────────────────────────────
   const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -323,13 +351,21 @@
     event: params.get('event'),
     scope: params.get('scope') || 'all',
     tab: params.get('tab') || 'matchups',
+    group: params.get('group') === 'archetype' ? 'archetype' : 'ink',
     player: params.get('player') ? Number(params.get('player')) : null,
     rate: 'match',
     standingsRound: null,
     standingsShown: STANDINGS_STEP,
   };
+  // index is whichever grouping is on screen; inkIndex is always by ink pair
+  // (Best of is an ink-pair race whatever the grouping).
   let index = null;
+  let inkIndex = null;
+  let archIndex = null;
   let dataset = null;
+  let deckData = null;   // { event, complete, cards, decks } once decklists are public
+  let arch = null;       // classifyEvent() result for deckData
+  const archMode = () => state.group === 'archetype' && !!archIndex;
   const standingsCache = new Map();
 
   function syncUrl(fromY = scrollY) {
@@ -337,6 +373,7 @@
     if (state.event) p.set('event', state.event);
     if (state.scope !== 'all') p.set('scope', state.scope);
     if (state.tab !== 'matchups') p.set('tab', state.tab);
+    if (state.group === 'archetype') p.set('group', 'archetype');
     if (state.player && state.tab === 'players') p.set('player', state.player);
     const url = `${location.pathname}${p.size ? '?' + p : ''}`;
     if (url === location.pathname + location.search) return;
@@ -356,6 +393,7 @@
     const event = p.get('event') || state.event;
     state.scope = p.get('scope') || 'all';
     state.tab = p.get('tab') || 'matchups';
+    state.group = p.get('group') === 'archetype' ? 'archetype' : 'ink';
     state.player = p.get('player') ? Number(p.get('player')) : null;
     if (event !== state.event) {
       state.event = event;
@@ -364,6 +402,7 @@
       await loadEvent();
     } else if (index) {
       $('scopeSel').value = state.scope;
+      applyGroup();
       render();
     }
     const y = e.state?.y ?? 0;
@@ -383,10 +422,30 @@
   }
 
   // ── Ink pair markup ─────────────────────────────────────
+  // A deck key is an ink pair ("amber,emerald") or, when grouping by archetype,
+  // an archetype label ("amber,emerald/A", "amber,emerald/other").
+  //   main   what to call it          short  for matrix column heads
+  //   name   the archetype's card-based name, when the letter needs explaining
+  function labelParts(deck) {
+    if (deck === UNKNOWN) return { main: archMode() ? 'No decklist' : 'Unknown', short: '??', name: '' };
+    const { ink, key } = splitLabel(deck);
+    const main = deckLabel(ink), short = deckShort(ink);
+    if (key == null) return { main, short, name: '' };
+    if (key === 'other') return { main: `${main} (other)`, short: `${short} oth`, name: '' };
+    const res = arch?.byInk[ink];
+    // An ink pair with one archetype needs no letter.
+    if (!res || res.archetypes.length < 2) return { main, short, name: '' };
+    return { main: `${main} ${key}`, short: `${short} ${key}`, name: res.archetypes.find(a => a.key === key)?.name ?? '' };
+  }
+  const fullLabel = deck => { const p = labelParts(deck); return p.name ? `${p.main} · ${p.name}` : p.main; };
+  const groupNoun = () => (archMode() ? 'Archetype' : 'Ink pair');
   const inkDots = deck => `<span class="inks">${
-    (deck === UNKNOWN ? ['unknown'] : deck.split(',')).map(i => `<span class="ink ${esc(i)}"></span>`).join('')
+    (deck === UNKNOWN ? ['unknown'] : splitLabel(deck).ink.split(',')).map(i => `<span class="ink ${esc(i)}"></span>`).join('')
   }</span>`;
-  const deckHtml = deck => `<span class="deck">${inkDots(deck)}<span>${esc(deckLabel(deck))}</span></span>`;
+  const deckHtml = deck => {
+    const p = labelParts(deck);
+    return `<span class="deck">${inkDots(deck)}<span>${esc(p.main)}${p.name ? `<span class="arch-name">${esc(p.name)}</span>` : ''}</span></span>`;
+  };
   const playerBtn = (id, handle) => `<button class="linkish" data-player="${id}">${esc(handle)}</button>`;
 
   // ── Events ──────────────────────────────────────────────
@@ -429,7 +488,22 @@
       return;
     }
     if (!quiet) showError('');
-    index = buildIndex(dataset);
+
+    // Decklists, when the event has any. Fetched once; again only while the
+    // Worker is still collecting them.
+    if (deckData?.event !== state.event) { deckData = null; arch = null; }
+    if (dataset.decklists && !deckData?.complete) {
+      try {
+        const payload = await api(`/dlc/decks?id=${state.event}`);
+        deckData = { event: state.event, complete: !!payload.complete, ...mergeDeckChunks(payload) };
+        arch = classifyEvent(deckData.decks, deckData.cards);
+      } catch { /* the page works without them */ }
+    }
+    // Some events have no ink label in their match data; the decklist has it.
+    const base = deckData ? withDeckInks(dataset, deckData.decks) : dataset;
+    inkIndex = buildIndex(base);
+    archIndex = arch ? buildIndex(withArchetypes(base, arch.labelOf)) : null;
+    applyGroup();
 
     if (!index.rounds.some(r => r.matches.length)) {
       const start = dataset.meta.start ? new Date(dataset.meta.start) : null;
@@ -465,6 +539,15 @@
     render();
   }
 
+  // Point `index` at the chosen grouping and keep the control in step.
+  function applyGroup() {
+    const sel = $('groupSel');
+    sel.disabled = !archIndex;
+    sel.options[1].textContent = archIndex ? 'Archetype' : 'Archetype (no decklists yet)';
+    sel.value = archMode() ? 'archetype' : 'ink';
+    index = archMode() ? archIndex : inkIndex;
+  }
+
   function renderStatus() {
     const stored = index.rounds.filter(r => r.matches.length);
     const live = stored.filter(r => r.stored !== 'final');
@@ -479,6 +562,10 @@
     } else if (dataset.complete) {
       parts.push('event complete');
     }
+    if (deckData) {
+      const n = Object.keys(deckData.decks).length;
+      parts.push(`<strong>${n.toLocaleString()}</strong> decklist${n === 1 ? '' : 's'}${deckData.complete ? '' : ' so far'}`);
+    }
     $('status').innerHTML = parts.join(' · ');
   }
 
@@ -488,7 +575,7 @@
     const fromY = scrollY; // read before the panels swap and the page changes height
     document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === state.tab));
     document.querySelectorAll('.panel').forEach(p => { p.hidden = p.id !== `panel-${state.tab}`; });
-    ({ matchups: renderMatrix, meta: renderMeta, conversion: renderConversion, bestof: renderBestOf, rounds: renderRounds, players: renderPlayers })[state.tab]?.();
+    ({ matchups: renderMatrix, meta: renderMeta, conversion: renderConversion, archetypes: renderArchetypes, bestof: renderBestOf, rounds: renderRounds, players: renderPlayers })[state.tab]?.();
     syncUrl(fromY);
   }
 
@@ -509,16 +596,19 @@
       `<strong>${mx.counted.toLocaleString()}</strong> matches counted · left out: ${ex.bye} bye${ex.bye === 1 ? '' : 's'}, ` +
       `${ex.noshow} awarded loss${ex.noshow === 1 ? '' : 'es'}, ${ex.pending} still being played`;
 
-    if (!mx.decks.length) { $('matrixWrap').innerHTML = '<div class="empty">No finished matches in this selection yet.</div>'; return; }
+    // By archetype, the leftovers are not decks anyone can read a matchup from.
+    const axes = archMode() ? mx.decks.filter(d => d !== UNKNOWN && !d.endsWith('/other')) : mx.decks;
+    $('matrixArchNote').hidden = !archMode();
+    if (!axes.length) { $('matrixWrap').innerHTML = '<div class="empty">No finished matches in this selection yet.</div>'; return; }
 
     const head = `<tr><th class="rowhead"></th><th>vs field</th><th class="gap"></th>${
-      mx.decks.map(d => `<th title="${esc(deckLabel(d))}">${inkDots(d)}${esc(deckShort(d))}</th>`).join('')}</tr>`;
+      axes.map(d => `<th title="${esc(fullLabel(d))}">${inkDots(d)}${esc(labelParts(d).short)}</th>`).join('')}</tr>`;
 
     const cell = (a, b, c, extraClass = '') => {
       if (!c || !c.n) return `<td class="none ${extraClass}">·</td>`;
       const r = rateOf(c);
       const thin = c.n < minN;
-      const tip = `<b>${esc(deckLabel(a))}</b> vs <b>${esc(b)}</b><br>` +
+      const tip = `<b>${esc(fullLabel(a))}</b> vs <b>${esc(b)}</b><br>` +
         `Matches: ${c.w}–${c.l}${c.d ? `–${c.d}` : ''} (${pct(matchWinRate(c), 1)})<br>` +
         `Games: ${c.gw}–${c.gl}${c.gd ? `, ${c.gd} drawn` : ''} (${pct(gameWinRate(c), 1)})` +
         (thin ? '<br><i>Small sample</i>' : '');
@@ -526,13 +616,13 @@
         `<span class="v">${pct(r)}</span><span class="n">${c.n.toLocaleString()}</span></td>`;
     };
 
-    const rows = mx.decks.map(a => {
-      const cells = mx.decks.map(b => {
+    const rows = axes.map(a => {
+      const cells = axes.map(b => {
         if (a === b) {
           const n = mx.mirrors[a] ?? 0;
-          return `<td class="mirror" data-tip="${esc(`<b>${esc(deckLabel(a))}</b> mirror<br>${n} match${n === 1 ? '' : 'es'}`)}"><span class="v">mirror</span><span class="n">${n}</span></td>`;
+          return `<td class="mirror" data-tip="${esc(`<b>${esc(fullLabel(a))}</b> mirror<br>${n} match${n === 1 ? '' : 'es'}`)}"><span class="v">mirror</span><span class="n">${n}</span></td>`;
         }
-        return cell(a, deckLabel(b), mx.cells[a]?.[b]);
+        return cell(a, fullLabel(b), mx.cells[a]?.[b]);
       }).join('');
       return `<tr><th class="rowhead">${deckHtml(a)}</th>${cell(a, 'the field', mx.totals[a], 'total')}<td class="gap"></td>${cells}</tr>`;
     }).join('');
@@ -543,8 +633,9 @@
   function renderMeta() {
     const { total, rows } = deckStats(index, state.scope);
     const max = Math.max(...rows.map(r => r.share), 0.0001);
+    $('metaTitle').textContent = archMode() ? 'Archetypes' : 'Ink pairs';
     $('metaWrap').innerHTML = rows.length ? `<table class="data">
-      <thead><tr><th>Ink pair</th><th>Players</th><th>Share</th><th>W</th><th>L</th><th>D</th><th>Match win</th><th>Game win</th><th>Mirrors</th></tr></thead>
+      <thead><tr><th>${groupNoun()}</th><th>Players</th><th>Share</th><th>W</th><th>L</th><th>D</th><th>Match win</th><th>Game win</th><th>Mirrors</th></tr></thead>
       <tbody>${rows.map(r => `<tr>
         <td>${deckHtml(r.deck)}</td>
         <td class="num">${r.players.toLocaleString()}</td>
@@ -558,7 +649,7 @@
     const trend = metaByRound(index);
     const decks = deckStats(index, 'all').rows.map(r => r.deck);
     $('trendWrap').innerHTML = trend.length ? `<table class="data">
-      <thead><tr><th>Ink pair</th>${trend.map(t => `<th title="${esc(t.round.phase.name)}">R${t.round.seq}</th>`).join('')}</tr></thead>
+      <thead><tr><th>${groupNoun()}</th>${trend.map(t => `<th title="${esc(t.round.phase.name)}">R${t.round.seq}</th>`).join('')}</tr></thead>
       <tbody>${decks.map(d => `<tr><td>${deckHtml(d)}</td>${trend.map(t =>
         `<td class="num">${pct((t.decks[d] ?? 0) / t.total, 1)}</td>`).join('')}</tr>`).join('')}
         <tr><td class="muted">Players paired</td>${trend.map(t => `<td class="num muted">${t.total.toLocaleString()}</td>`).join('')}</tr>
@@ -569,20 +660,81 @@
     const conv = conversion(index);
     if (!conv.length) {
       const next = index.phases.find(p => !p.rounds.some(r => r.matches.length));
-      $('conversionWrap').innerHTML = `<div class="empty">Conversion appears once ${next ? esc(next.label) : 'the next phase'} has pairings.<br>It shows what share of each ink pair made it through.</div>`;
+      $('conversionWrap').innerHTML = `<div class="empty">Conversion appears once ${next ? esc(next.label) : 'the next phase'} has pairings.<br>It shows what share of each ${archMode() ? 'archetype' : 'ink pair'} made it through.</div>`;
       return;
     }
     $('conversionWrap').innerHTML = conv.map(c => `
       <h2 class="sub">${esc(c.from.label)} → ${esc(c.to.label)}</h2>
       <p class="note" style="margin:0 0 .6rem"><strong>${c.advanced.toLocaleString()}</strong> of ${c.entered.toLocaleString()} players advanced (${pct(c.advanced / c.entered, 1)}).</p>
       <div class="scroll"><table class="data">
-        <thead><tr><th>Ink pair</th><th>Entered</th><th>Advanced</th><th>Conversion</th><th>Share before</th><th>Share after</th></tr></thead>
+        <thead><tr><th>${groupNoun()}</th><th>Entered</th><th>Advanced</th><th>Conversion</th><th>Share before</th><th>Share after</th></tr></thead>
         <tbody>${c.rows.map(r => `<tr>
           <td>${deckHtml(r.deck)}</td><td class="num">${r.entered}</td><td class="num">${r.advanced}</td>
           <td class="num">${pct(r.rate, 1)}</td><td class="num muted">${pct(r.shareBefore, 1)}</td><td class="num">${pct(r.shareAfter, 1)}</td>
         </tr>`).join('')}</tbody>
       </table></div>`).join('') +
       '<p class="note">Who advanced is worked out from who appears in the next phase\'s pairings.</p>';
+  }
+
+  const cardList = rows => `<ul>${rows.map(r => `<li><span class="q">${r.q}</span>${esc(r.name)}</li>`).join('')}</ul>`;
+
+  // What each archetype is. Always the whole event's lists: the groups do not
+  // change with the round filter, only who is still playing them does.
+  function renderArchetypes() {
+    const wrap = $('archWrap');
+    if (!arch) {
+      wrap.innerHTML = `<div class="empty">Play Hub has not published decklists for this event yet.<br>
+        Once it does, they are collected here automatically and every tab can be grouped by archetype.</div>`;
+      return;
+    }
+    const sizeOf = res => res.archetypes.reduce((n, a) => n + a.size, 0) + res.other.length;
+    const inks = Object.keys(arch.byInk).sort((a, b) => sizeOf(arch.byInk[b]) - sizeOf(arch.byInk[a]) || a.localeCompare(b));
+    const lists = Object.keys(deckData.decks).length;
+
+    wrap.innerHTML = `<p class="note" style="margin:0 0 1rem"><strong>${lists.toLocaleString()}</strong> decklists${
+      deckData.complete ? '' : ' so far — groups can still shift while the rest arrive'}. To see who brought what to a later phase, pick it under <strong>Show</strong>, set <strong>Group by</strong> to Archetype, and open Meta or Conversion.</p>` +
+      inks.map(ink => {
+        const res = arch.byInk[ink];
+        const total = sizeOf(res);
+        const solo = res.archetypes.length < 2;
+        const rows = res.archetypes.map(a => `<tr>
+          <td>${deckHtml(`${ink}/${a.key}`)}</td>
+          <td class="num">${a.size}</td><td class="num">${pct(a.size / total, 1)}</td>
+          <td class="wrap">${solo ? '<span class="muted">The only archetype in this ink pair</span>'
+            : a.signature.slice(0, 3).map(c => `${esc(c.name)} <span class="muted num">${pct(c.inGroup)} vs ${pct(c.elsewhere)}</span>`).join('<br>')}</td>
+        </tr>`).join('') + (res.other.length ? `<tr>
+          <td>${deckHtml(`${ink}/other`)}</td><td class="num">${res.other.length}</td><td class="num">${pct(res.other.length / total, 1)}</td>
+          <td class="wrap muted">Lists too far from any group, or in a group of fewer than ${DEFAULT_MIN_SIZE}</td></tr>` : '');
+        const cores = res.archetypes.map(a => `<details class="cards">
+          <summary>${esc(fullLabel(`${ink}/${a.key}`))} — ${a.core.length} core cards</summary>
+          ${cardList(a.core.map(c => ({ q: `${c.copies.toFixed(1)}×`, name: c.name })))}
+        </details>`).join('');
+        return `<h2 class="sub">${inkDots(ink)} ${esc(deckLabel(ink))} <span class="muted" style="font-family:var(--font-body);font-size:.8rem;letter-spacing:0">· ${total} list${total === 1 ? '' : 's'}</span></h2>
+          <div class="scroll"><table class="data">
+            <thead><tr><th>Archetype</th><th>Lists</th><th>Of ink pair</th><th class="left">What sets it apart (lists playing it: here vs the rest of the ink pair)</th></tr></thead>
+            <tbody>${rows}</tbody></table></div>${cores}`;
+      }).join('') +
+      `<p class="note">Nobody labels these. Two lists are compared by how many of their cards they do not share. Lists are merged closest first, and merging stops at ${DEFAULT_CUT} cards apart; a group needs ${DEFAULT_MIN_SIZE} lists to count. Each archetype is named after the cards that most set it apart. Core cards are in at least 90% of its lists, shown with the average number of copies.</p>`;
+  }
+
+  function playerDeckHtml(pid) {
+    const deck = deckData?.decks[pid];
+    if (!deck) return '';
+    const rows = deck.cards
+      .map(([c, q]) => ({ q: `${q}×`, name: deckData.cards[c]?.n ?? `Card ${c}`, cost: deckData.cards[c]?.c ?? 99 }))
+      .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
+    const label = arch?.labelOf.get(Number(pid));
+    const count = deck.cards.reduce((n, [, q]) => n + q, 0);
+    // fullLabel reads archetype names whatever the page is grouped by.
+    return `<details class="cards"><summary>Decklist · ${count} cards${label ? ` · ${esc(archLabel(label))}` : ''}</summary>${cardList(rows)}</details>`;
+  }
+  // An archetype label in words, independent of the current grouping.
+  function archLabel(label) {
+    const { ink, key } = splitLabel(label);
+    const res = arch?.byInk[ink];
+    if (key === 'other') return `${deckLabel(ink)}, no archetype`;
+    const a = res?.archetypes.find(x => x.key === key);
+    return res?.archetypes.length > 1 && a ? `${deckLabel(ink)} ${key} · ${a.name}` : deckLabel(ink);
   }
 
   function renderRounds() {
@@ -626,8 +778,9 @@
     const live = index.rounds.find(r => r.matches.length && r.stored !== 'final');
     // Lock status is points arithmetic (see bestOfRace). In the top cut there is
     // nothing to compute, so the list is shown without it.
-    const race = bestOfRace(index, rows, round.id, { advancePoints: ADVANCE_POINTS[state.event] ?? {}, perDeck: 5 });
-    const groups = race?.groups ?? leadersByDeck(index, rows, 5);
+    const race = bestOfRace(inkIndex, rows, round.id, { advancePoints: ADVANCE_POINTS[state.event] ?? {}, perDeck: 5 });
+    const groups = race?.groups ?? leadersByDeck(inkIndex, rows, 5);
+    const inkHtml = deck => `<span class="deck">${inkDots(deck)}<span>${esc(deck === UNKNOWN ? 'Unknown' : deckLabel(deck))}</span></span>`;
     const lock = '<span class="lock" title="Locked in: nobody else on this ink pair can finish above them">🔒</span>';
     const running = '<span class="lock" title="Still in the running for best of this ink pair">🏃</span>';
     // Leader: locked or still being chased. Everyone else: can they catch the leader?
@@ -638,7 +791,7 @@
     wrap.innerHTML = `<p class="note" style="margin:0 0 1rem">Standings after <strong>${esc(round.label)}</strong>${
       live ? ` · ${esc(live.label)} is being played` : ''}</p>` +
       groups.map(g => `
-        <h2 class="sub">${deckHtml(g.deck)} <span class="muted" style="font-family:var(--font-body);font-size:.8rem;letter-spacing:0">· ${g.players} player${g.players === 1 ? '' : 's'}</span></h2>
+        <h2 class="sub">${inkHtml(g.deck)} <span class="muted" style="font-family:var(--font-body);font-size:.8rem;letter-spacing:0">· ${g.players} player${g.players === 1 ? '' : 's'}</span></h2>
         <div class="scroll"><table class="data">
           <thead><tr><th>Overall</th><th class="left">Player</th><th>Record</th><th>Pts</th><th>Behind</th><th>OMW</th></tr></thead>
           <tbody>${g.leaders.map((l, i) => `<tr>
@@ -665,7 +818,7 @@
     if (state.standingsRound !== rid) return; // user moved on while loading
     const shown = rows.slice(0, state.standingsShown);
     $('standingsWrap').innerHTML = `<table class="data">
-      <thead><tr><th>#</th><th class="left">Player</th><th class="left">Ink pair</th><th>Record</th><th>Pts</th><th>OMW</th><th>GW</th><th>OGW</th></tr></thead>
+      <thead><tr><th>#</th><th class="left">Player</th><th class="left">${groupNoun()}</th><th>Record</th><th>Pts</th><th>OMW</th><th>GW</th><th>OGW</th></tr></thead>
       <tbody>${shown.map(s => `<tr>
         <td class="num">${s.r}</td><td class="left">${playerBtn(s.p, handleOf(index, s.p))}</td>
         <td class="left">${deckHtml(deckOf(index, s.p))}</td><td class="num">${esc(s.rec ?? '')}</td><td class="num">${s.pts}</td>
@@ -682,8 +835,9 @@
     const h = playerHistory(index, state.player);
     $('playerWrap').innerHTML = `
       <div class="player-head"><span class="name">${esc(h.handle)}</span>${deckHtml(h.deck)}<span class="muted num">${esc(h.record)} · ${h.points} pts</span></div>
+      ${playerDeckHtml(state.player)}
       <div class="scroll"><table class="data">
-        <thead><tr><th>Round</th><th>Table</th><th class="left">Result</th><th class="left">Games</th><th class="left">Opponent</th><th class="left">Their ink pair</th><th>Record</th></tr></thead>
+        <thead><tr><th>Round</th><th>Table</th><th class="left">Result</th><th class="left">Games</th><th class="left">Opponent</th><th class="left">Their ${archMode() ? 'archetype' : 'ink pair'}</th><th>Record</th></tr></thead>
         <tbody>${h.rows.map(r => `<tr>
           <td>${esc(r.round.label)}</td><td class="num muted">${r.table ?? ''}</td>
           <td class="left"><span class="res ${r.result}">${r.result === 'BYE' ? 'Bye' : r.result === 'LIVE' ? 'Playing' : r.result}</span></td>
@@ -718,6 +872,7 @@
     loadEvent();
   });
   $('scopeSel').addEventListener('change', e => { state.scope = e.target.value; render(); });
+  $('groupSel').addEventListener('change', e => { state.group = e.target.value; applyGroup(); render(); });
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { state.tab = t.dataset.tab; render(); }));
   document.querySelectorAll('input[name="rate"]').forEach(r => r.addEventListener('change', () => { state.rate = r.value; renderMatrix(); }));
   $('minN').addEventListener('input', renderMatrix);

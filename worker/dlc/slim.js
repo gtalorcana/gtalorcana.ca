@@ -136,3 +136,42 @@ export function mergePlayers(map, entries) {
   }
   return changed;
 }
+
+// ── Decklists ────────────────────────────────────────────────────────────────
+// A raw decklist is ~27 KB (card text, signed image URLs); stored it is ~200
+// bytes. Cards live once in a shared table and a deck refers to them by position:
+//   cards  [{ n: "Name - Version", t: type, c: ink cost, ink: [...], song: 1? }]
+//   deck   { ink: "amber,emerald" | null, cards: [[cardIndex, quantity], ...] }
+// A card is identified by its full name, so reprints of one card count as one.
+// `cards` is appended to in place; `cardIndex` is a Map(name -> position) over it.
+
+const optionList = v =>
+  (Array.isArray(v) ? v : v ? [v] : []).map(o => (typeof o === 'string' ? o : o?.option)).filter(Boolean);
+
+export const cardIndexOf = cards => new Map(cards.map((c, i) => [c.n, i]));
+
+export function slimDeck(raw, cards, cardIndex) {
+  const counts = new Map();
+  for (const section of raw.sections ?? []) {
+    if (section.section_type && section.section_type !== 'main') continue;
+    for (const entry of section.cards ?? []) {
+      const c = entry.card ?? {};
+      const a = c.attribute_values ?? {};
+      const name = c.display_name || c.name;
+      if (!name) continue;
+      if (!cardIndex.has(name)) {
+        const card = { n: name, t: c.type ?? null, c: a['Ink Cost'] ?? null, ink: optionList(a.Ink).map(s => s.toLowerCase()) };
+        if (optionList(a.Classifications).includes('Song')) card.song = 1;
+        cardIndex.set(name, cards.length);
+        cards.push(card);
+      }
+      const i = cardIndex.get(name);
+      counts.set(i, (counts.get(i) ?? 0) + (entry.quantity ?? 0));
+    }
+  }
+  const inks = (raw.descriptor?.values ?? []).map(s => String(s).trim().toLowerCase()).filter(Boolean).sort();
+  return {
+    ink: inks.length ? [...new Set(inks)].join(',') : null,
+    cards: [...counts].sort((x, y) => x[0] - y[0]),
+  };
+}
