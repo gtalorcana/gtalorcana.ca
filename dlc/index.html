@@ -11,8 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@400;500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/shared.css?v=20261113143649" />
-  <link rel="stylesheet" href="/tools.css?v=20261113143649" />
+  <link rel="stylesheet" href="/shared.css?v=20261113144130" />
+  <link rel="stylesheet" href="/tools.css?v=20261113144130" />
   <style>
     /* ── LAYOUT ──────────────────────────────────────────── */
     .card.wide { max-width: 1180px; }
@@ -248,7 +248,7 @@
     <section class="panel" id="panel-bestof" hidden>
       <div id="bestofWrap"></div>
       <p class="note">The highest-placed players on each ink pair, in Play Hub's standings order (tiebreakers applied). "Behind" is match points behind that ink pair's leader.</p>
-      <p class="note">🔒 means nobody else on the ink pair can still finish above that player.</p>
+      <p class="note">🔒 means nobody else on the ink pair can still finish above that player. 🏃 means still in the running: they can finish top of their ink pair, or at least draw level on points.</p>
     </section>
 
     <!-- Rounds -->
@@ -292,12 +292,12 @@
   <p style="margin-top:1rem;">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger's Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
 </footer>
 
-<script src="/shared.js?v=20261113143649"></script>
+<script src="/shared.js?v=20261113144130"></script>
 <script type="module">
   import {
     buildIndex, listScopes, matchupMatrix, deckStats, metaByRound, conversion, playerHistory,
     searchPlayers, dropsByRound, leadersByDeck, bestOfRace, matchWinRate, gameWinRate, deckLabel, deckShort, deckOf, handleOf, UNKNOWN,
-  } from './stats.js?v=20261113143649';
+  } from './stats.js?v=20261113144130';
 
   // ── Config ──────────────────────────────────────────────
   const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
@@ -629,6 +629,11 @@
     const race = bestOfRace(index, rows, round.id, { advancePoints: ADVANCE_POINTS[state.event] ?? {}, perDeck: 5 });
     const groups = race?.groups ?? leadersByDeck(index, rows, 5);
     const lock = '<span class="lock" title="Locked in: nobody else on this ink pair can finish above them">🔒</span>';
+    const running = '<span class="lock" title="Still in the running for best of this ink pair">🏃</span>';
+    // Leader: locked or still being chased. Everyone else: can they catch the leader?
+    const mark = (g, l, i) => !g.status ? ''
+      : i === 0 ? (g.status === 'locked' ? lock : running)
+      : l.canCatch ? running : '';
 
     wrap.innerHTML = `<p class="note" style="margin:0 0 1rem">Standings after <strong>${esc(round.label)}</strong>${
       live ? ` · ${esc(live.label)} is being played` : ''}</p>` +
@@ -638,7 +643,7 @@
           <thead><tr><th>Overall</th><th class="left">Player</th><th>Record</th><th>Pts</th><th>Behind</th><th>OMW</th></tr></thead>
           <tbody>${g.leaders.map((l, i) => `<tr>
             <td class="num">#${l.rank}</td><td class="left">${playerBtn(l.id, l.handle)}</td>
-            <td class="num">${esc(l.record ?? '')}${i === 0 && g.status === 'locked' ? lock : ''}</td><td class="num">${l.points}</td>
+            <td class="num">${esc(l.record ?? '')}${mark(g, l, i)}</td><td class="num">${l.points}</td>
             <td class="num muted">${l.behind ? '−' + l.behind : i ? 'level' : 'leader'}</td><td class="num muted">${pct(l.omw, 1)}</td>
           </tr>`).join('')}</tbody>
         </table></div>`).join('');
