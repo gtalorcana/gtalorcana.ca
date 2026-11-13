@@ -321,14 +321,43 @@
   let dataset = null;
   const standingsCache = new Map();
 
-  function syncUrl() {
+  function syncUrl(fromY = scrollY) {
     const p = new URLSearchParams();
     if (state.event) p.set('event', state.event);
     if (state.scope !== 'all') p.set('scope', state.scope);
     if (state.tab !== 'matchups') p.set('tab', state.tab);
     if (state.player && state.tab === 'players') p.set('player', state.player);
-    history.replaceState(null, '', `${location.pathname}${p.size ? '?' + p : ''}`);
+    const url = `${location.pathname}${p.size ? '?' + p : ''}`;
+    if (url === location.pathname + location.search) return;
+    // Once the page has loaded, each change of view is a history entry, so the
+    // browser's Back button returns to the previous tab / player / filter.
+    if (pushHistory) {
+      history.replaceState({ y: fromY }, '', location.href); // remember where we were
+      history.pushState(null, '', url);
+    } else {
+      history.replaceState(null, '', url);
+    }
   }
+  let pushHistory = false;
+
+  addEventListener('popstate', async e => {
+    const p = new URLSearchParams(location.search);
+    const event = p.get('event') || state.event;
+    state.scope = p.get('scope') || 'all';
+    state.tab = p.get('tab') || 'matchups';
+    state.player = p.get('player') ? Number(p.get('player')) : null;
+    if (event !== state.event) {
+      state.event = event;
+      state.standingsRound = null;
+      $('eventSel').value = event;
+      await loadEvent();
+    } else if (index) {
+      $('scopeSel').value = state.scope;
+      render();
+    }
+    const y = e.state?.y ?? 0;
+    requestAnimationFrame(() => requestAnimationFrame(() => scrollTo(0, y)));
+  });
 
   async function api(path) {
     const res = await fetch(`${WORKER}${path}`);
@@ -445,10 +474,11 @@
   // ── Render ──────────────────────────────────────────────
   function render() {
     if (!index) return;
+    const fromY = scrollY; // read before the panels swap and the page changes height
     document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === state.tab));
     document.querySelectorAll('.panel').forEach(p => { p.hidden = p.id !== `panel-${state.tab}`; });
     ({ matchups: renderMatrix, meta: renderMeta, conversion: renderConversion, bestof: renderBestOf, rounds: renderRounds, players: renderPlayers })[state.tab]?.();
-    syncUrl();
+    syncUrl(fromY);
   }
 
   // Diverging fill: distance from 50% drives intensity, saturating at ±20 points.
@@ -700,7 +730,7 @@
     if (index && !dataset.complete && document.visibilityState === 'visible') loadEvent({ quiet: true });
   }, REFRESH_MS);
 
-  loadEvents();
+  loadEvents().then(() => { pushHistory = true; });
 </script>
 </body>
 </html>
