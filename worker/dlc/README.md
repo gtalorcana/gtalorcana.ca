@@ -59,7 +59,7 @@ The cron runs every minute and does **one page of RPH data per run**:
 2. Pick one job: finalise a completed round first, then standings, then refresh the live round that has waited longest.
 3. Fetch one page, slim it, merge it into the stored round.
 
-A round is walked page by page (a "cycle"). When a cycle that began after the round was `COMPLETE` finishes, the round is marked `final` and never fetched again. A live round gets a new cycle every 10 minutes.
+A round is walked page by page (a "cycle"). When a cycle that began after the round was `COMPLETE` finishes, the round is marked `final` and never fetched again. A live round gets a new cycle every 15 minutes.
 
 ### Why one page per run
 
@@ -67,13 +67,13 @@ Sized for the Workers **free plan**:
 
 | Limit | Free plan | What we use |
 |-------|-----------|-------------|
-| CPU per run | 10 ms | One 200-match page is ~1.9 MB of JSON to parse |
+| CPU per run | 10 ms | One 100-match page is ~0.95 MB of JSON to parse |
 | Subrequests per run | 50 | 3 at most |
-| KV writes per day | 1,000 | About 5 per live-round cycle; nothing when no round is live |
+| KV writes per day | 1,000 | About 10 per live-round cycle; nothing when no round is live |
 
-CPU is the tight one and has **not been measured on Cloudflare yet** — only locally. If the logs show "exceeded CPU time limit", lower `MATCH_PAGE_SIZE` in `index.js`. On a paid plan, raise it to 1000 and a round lands in one run.
+CPU is the tight one: a 200-match page measured 18 ms on Cloudflare, so the page size is 100. If the logs show "exceeded CPU time limit", lower `MATCH_PAGE_SIZE` in `index.js` further. On a paid plan, raise it to 1000 and a round lands in one run.
 
-An 817-match round takes 5 runs (5 minutes) to store. A fresh deploy mid-event has to walk every finished round, so seed it instead (below).
+An 817-match round takes 9 runs (9 minutes) to store. A fresh deploy mid-event has to walk every finished round, so seed it instead (below).
 
 ---
 

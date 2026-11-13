@@ -22,9 +22,9 @@ import { slimEvent, slimMatch, slimStanding, mergeMatches, mergePlayers, sortMat
 // Free plan: 10 ms CPU per run, 50 subrequests per run, 1,000 KV writes per day.
 // CPU is the tight one — a raw match is ~9.5 KB of JSON to parse — so each run
 // handles one page. On a paid plan these can simply be raised.
-const MATCH_PAGE_SIZE = 200;       // ~1.9 MB of JSON per page
+const MATCH_PAGE_SIZE = 100;       // ~0.95 MB of JSON per page (200 measured 18 ms CPU)
 const STANDINGS_PAGE_SIZE = 500;   // ~0.75 MB per page
-const REFRESH_MS = 10 * 60 * 1000; // how often an in-progress round is re-read
+const REFRESH_MS = 15 * 60 * 1000; // how often an in-progress round is re-read
 const RETRY_MS = 5 * 60 * 1000;    // back-off after a failed page
 const SERVE_TTL = 30;              // seconds responses are cached at the edge
 const STALE_DAYS = 10;             // stop polling an event this long after it started
