@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import {
   buildIndex, listScopes, matchesIn, classify, matchupMatrix, deckStats, metaByRound,
   conversion, playerHistory, searchPlayers, dropsByRound, matchWinRate, gameWinRate,
-  deckLabel, deckShort, UNKNOWN, leadersByDeck,
+  deckLabel, deckShort, UNKNOWN, leadersByDeck, bestOfRace,
 } from '../../dlc/stats.js';
 import { slimMatch, slimEvent, inkPair, mergePlayers } from './slim.js';
 import { loadFixture } from './tools/fixture.mjs';
@@ -383,4 +383,98 @@ test('fixture: every labelled ink pair has a leader, ranked in order', () => {
   assert.equal(out[0].leaders[0].rank, 1);
   assert.equal(out.reduce((s, g) => s + g.players, 0) + rows.filter(s => !dataset.players[s.p]?.ink).length, 1633);
   for (const g of out) assert.deepEqual(g.leaders.map(l => l.rank), g.leaders.map(l => l.rank).sort((a, b) => a - b));
+});
+
+// ── Best-of race ─────────────────────────────────────────────────────────────
+// One 4-round Swiss phase. Standings are after round 2, so 2 rounds (6 points)
+// remain. Everyone was paired in round 2 except player 9, who dropped.
+
+function raceIndex(phases) {
+  const ink = { 1: AE, 2: AE, 3: AE, 4: ES, 5: ES, 6: AR, 7: AR, 8: AR, 9: AR };
+  const pair = (id, a, b) => ({ id, t: id, d: 1, p: [a, b], w: a, g: [2, 0, 0] });
+  return buildIndex({
+    meta: { phases },
+    players: Object.fromEntries(Object.entries(ink).map(([id, i]) => [id, { h: 'p' + id, ink: i }])),
+    rounds: {
+      11: { status: 'final', matches: [pair(1, 1, 2), pair(2, 3, 4), pair(3, 5, 6), pair(4, 7, 8), { id: 5, t: 0, d: 1, p: [9], w: 9, g: null, k: 'bye' }] },
+      12: { status: 'final', matches: [pair(6, 1, 3), pair(7, 2, 4), pair(8, 5, 7), pair(9, 6, 8)] },
+    },
+  });
+}
+const swiss4 = { id: 1, name: 'Phase 1', order: 1, round_type: 'SWISS', rounds_planned: 4, rounds: [{ id: 11, number: 1 }, { id: 12, number: 2 }] };
+const swiss3 = { id: 2, name: 'Phase 2', order: 2, round_type: 'SWISS', rounds_planned: 3, rounds: [] };
+const raceRows = [
+  { r: 1, p: 1, pts: 12 }, { r: 2, p: 2, pts: 5 }, { r: 3, p: 3, pts: 3 },                        // AE
+  { r: 4, p: 4, pts: 9 }, { r: 5, p: 5, pts: 3 },                                                // ES
+  { r: 6, p: 6, pts: 6 }, { r: 7, p: 7, pts: 3 }, { r: 8, p: 8, pts: 0 }, { r: 9, p: 9, pts: 6 }, // AR
+];
+const statusOf = race => Object.fromEntries(race.groups.map(g => [g.deck, g.status]));
+
+test('race: final phase — locked, tiebreak only, open by points arithmetic', () => {
+  const race = bestOfRace(raceIndex([swiss4]), raceRows, 12);
+  assert.equal(race.roundsLeft, 2);
+  assert.equal(race.rule, null);
+  // AE: 12 vs best case 11. ES: 9 vs best case 9. AR: 6 vs best case 9.
+  assert.deepEqual(statusOf(race), { [AE]: 'locked', [ES]: 'tiebreak', [AR]: 'open' });
+  const ar = race.groups.find(g => g.deck === AR);
+  assert.equal(ar.threats, 3);
+  assert.deepEqual(ar.leaders.map(l => [l.id, l.max, l.canCatch]), [[6, 12, null], [7, 9, true], [8, 6, 'tie'], [9, 6, 'tie']]);
+});
+
+test('race: a dropped player cannot gain points', () => {
+  const race = bestOfRace(raceIndex([swiss4]), raceRows, 12);
+  assert.equal(race.groups.find(g => g.deck === AR).leaders.find(l => l.id === 9).max, 6);
+});
+
+test('race: points needed for the next phase decide who stays alive', () => {
+  const race = bestOfRace(raceIndex([swiss4, swiss3]), raceRows, 12, { advancePoints: { 1: 12 } });
+  assert.equal(race.roundsLeft, 2);
+  assert.deepEqual(race.rule, { type: 'points', value: 12 });
+  assert.equal(race.nextPhase.name, 'Phase 2');
+  // AE: leader is through and nobody else can reach 12 -> locked for the event.
+  // ES: leader (9) can reach 12, rival tops out at 9 -> can only draw level.
+  // AR: leader (6) can reach 12; p7 tops out at 9 > 6 -> open.
+  assert.deepEqual(statusOf(race), { [AE]: 'locked', [ES]: 'tiebreak', [AR]: 'open' });
+  assert.equal(race.groups[0].leaders[0].through, true);
+
+  // Lower the bar to 9: more players can reach Phase 2, so more races reopen.
+  const easier = bestOfRace(raceIndex([swiss4, swiss3]), raceRows, 12, { advancePoints: { 1: 9 } });
+  assert.equal(statusOf(easier)[ES], 'open'); // rival reaches 9
+  assert.equal(statusOf(easier)[AE], 'open'); // p2 reaches 11
+});
+
+test('race: with no cut rule the next Swiss phase just adds rounds', () => {
+  const race = bestOfRace(raceIndex([swiss4, swiss3]), raceRows, 12);
+  assert.equal(race.roundsLeft, 5);
+  assert.equal(race.rule, null);
+  assert.equal(statusOf(race)[AE], 'open'); // 5 + 15 > 12
+});
+
+test('race: a ranked top cut is read from the event', () => {
+  const cut = { id: 3, name: 'Phase 2', order: 2, round_type: 'RANKED_SINGLE_ELIMINATION', rank_required: 2, rounds: [] };
+  const race = bestOfRace(raceIndex([swiss4, cut]), raceRows, 12);
+  assert.deepEqual(race.rule, { type: 'rank', value: 2 });
+  // p1 (12) is not certain of top 2: p4 can reach 15 and p6 can reach 12.
+  assert.equal(race.groups[0].leaders[0].through, false);
+  // p8 (best case 6) cannot make top 2: p1 and p4 already have more than 6.
+  assert.equal(race.groups.find(g => g.deck === AR).leaders.find(l => l.id === 8).canCatch, 'tie');
+});
+
+test('race: nothing to report for a top-cut round', () => {
+  const cutOnly = { id: 1, name: 'Top 8', order: 1, round_type: 'RANKED_SINGLE_ELIMINATION', rounds: [{ id: 11, number: 1 }, { id: 12, number: 2 }] };
+  assert.equal(bestOfRace(raceIndex([cutOnly]), raceRows, 12), null);
+});
+
+test('fixture: London after round 6 with 18 points to reach Phase 2', () => {
+  const race = bestOfRace(fx, standings[1582176].rows, 1582176, { advancePoints: { 1: 18 } });
+  assert.equal(race.roundsLeft, 2);
+  assert.deepEqual(race.rule, { type: 'points', value: 18 });
+  assert.equal(race.groups.length, 15);
+  for (const g of race.groups) {
+    assert.ok(['locked', 'tiebreak', 'open'].includes(g.status));
+    // A leader on 18 with rivals who can also reach 18 is never locked.
+    if (g.leaders[0].through && g.threats) assert.equal(g.status, 'open');
+  }
+  // The biggest ink pair has several players already on 18.
+  assert.equal(race.groups.find(g => g.deck === 'amber,emerald').status, 'open');
 });

@@ -1,7 +1,7 @@
 {
   "event_id": 1254364,
   "event_name": "DLC London: Main Event 1",
-  "captured_at": "2026-11-13T18:07:33.408Z",
+  "captured_at": "2026-11-13T19:28:57.060Z",
   "players": 1633,
   "rounds": [
     {
@@ -62,15 +62,18 @@
       "phase": "Phase 1",
       "round": 7,
       "id": 1582177,
-      "status": "IN_PROGRESS",
-      "matches": 697,
-      "fetched": "yes"
+      "status": "COMPLETE",
+      "matches": 698,
+      "fetched": "yes",
+      "standings": 1633
     },
     {
       "phase": "Phase 1",
       "round": 8,
       "id": 1582178,
-      "status": "UPCOMING"
+      "status": "IN_PROGRESS",
+      "matches": 615,
+      "fetched": "yes"
     }
   ]
 }

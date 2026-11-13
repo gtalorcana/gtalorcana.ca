@@ -7,7 +7,9 @@
 //   --games           matrix shows game win rate instead of match win rate
 //   --player <text>   round-by-round history for the best handle match
 //   --standings <n>   top n of the latest saved standings
-//   --leaders <n>     top n players on each ink pair in the latest saved standings
+//   --leaders <n>     top n players on each ink pair in the latest saved standings,
+//                     with whether the leader is locked in
+//   --advance <p:pts> points needed after phase p to reach the next phase, e.g. 1:18
 //   --json            dump the computed stats as JSON instead of tables
 //
 // Take a fixture first with: node worker/dlc/tools/snapshot.mjs <event_id>
@@ -15,7 +17,7 @@
 import { loadFixture } from './fixture.mjs';
 import {
   buildIndex, listScopes, matchupMatrix, deckStats, metaByRound, conversion, playerHistory,
-  searchPlayers, dropsByRound, leadersByDeck, matchWinRate, gameWinRate, deckLabel, deckShort, handleOf, deckOf,
+  searchPlayers, dropsByRound, leadersByDeck, bestOfRace, matchWinRate, gameWinRate, deckLabel, deckShort, handleOf, deckOf,
 } from '../../../dlc/stats.js';
 
 const args = process.argv.slice(2);
@@ -143,8 +145,14 @@ if (opt('leaders')) {
   if (last) {
     console.log(`
 BEST OF EACH INK PAIR after ${last.label}`);
-    for (const g of leadersByDeck(index, standings[last.id].rows, Number(opt('leaders')))) {
-      console.log(`${deckLabel(g.deck)} (${g.players} players)`);
+    const advancePoints = {};
+    if (opt('advance')) { const [p, pts] = opt('advance').split(':'); advancePoints[p] = Number(pts); }
+    const race = bestOfRace(index, standings[last.id].rows, last.id, { advancePoints, perDeck: Number(opt('leaders')) });
+    if (race) console.log(`${race.roundsLeft} rounds left in ${race.phase.name}${race.rule ? ` · ${race.rule.type === 'points' ? race.rule.value + ' points' : 'top ' + race.rule.value} reaches ${race.nextPhase.name}` : ''}`);
+    const groups = race?.groups ?? leadersByDeck(index, standings[last.id].rows, Number(opt('leaders')));
+    for (const g of groups) {
+      const status = g.status ? `  [${g.status === 'tiebreak' ? 'TIEBREAK ONLY' : g.status.toUpperCase()}${g.threats ? `: ${g.threats} can catch` : ''}]` : '';
+      console.log(`${deckLabel(g.deck)} (${g.players} players)${status}`);
       for (const [i, l] of g.leaders.entries()) {
         console.log(`  ${pad('#' + l.rank, 7)}${pad(l.handle, 26)}${pad(l.record, 8)}${padL(l.points, 3)} pts  ${l.behind ? '-' + l.behind : i ? 'level' : 'leader'}`);
       }

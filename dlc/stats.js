@@ -40,6 +40,8 @@ export function buildIndex(dataset) {
       label: isElimination(p.round_type) ? `Top cut (${p.name})` : p.name,
       elimination: isElimination(p.round_type),
       status: p.status,
+      planned: p.rounds_planned ?? null,
+      rankRequired: p.rank_required ?? null,
       rounds: [],
     }));
 
@@ -379,4 +381,102 @@ export function leadersByDeck(index, standingRows, perDeck = 5) {
       })),
     }))
     .sort((a, b) => a.leaders[0].rank - b.leaders[0].rank);
+}
+
+// ── Best-of race: who is locked in ───────────────────────────────────────────
+
+// Number of values in an ascending array that are >= x.
+function countAtLeast(sorted, x) {
+  let lo = 0, hi = sorted.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (sorted[mid] < x) lo = mid + 1; else hi = mid; }
+  return sorted.length - lo;
+}
+
+// Can the leader of each ink pair still be overtaken? Points arithmetic only —
+// exact, no simulation. Assumes "best of" goes to the highest final placing, so
+// a player who reaches the next phase finishes above everyone who does not.
+//
+//   standingRows  one round's standings ({ r, p, pts, rec, omw })
+//   roundId       the round those standings are for
+//   advancePoints { [phase order]: points needed to enter the following phase }
+//                 RPH does not publish this rule, so the caller supplies it.
+//                 A phase with rank_required (a top cut) is read from the event.
+//                 With neither, the next Swiss phase is treated as a continuation.
+//
+// Returns null for a top-cut round, otherwise:
+//   { roundsLeft, rule: { type: 'points' | 'rank', value } | null, phase, nextPhase,
+//     groups: [{ deck, players, status, threats, leaders: [...] }] }
+//   status   'locked'    nobody on the ink pair can finish above the leader
+//            'tiebreak'  rivals can only draw level on points
+//            'open'      at least one rival can still pass
+//   threats  rivals who can pass or draw level
+//   leader rows add: max (best possible points before the cut), through (already
+//   certain of the next phase), canCatch: false | 'tie' | true (vs the leader)
+export function bestOfRace(index, standingRows, roundId, { advancePoints = {}, perDeck = 5 } = {}) {
+  const round = index.rounds.find(r => r.id === roundId);
+  if (!round || round.phase.elimination) return null;
+  const phase = round.phase;
+  const size = p => Math.max(p.planned ?? 0, p.rounds.length);
+
+  // Rounds left until the next cut, and what that cut is.
+  let roundsLeft = size(phase) - (phase.rounds.indexOf(round) + 1);
+  let rule = null, nextPhase = null;
+  for (let i = phase.index; i + 1 < index.phases.length; i++) {
+    const next = index.phases[i + 1];
+    const points = advancePoints[i + 1];
+    if (points != null) { rule = { type: 'points', value: Number(points) }; nextPhase = next; break; }
+    if (next.rankRequired) { rule = { type: 'rank', value: next.rankRequired }; nextPhase = next; break; }
+    if (next.elimination) { nextPhase = next; break; }
+    roundsLeft += size(next); // no cut between them: Swiss simply continues
+  }
+
+  // A player who was last paired before this round has dropped and cannot gain.
+  // Drops after this round are not assumed, so a lock is never claimed early.
+  const active = pid => (index.byPlayer.get(pid)?.at(-1)?.round.seq ?? 0) >= round.seq;
+  const maxOf = s => s.pts + (active(s.p) ? 3 * roundsLeft : 0);
+
+  const ptsSorted = standingRows.map(s => s.pts).sort((a, b) => a - b);
+  const maxSorted = standingRows.map(maxOf).sort((a, b) => a - b);
+  // through: certain of the next phase. can: still able to reach it.
+  const through = s => {
+    if (!rule) return false;
+    if (rule.type === 'points') return s.pts >= rule.value;
+    return countAtLeast(maxSorted, s.pts) - 1 < rule.value;      // others who can reach my points
+  };
+  const can = s => {
+    if (!rule) return false;
+    if (rule.type === 'points') return maxOf(s) >= rule.value;
+    return countAtLeast(ptsSorted, maxOf(s) + 1) < rule.value;   // players already beyond my best
+  };
+
+  const byDeck = {};
+  for (const s of [...standingRows].sort((a, b) => a.r - b.r)) {
+    const deck = deckOf(index, s.p);
+    if (deck !== UNKNOWN) (byDeck[deck] ??= []).push(s);
+  }
+
+  const groups = Object.entries(byDeck).map(([deck, rows]) => {
+    const lead = rows[0];
+    const leadThrough = through(lead);
+    // true: can finish above the leader. 'tie': can only draw level on points.
+    const canCatch = s => {
+      if (can(s)) return true;               // reaches the next phase, where it stays open
+      if (leadThrough) return false;         // leader goes on, this player does not
+      const m = maxOf(s);
+      return m > lead.pts ? true : m === lead.pts ? 'tie' : false;
+    };
+    const rivals = rows.slice(1).map(canCatch);
+    const threats = rivals.filter(Boolean).length;
+    const status = !threats ? 'locked' : rivals.some(c => c === true) ? 'open' : 'tiebreak';
+    return {
+      deck, players: rows.length, status, threats,
+      leaders: rows.slice(0, perDeck).map((s, i) => ({
+        rank: s.r, id: s.p, handle: handleOf(index, s.p), record: s.rec, points: s.pts,
+        behind: lead.pts - s.pts, omw: s.omw,
+        max: maxOf(s), through: through(s), canCatch: i === 0 ? null : canCatch(s),
+      })),
+    };
+  }).sort((a, b) => a.leaders[0].rank - b.leaders[0].rank);
+
+  return { roundsLeft, rule, phase, nextPhase, groups };
 }
