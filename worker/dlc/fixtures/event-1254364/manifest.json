@@ -1,0 +1,76 @@
+{
+  "event_id": 1254364,
+  "event_name": "DLC London: Main Event 1",
+  "captured_at": "2026-11-13T18:07:33.408Z",
+  "players": 1633,
+  "rounds": [
+    {
+      "phase": "Phase 1",
+      "round": 1,
+      "id": 1582171,
+      "status": "COMPLETE",
+      "matches": 817,
+      "fetched": "kept",
+      "standings": 1633
+    },
+    {
+      "phase": "Phase 1",
+      "round": 2,
+      "id": 1582172,
+      "status": "COMPLETE",
+      "matches": 785,
+      "fetched": "kept",
+      "standings": 1633
+    },
+    {
+      "phase": "Phase 1",
+      "round": 3,
+      "id": 1582173,
+      "status": "COMPLETE",
+      "matches": 780,
+      "fetched": "kept",
+      "standings": 1633
+    },
+    {
+      "phase": "Phase 1",
+      "round": 4,
+      "id": 1582174,
+      "status": "COMPLETE",
+      "matches": 776,
+      "fetched": "kept",
+      "standings": 1633
+    },
+    {
+      "phase": "Phase 1",
+      "round": 5,
+      "id": 1582175,
+      "status": "COMPLETE",
+      "matches": 770,
+      "fetched": "kept",
+      "standings": 1633
+    },
+    {
+      "phase": "Phase 1",
+      "round": 6,
+      "id": 1582176,
+      "status": "COMPLETE",
+      "matches": 764,
+      "fetched": "kept",
+      "standings": 1633
+    },
+    {
+      "phase": "Phase 1",
+      "round": 7,
+      "id": 1582177,
+      "status": "IN_PROGRESS",
+      "matches": 697,
+      "fetched": "yes"
+    },
+    {
+      "phase": "Phase 1",
+      "round": 8,
+      "id": 1582178,
+      "status": "UPCOMING"
+    }
+  ]
+}

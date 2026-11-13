@@ -1,0 +1,28 @@
+name: Deploy DLC Explorer Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'worker/dlc/**'
+      - '!worker/dlc/fixtures/**'
+      - '!worker/dlc/tools/**'
+      - '!worker/dlc/**/*.test.js'
+      - '!worker/dlc/README.md'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test
+        run: node --test worker/dlc/stats.test.js
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: worker/dlc
+          environment: production

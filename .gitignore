@@ -9,3 +9,6 @@ package-lock.json
 !.dev.vars.example
 .env*
 !.env.example
+
+# DLC Explorer: generated KV seed files
+worker/dlc/fixtures/seed-*.json

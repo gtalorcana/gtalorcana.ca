@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:title" content="DLC Explorer — GTA Lorcana" />
+  <meta property="og:description" content="Matchups, meta share and round-by-round results from Disney Lorcana Challenge events." />
+  <meta property="og:image" content="https://www.gtalorcana.ca/gtalorcana-logo.svg" />
+  <title>DLC Explorer — GTA Lorcana</title>
+  <link rel="icon" type="image/svg+xml" href="/gtalorcana-logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@400;500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/shared.css" />
+  <link rel="stylesheet" href="/tools.css" />
+  <style>
+    /* ── LAYOUT ──────────────────────────────────────────── */
+    .card.wide { max-width: 1180px; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .controls .field { margin-bottom: 0; }
+    @media (max-width: 640px) { .controls { grid-template-columns: 1fr; } }
+
+    .status-line { font-size: .82rem; color: var(--text-muted); margin-top: .9rem; }
+    .status-line strong { color: var(--text); font-weight: 500; }
+    .live-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #22c55e; margin-right: .35rem; vertical-align: baseline;
+    }
+
+    /* ── TABS ────────────────────────────────────────────── */
+    .tabs { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+    .tab {
+      font-family: var(--font-heading); font-size: .78rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      background: var(--surface2); color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: .5rem .9rem; min-height: 44px; cursor: pointer; transition: all .2s;
+    }
+    .tab:hover { color: var(--gold); }
+    .tab[aria-selected="true"] {
+      border-color: var(--gold); color: var(--gold); background: rgba(212,168,67,0.1);
+    }
+    .panel[hidden] { display: none; }
+
+    .toolbar { display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; margin-bottom: 1rem; }
+    .toolbar .field { margin-bottom: 0; }
+    .toolbar .radio-group { flex-wrap: nowrap; }
+    .toolbar .radio-option label { padding: .4rem .8rem; min-height: 44px; white-space: nowrap; }
+    .toolbar input[type="number"] { width: 6rem; min-height: 44px; }
+
+    .note { font-size: .82rem; color: var(--text-muted); margin-top: .8rem; line-height: 1.5; }
+    .empty { text-align: center; color: var(--text-muted); padding: 2rem 1rem; font-size: .92rem; }
+    h2.sub {
+      font-family: var(--font-heading); font-size: .95rem; color: var(--heading);
+      letter-spacing: .06em; margin: 1.6rem 0 .6rem;
+    }
+    h2.sub:first-child { margin-top: 0; }
+
+    /* ── TABLES ──────────────────────────────────────────── */
+    .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table.data { border-collapse: separate; border-spacing: 0; width: 100%; font-size: .88rem; }
+    table.data th, table.data td {
+      padding: .45rem .6rem; text-align: right; white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+    }
+    table.data th {
+      font-family: var(--font-heading); font-size: .72rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted);
+    }
+    table.data th:first-child, table.data td:first-child { text-align: left; }
+    table.data td.left, table.data th.left { text-align: left; }
+    table.data .muted { color: var(--text-muted); }
+    table.data tbody tr:hover td { background: rgba(212,168,67,0.05); }
+    .num { font-variant-numeric: tabular-nums; }
+
+    .linkish {
+      background: none; border: none; padding: 0; font: inherit; color: var(--text);
+      cursor: pointer; text-align: left; text-decoration: underline;
+      text-decoration-color: var(--border); text-underline-offset: 3px;
+    }
+    .linkish:hover { color: var(--gold); text-decoration-color: var(--gold); }
+
+    /* ── INK PAIRS ───────────────────────────────────────── */
+    .deck { display: inline-flex; align-items: center; gap: .4rem; }
+    .inks { display: inline-flex; gap: 2px; }
+    .ink { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,.25); }
+    .ink.amber { background: #f2a900; } .ink.amethyst { background: #8b4aa8; }
+    .ink.emerald { background: #2e9b57; } .ink.ruby { background: #d0293b; }
+    .ink.sapphire { background: #1f8fd0; } .ink.steel { background: #9aa6b2; }
+    .ink.unknown { background: transparent; border: 1px dashed var(--text-muted); }
+
+    /* ── SHARE BAR ───────────────────────────────────────── */
+    .share { display: flex; align-items: center; gap: .5rem; justify-content: flex-end; }
+    .share-track { width: 90px; height: 8px; border-radius: 4px; background: var(--surface2); overflow: hidden; }
+    .share-fill { height: 100%; border-radius: 0 4px 4px 0; background: var(--gold); }
+
+    /* ── MATCHUP MATRIX ──────────────────────────────────── */
+    /* Diverging scale: blue above 50%, red below, neutral at 50%. The number is
+       always printed, so colour never carries the value alone. */
+    table.matrix { border-collapse: separate; border-spacing: 2px; font-size: .82rem; }
+    table.matrix th {
+      font-family: var(--font-heading); font-size: .7rem; font-weight: 600; letter-spacing: .04em;
+      color: var(--text-muted); padding: .3rem .35rem; white-space: nowrap; text-align: center;
+    }
+    table.matrix th.rowhead {
+      text-align: left; position: sticky; left: 0; z-index: 1; background: var(--surface);
+      padding-right: .7rem;
+    }
+    table.matrix th .inks { display: flex; justify-content: center; margin-bottom: 2px; }
+    table.matrix td {
+      min-width: 62px; height: 46px; padding: .2rem .3rem; text-align: center;
+      border-radius: 5px; background: var(--surface2); line-height: 1.15; position: relative;
+    }
+    table.matrix td .v { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); display: block; }
+    table.matrix td .n { font-size: .68rem; color: var(--text-muted); font-variant-numeric: tabular-nums; display: block; }
+    table.matrix td.thin .v { font-weight: 400; color: var(--text-muted); }
+    table.matrix td.mirror { background: transparent; border: 1px dashed var(--border); }
+    table.matrix td.mirror .v { font-weight: 400; color: var(--text-muted); font-size: .72rem; }
+    table.matrix td.none { background: transparent; color: var(--text-muted); }
+    table.matrix td.total { border-left: 0; }
+    table.matrix th.gap, table.matrix td.gap { min-width: 6px; width: 6px; background: transparent; padding: 0; }
+    table.matrix td[data-tip]:hover { outline: 2px solid var(--gold); outline-offset: -1px; cursor: default; }
+
+    .legend { display: flex; align-items: center; gap: .5rem; font-size: .75rem; color: var(--text-muted); margin-top: .8rem; flex-wrap: wrap; }
+    .legend-bar {
+      width: 160px; height: 10px; border-radius: 5px;
+      background: linear-gradient(90deg, rgba(214,69,69,.6), var(--surface2) 50%, rgba(56,128,235,.6));
+    }
+    .legend .swatch { width: 14px; height: 10px; border-radius: 3px; border: 1px dashed var(--border); display: inline-block; }
+
+    #tip {
+      position: fixed; z-index: 200; pointer-events: none; display: none;
+      background: var(--bg3); color: var(--text); border: 1px solid var(--border);
+      border-radius: 8px; padding: .5rem .7rem; font-size: .8rem; line-height: 1.45;
+      box-shadow: 0 6px 24px rgba(0,0,0,.35); max-width: 260px;
+    }
+    #tip b { color: var(--heading); font-weight: 600; }
+
+    /* ── PLAYER ──────────────────────────────────────────── */
+    .results { display: flex; flex-direction: column; gap: .3rem; margin-top: .8rem; }
+    .results button {
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+      padding: .5rem .8rem; min-height: 44px; color: var(--text); font: inherit; cursor: pointer;
+    }
+    .results button:hover { border-color: var(--gold); }
+    .player-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1rem; margin: 1.2rem 0 .6rem; }
+    .player-head .name { font-family: var(--font-heading); font-size: 1.15rem; color: var(--heading); }
+    .res { font-weight: 700; }
+    .res.W { color: #3880eb; } .res.L { color: #d64545; }
+    .res.D, .res.BYE, .res.LIVE { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-nav">Skip to content</a>
+
+<!-- Starfield -->
+<div id="stars"></div>
+
+<!-- Nav -->
+<nav>
+  <a class="nav-logo" href="/">
+    <img src="/gtalorcana-logo.svg" alt="GTA Lorcana" onerror="this.style.display='none'" />
+    <span class="nav-title">GTA Lorcana</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-back" href="/">← Home</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-label">Light</span>
+    </button>
+  </div>
+</nav>
+
+<main id="main-content">
+  <div class="page-header">
+    <h1>🏆 DLC Explorer</h1>
+    <p>What happened at a Disney Lorcana Challenge, round by round.</p>
+  </div>
+
+  <div class="card wide">
+    <div class="controls">
+      <div class="field">
+        <label for="eventSel">Event</label>
+        <select id="eventSel"><option>Loading…</option></select>
+      </div>
+      <div class="field">
+        <label for="scopeSel">Show</label>
+        <select id="scopeSel" disabled><option>Whole event</option></select>
+      </div>
+    </div>
+    <div class="status-line" id="status">Loading events…</div>
+    <div class="error-msg" id="error" style="margin-top:.8rem"></div>
+  </div>
+
+  <div class="card wide" id="content" hidden>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="matchups">Matchups</button>
+      <button class="tab" role="tab" data-tab="meta">Meta</button>
+      <button class="tab" role="tab" data-tab="conversion">Conversion</button>
+      <button class="tab" role="tab" data-tab="rounds">Rounds</button>
+      <button class="tab" role="tab" data-tab="players">Players</button>
+    </div>
+
+    <!-- Matchups -->
+    <section class="panel" id="panel-matchups">
+      <div class="toolbar">
+        <div class="field">
+          <label>Win rate</label>
+          <div class="radio-group">
+            <div class="radio-option"><input type="radio" name="rate" id="rateMatch" value="match" checked /><label for="rateMatch">Match</label></div>
+            <div class="radio-option"><input type="radio" name="rate" id="rateGame" value="game" /><label for="rateGame">Game</label></div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="minN">Fade below (matches)</label>
+          <input type="number" id="minN" min="1" max="500" value="20" />
+        </div>
+      </div>
+      <div id="matrixSummary" class="note" style="margin:0 0 .8rem"></div>
+      <div class="scroll" id="matrixWrap"></div>
+      <div class="legend">
+        <span>Row deck loses</span><span class="legend-bar"></span><span>Row deck wins</span>
+        <span style="margin-left:.8rem"><span class="swatch"></span> mirror (count only)</span>
+      </div>
+      <p class="note">Each cell is the row deck's win rate against the column deck, with the number of matches underneath. Byes and awarded losses are left out. Drawn matches count toward the sample but not the rate. Cells under the fade threshold are too small to trust.</p>
+    </section>
+
+    <!-- Meta -->
+    <section class="panel" id="panel-meta" hidden>
+      <h2 class="sub">Ink pairs</h2>
+      <div class="scroll" id="metaWrap"></div>
+      <p class="note">Share is of players paired in the selected rounds. Win rates leave out mirrors, byes and awarded losses; draws are listed separately.</p>
+      <h2 class="sub">Share by round</h2>
+      <div class="scroll" id="trendWrap"></div>
+    </section>
+
+    <!-- Conversion -->
+    <section class="panel" id="panel-conversion" hidden>
+      <div id="conversionWrap"></div>
+    </section>
+
+    <!-- Rounds -->
+    <section class="panel" id="panel-rounds" hidden>
+      <h2 class="sub">Players and drops</h2>
+      <div class="scroll" id="dropsWrap"></div>
+      <p class="note">"Left" counts players who were paired that round and never again. At the end of a phase that mostly means missing the cut.</p>
+      <h2 class="sub">Standings</h2>
+      <div class="toolbar">
+        <div class="field" style="min-width:220px">
+          <label for="standingsSel">After round</label>
+          <select id="standingsSel"></select>
+        </div>
+      </div>
+      <div class="scroll" id="standingsWrap"></div>
+    </section>
+
+    <!-- Players -->
+    <section class="panel" id="panel-players" hidden>
+      <div class="field">
+        <label for="playerSearch">Find a player by handle</label>
+        <input type="text" id="playerSearch" autocomplete="off" placeholder="Start typing…" />
+      </div>
+      <div class="results" id="playerResults"></div>
+      <div id="playerWrap"></div>
+    </section>
+  </div>
+</main>
+
+<div id="tip" role="tooltip"></div>
+
+<footer>
+  <div class="footer-logo">GTA Lorcana</div>
+  <p>Greater Toronto Area's Disney Lorcana Community</p>
+  <p style="margin-top:.5rem">
+    <a href="https://discord.gg/sNyzVMnTs6" target="_blank">Discord</a>
+    &nbsp;·&nbsp;
+    <a href="https://www.disneylorcana.com" target="_blank">Disney Lorcana Official</a>
+  </p>
+  <p style="margin-top:.5rem">Results are public data from the Ravensburger Play Hub.</p>
+  <p style="margin-top:1rem;">This website uses trademarks and/or copyrights associated with Disney Lorcana TCG, used under Ravensburger's Community Code Policy. We are expressly prohibited from charging you to use or access this content. This website is not published, endorsed, or specifically approved by Disney or Ravensburger. For more information about Disney Lorcana TCG, visit https://www.disneylorcana.com/en-US/.</p>
+</footer>
+
+<script src="/shared.js"></script>
+<script type="module">
+  import {
+    buildIndex, listScopes, matchupMatrix, deckStats, metaByRound, conversion, playerHistory,
+    searchPlayers, dropsByRound, matchWinRate, gameWinRate, deckLabel, deckShort, deckOf, handleOf, UNKNOWN,
+  } from './stats.js';
+
+  // ── Config ──────────────────────────────────────────────
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  const WORKER = isLocal ? 'http://localhost:8787' : 'https://api.gtalorcana.ca';
+  const REFRESH_MS = 2 * 60 * 1000;
+  const STANDINGS_STEP = 100;
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const pct = (v, digits = 0) => (v == null ? '–' : `${(v * 100).toFixed(digits)}%`);
+
+  // ── State (mirrored in the URL so views can be linked) ──
+  const params = new URLSearchParams(location.search);
+  const state = {
+    event: params.get('event'),
+    scope: params.get('scope') || 'all',
+    tab: params.get('tab') || 'matchups',
+    player: params.get('player') ? Number(params.get('player')) : null,
+    rate: 'match',
+    standingsRound: null,
+    standingsShown: STANDINGS_STEP,
+  };
+  let index = null;
+  let dataset = null;
+  const standingsCache = new Map();
+
+  function syncUrl() {
+    const p = new URLSearchParams();
+    if (state.event) p.set('event', state.event);
+    if (state.scope !== 'all') p.set('scope', state.scope);
+    if (state.tab !== 'matchups') p.set('tab', state.tab);
+    if (state.player && state.tab === 'players') p.set('player', state.player);
+    history.replaceState(null, '', `${location.pathname}${p.size ? '?' + p : ''}`);
+  }
+
+  async function api(path) {
+    const res = await fetch(`${WORKER}${path}`);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+    return body;
+  }
+
+  function showError(msg) {
+    $('error').textContent = msg || '';
+    $('error').classList.toggle('visible', !!msg);
+  }
+
+  // ── Ink pair markup ─────────────────────────────────────
+  const inkDots = deck => `<span class="inks">${
+    (deck === UNKNOWN ? ['unknown'] : deck.split(',')).map(i => `<span class="ink ${esc(i)}"></span>`).join('')
+  }</span>`;
+  const deckHtml = deck => `<span class="deck">${inkDots(deck)}<span>${esc(deckLabel(deck))}</span></span>`;
+  const playerBtn = (id, handle) => `<button class="linkish" data-player="${id}">${esc(handle)}</button>`;
+
+  // ── Events ──────────────────────────────────────────────
+  async function loadEvents() {
+    let events = [];
+    try {
+      events = (await api('/dlc/events')).events ?? [];
+    } catch (e) {
+      $('status').textContent = '';
+      showError(`Could not load events: ${e.message}`);
+      return;
+    }
+    if (!events.length) { $('status').textContent = 'No events are being tracked yet.'; return; }
+
+    $('eventSel').innerHTML = events.map(e =>
+      `<option value="${e.id}">${esc(e.name)}${e.pending ? ' (no data yet)' : ''}</option>`).join('');
+    if (!events.some(e => String(e.id) === state.event)) {
+      if (state.event) showError(`Event ${state.event} is not tracked — showing ${events[0].name} instead.`);
+      state.event = String(events[0].id);
+    }
+    $('eventSel').value = state.event;
+    await loadEvent();
+  }
+
+  async function loadEvent({ quiet = false } = {}) {
+    if (!quiet) {
+      $('status').textContent = 'Loading matches…';
+      $('content').hidden = true;
+      index = null;
+    }
+    try {
+      dataset = await api(`/dlc/matches?id=${state.event}`);
+    } catch (e) {
+      if (quiet) return; // keep showing what we have
+      $('status').textContent = '';
+      $('scopeSel').disabled = true;
+      showError(/no data/i.test(e.message)
+        ? 'This event has no data yet. Rounds appear here a few minutes after pairings go up.'
+        : e.message);
+      return;
+    }
+    if (!quiet) showError('');
+    index = buildIndex(dataset);
+
+    if (!index.rounds.some(r => r.matches.length)) {
+      const start = dataset.meta.start ? new Date(dataset.meta.start) : null;
+      $('status').innerHTML = `<strong>${esc(dataset.meta.name)}</strong> has no pairings yet` +
+        (start && start > new Date() ? ` — it starts ${esc(start.toLocaleString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' }))} your time.` : '.') +
+        ' Rounds appear here a few minutes after pairings go up.';
+      $('scopeSel').disabled = true;
+      $('content').hidden = true;
+      syncUrl();
+      return;
+    }
+
+    const scopes = listScopes(index);
+    if (!scopes.some(s => s.key === state.scope)) state.scope = 'all';
+    const group = (label, list) => (list.length ? `<optgroup label="${label}">${list.map(s =>
+      `<option value="${s.key}">${esc(s.label)}</option>`).join('')}</optgroup>` : '');
+    $('scopeSel').innerHTML =
+      `<option value="all">Whole event</option>` +
+      group('Phases', scopes.filter(s => s.key.startsWith('phase:'))) +
+      group('Single round', scopes.filter(s => s.key.startsWith('round:')));
+    $('scopeSel').value = state.scope;
+    $('scopeSel').disabled = false;
+
+    const withStandings = index.rounds.filter(r => r.matches.length && r.stored === 'final');
+    const keep = withStandings.some(r => r.id === state.standingsRound);
+    if (!keep) state.standingsRound = withStandings.at(-1)?.id ?? null;
+    $('standingsSel').innerHTML = withStandings.map(r =>
+      `<option value="${r.id}">${esc(r.label)} · ${esc(r.phase.name)}</option>`).join('');
+    if (state.standingsRound) $('standingsSel').value = state.standingsRound;
+
+    renderStatus();
+    $('content').hidden = false;
+    render();
+  }
+
+  function renderStatus() {
+    const stored = index.rounds.filter(r => r.matches.length);
+    const live = stored.filter(r => r.stored !== 'final');
+    const players = dataset.meta.player_count;
+    const updated = live.map(r => dataset.rounds[r.id]?.updated_at).filter(Boolean).sort().at(-1);
+    const parts = [];
+    if (players) parts.push(`<strong>${players.toLocaleString()}</strong> players`);
+    parts.push(`<strong>${stored.length}</strong> round${stored.length === 1 ? '' : 's'} recorded`);
+    if (live.length) {
+      parts.push(`<span class="live-dot"></span>${esc(live.map(r => r.label).join(', '))} in progress` +
+        (updated ? `, read ${new Date(updated).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ''));
+    } else if (dataset.complete) {
+      parts.push('event complete');
+    }
+    $('status').innerHTML = parts.join(' · ');
+  }
+
+  // ── Render ──────────────────────────────────────────────
+  function render() {
+    if (!index) return;
+    document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === state.tab));
+    document.querySelectorAll('.panel').forEach(p => { p.hidden = p.id !== `panel-${state.tab}`; });
+    ({ matchups: renderMatrix, meta: renderMeta, conversion: renderConversion, rounds: renderRounds, players: renderPlayers })[state.tab]?.();
+    syncUrl();
+  }
+
+  // Diverging fill: distance from 50% drives intensity, saturating at ±20 points.
+  function cellFill(rate) {
+    if (rate == null) return '';
+    const t = Math.max(-1, Math.min(1, (rate - 0.5) / 0.2));
+    const a = (Math.abs(t) * 0.6).toFixed(3);
+    return t >= 0 ? `background:rgba(56,128,235,${a})` : `background:rgba(214,69,69,${a})`;
+  }
+
+  function renderMatrix() {
+    const mx = matchupMatrix(index, state.scope);
+    const minN = Math.max(1, Number($('minN').value) || 1);
+    const rateOf = state.rate === 'game' ? gameWinRate : matchWinRate;
+    const ex = mx.excluded;
+    $('matrixSummary').innerHTML =
+      `<strong>${mx.counted.toLocaleString()}</strong> matches counted · left out: ${ex.bye} bye${ex.bye === 1 ? '' : 's'}, ` +
+      `${ex.noshow} awarded loss${ex.noshow === 1 ? '' : 'es'}, ${ex.pending} still being played`;
+
+    if (!mx.decks.length) { $('matrixWrap').innerHTML = '<div class="empty">No finished matches in this selection yet.</div>'; return; }
+
+    const head = `<tr><th class="rowhead"></th><th>vs field</th><th class="gap"></th>${
+      mx.decks.map(d => `<th title="${esc(deckLabel(d))}">${inkDots(d)}${esc(deckShort(d))}</th>`).join('')}</tr>`;
+
+    const cell = (a, b, c, extraClass = '') => {
+      if (!c || !c.n) return `<td class="none ${extraClass}">·</td>`;
+      const r = rateOf(c);
+      const thin = c.n < minN;
+      const tip = `<b>${esc(deckLabel(a))}</b> vs <b>${esc(b)}</b><br>` +
+        `Matches: ${c.w}–${c.l}${c.d ? `–${c.d}` : ''} (${pct(matchWinRate(c), 1)})<br>` +
+        `Games: ${c.gw}–${c.gl}${c.gd ? `, ${c.gd} drawn` : ''} (${pct(gameWinRate(c), 1)})` +
+        (thin ? '<br><i>Small sample</i>' : '');
+      return `<td class="${thin ? 'thin' : ''} ${extraClass}" style="${thin ? '' : cellFill(r)}" data-tip="${esc(tip)}">` +
+        `<span class="v">${pct(r)}</span><span class="n">${c.n.toLocaleString()}</span></td>`;
+    };
+
+    const rows = mx.decks.map(a => {
+      const cells = mx.decks.map(b => {
+        if (a === b) {
+          const n = mx.mirrors[a] ?? 0;
+          return `<td class="mirror" data-tip="${esc(`<b>${esc(deckLabel(a))}</b> mirror<br>${n} match${n === 1 ? '' : 'es'}`)}"><span class="v">mirror</span><span class="n">${n}</span></td>`;
+        }
+        return cell(a, deckLabel(b), mx.cells[a]?.[b]);
+      }).join('');
+      return `<tr><th class="rowhead">${deckHtml(a)}</th>${cell(a, 'the field', mx.totals[a], 'total')}<td class="gap"></td>${cells}</tr>`;
+    }).join('');
+
+    $('matrixWrap').innerHTML = `<table class="matrix"><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+  }
+
+  function renderMeta() {
+    const { total, rows } = deckStats(index, state.scope);
+    const max = Math.max(...rows.map(r => r.share), 0.0001);
+    $('metaWrap').innerHTML = rows.length ? `<table class="data">
+      <thead><tr><th>Ink pair</th><th>Players</th><th>Share</th><th>W</th><th>L</th><th>D</th><th>Match win</th><th>Game win</th><th>Mirrors</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td>${deckHtml(r.deck)}</td>
+        <td class="num">${r.players.toLocaleString()}</td>
+        <td><div class="share"><span class="num">${pct(r.share, 1)}</span><span class="share-track"><span class="share-fill" style="width:${(r.share / max * 100).toFixed(1)}%;display:block"></span></span></div></td>
+        <td class="num">${r.w}</td><td class="num">${r.l}</td><td class="num muted">${r.d}</td>
+        <td class="num">${pct(r.mwr, 1)}</td><td class="num">${pct(r.gwr, 1)}</td><td class="num muted">${r.mirror}</td>
+      </tr>`).join('')}</tbody>
+      <tfoot><tr><td class="muted">All</td><td class="num muted">${total.toLocaleString()}</td><td colspan="7"></td></tr></tfoot>
+    </table>` : '<div class="empty">No pairings in this selection yet.</div>';
+
+    const trend = metaByRound(index);
+    const decks = deckStats(index, 'all').rows.map(r => r.deck);
+    $('trendWrap').innerHTML = trend.length ? `<table class="data">
+      <thead><tr><th>Ink pair</th>${trend.map(t => `<th title="${esc(t.round.phase.name)}">R${t.round.seq}</th>`).join('')}</tr></thead>
+      <tbody>${decks.map(d => `<tr><td>${deckHtml(d)}</td>${trend.map(t =>
+        `<td class="num">${pct((t.decks[d] ?? 0) / t.total, 1)}</td>`).join('')}</tr>`).join('')}
+        <tr><td class="muted">Players paired</td>${trend.map(t => `<td class="num muted">${t.total.toLocaleString()}</td>`).join('')}</tr>
+      </tbody></table>` : '';
+  }
+
+  function renderConversion() {
+    const conv = conversion(index);
+    if (!conv.length) {
+      const next = index.phases.find(p => !p.rounds.some(r => r.matches.length));
+      $('conversionWrap').innerHTML = `<div class="empty">Conversion appears once ${next ? esc(next.label) : 'the next phase'} has pairings.<br>It shows what share of each ink pair made it through.</div>`;
+      return;
+    }
+    $('conversionWrap').innerHTML = conv.map(c => `
+      <h2 class="sub">${esc(c.from.label)} → ${esc(c.to.label)}</h2>
+      <p class="note" style="margin:0 0 .6rem"><strong>${c.advanced.toLocaleString()}</strong> of ${c.entered.toLocaleString()} players advanced (${pct(c.advanced / c.entered, 1)}).</p>
+      <div class="scroll"><table class="data">
+        <thead><tr><th>Ink pair</th><th>Entered</th><th>Advanced</th><th>Conversion</th><th>Share before</th><th>Share after</th></tr></thead>
+        <tbody>${c.rows.map(r => `<tr>
+          <td>${deckHtml(r.deck)}</td><td class="num">${r.entered}</td><td class="num">${r.advanced}</td>
+          <td class="num">${pct(r.rate, 1)}</td><td class="num muted">${pct(r.shareBefore, 1)}</td><td class="num">${pct(r.shareAfter, 1)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`).join('') +
+      '<p class="note">Who advanced is worked out from who appears in the next phase\'s pairings.</p>';
+  }
+
+  function renderRounds() {
+    const drops = dropsByRound(index);
+    $('dropsWrap').innerHTML = `<table class="data">
+      <thead><tr><th>Round</th><th class="left">Phase</th><th>Players</th><th>Matches</th><th>Left after</th></tr></thead>
+      <tbody>${drops.map(d => `<tr>
+        <td>${esc(d.round.label)}${d.round.stored === 'final' ? '' : ' <span class="muted">(in progress)</span>'}</td>
+        <td class="left muted">${esc(d.round.phase.label)}</td>
+        <td class="num">${d.players.toLocaleString()}</td>
+        <td class="num">${d.round.matches.length.toLocaleString()}</td>
+        <td class="num">${d.left == null ? '<span class="muted">–</span>' : d.left}${d.phaseEnd ? ' <span class="muted">(end of phase)</span>' : ''}</td>
+      </tr>`).join('')}</tbody></table>`;
+    renderStandings();
+  }
+
+  async function renderStandings() {
+    const rid = state.standingsRound;
+    if (!rid) { $('standingsWrap').innerHTML = '<div class="empty">Standings appear once a round is complete.</div>'; return; }
+    const key = `${state.event}:${rid}`;
+    if (!standingsCache.has(key)) {
+      $('standingsWrap').innerHTML = '<div class="spinner"></div>';
+      try {
+        standingsCache.set(key, (await api(`/dlc/standings?id=${state.event}&round=${rid}`)).rows ?? []);
+      } catch (e) {
+        if (state.standingsRound === rid) $('standingsWrap').innerHTML = `<div class="empty">${esc(/no standings/i.test(e.message) ? 'Standings for this round have not been recorded yet.' : e.message)}</div>`;
+        return;
+      }
+    }
+    if (state.standingsRound !== rid) return; // user moved on while loading
+    const rows = standingsCache.get(key);
+    const shown = rows.slice(0, state.standingsShown);
+    $('standingsWrap').innerHTML = `<table class="data">
+      <thead><tr><th>#</th><th class="left">Player</th><th class="left">Ink pair</th><th>Record</th><th>Pts</th><th>OMW</th><th>GW</th><th>OGW</th></tr></thead>
+      <tbody>${shown.map(s => `<tr>
+        <td class="num">${s.r}</td><td class="left">${playerBtn(s.p, handleOf(index, s.p))}</td>
+        <td class="left">${deckHtml(deckOf(index, s.p))}</td><td class="num">${esc(s.rec ?? '')}</td><td class="num">${s.pts}</td>
+        <td class="num muted">${pct(s.omw, 1)}</td><td class="num muted">${pct(s.gw, 1)}</td><td class="num muted">${pct(s.ogw, 1)}</td>
+      </tr>`).join('')}</tbody></table>` +
+      (rows.length > shown.length
+        ? `<button class="btn btn-secondary" id="moreStandings" style="margin-top:.8rem">Show ${Math.min(STANDINGS_STEP, rows.length - shown.length)} more of ${rows.length.toLocaleString()}</button>`
+        : '');
+  }
+
+  function renderPlayers() {
+    renderSearch();
+    if (!state.player || !index.players[state.player]) { $('playerWrap').innerHTML = ''; return; }
+    const h = playerHistory(index, state.player);
+    $('playerWrap').innerHTML = `
+      <div class="player-head"><span class="name">${esc(h.handle)}</span>${deckHtml(h.deck)}<span class="muted num">${esc(h.record)} · ${h.points} pts</span></div>
+      <div class="scroll"><table class="data">
+        <thead><tr><th>Round</th><th>Table</th><th class="left">Result</th><th class="left">Games</th><th class="left">Opponent</th><th class="left">Their ink pair</th><th>Record</th></tr></thead>
+        <tbody>${h.rows.map(r => `<tr>
+          <td>${esc(r.round.label)}</td><td class="num muted">${r.table ?? ''}</td>
+          <td class="left"><span class="res ${r.result}">${r.result === 'BYE' ? 'Bye' : r.result === 'LIVE' ? 'Playing' : r.result}</span></td>
+          <td class="left num">${esc(r.score ?? '')}</td>
+          <td class="left">${r.opp ? playerBtn(r.opp.id, r.opp.handle) : `<span class="muted">${r.awarded ? 'Awarded loss' : '—'}</span>`}</td>
+          <td class="left">${r.opp ? deckHtml(r.opp.deck) : ''}</td>
+          <td class="num">${esc(r.record)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+  }
+
+  function renderSearch() {
+    const q = $('playerSearch').value;
+    const hits = searchPlayers(index, q, 12);
+    $('playerResults').innerHTML = hits.map(p =>
+      `<button data-player="${p.id}"><span>${esc(p.handle)}</span>${deckHtml(p.deck)}</button>`).join('') ||
+      (q.trim() ? '<div class="empty" style="padding:.8rem">No handle matches that.</div>' : '');
+  }
+
+  function openPlayer(id) {
+    state.player = Number(id);
+    state.tab = 'players';
+    $('playerSearch').value = '';
+    render();
+    $('playerWrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── Events ──────────────────────────────────────────────
+  $('eventSel').addEventListener('change', e => {
+    state.event = e.target.value; state.scope = 'all'; state.player = null; state.standingsRound = null;
+    state.standingsShown = STANDINGS_STEP;
+    loadEvent();
+  });
+  $('scopeSel').addEventListener('change', e => { state.scope = e.target.value; render(); });
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { state.tab = t.dataset.tab; render(); }));
+  document.querySelectorAll('input[name="rate"]').forEach(r => r.addEventListener('change', () => { state.rate = r.value; renderMatrix(); }));
+  $('minN').addEventListener('input', renderMatrix);
+  $('standingsSel').addEventListener('change', e => {
+    state.standingsRound = Number(e.target.value); state.standingsShown = STANDINGS_STEP; renderStandings();
+  });
+  $('playerSearch').addEventListener('input', renderSearch);
+  document.addEventListener('click', e => {
+    const p = e.target.closest('[data-player]');
+    if (p) return openPlayer(p.dataset.player);
+    if (e.target.id === 'moreStandings') { state.standingsShown += STANDINGS_STEP; renderStandings(); }
+  });
+
+  // Matrix tooltip (mouse hover, or tap on touch screens)
+  const tip = $('tip');
+  function showTip(td, x, y) {
+    tip.innerHTML = td.dataset.tip; // built from escaped text above
+    tip.style.display = 'block';
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = `${Math.max(8, Math.min(x + 14, innerWidth - w - 8))}px`;
+    tip.style.top = `${y + 18 + h > innerHeight ? Math.max(8, y - h - 12) : y + 18}px`;
+  }
+  $('matrixWrap').addEventListener('pointermove', e => {
+    const td = e.target.closest('td[data-tip]');
+    if (td) showTip(td, e.clientX, e.clientY); else tip.style.display = 'none';
+  });
+  $('matrixWrap').addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+  addEventListener('scroll', () => { tip.style.display = 'none'; }, { passive: true });
+
+  // Keep a live event fresh without disturbing what the reader is looking at.
+  setInterval(() => {
+    if (index && !dataset.complete && document.visibilityState === 'visible') loadEvent({ quiet: true });
+  }, REFRESH_MS);
+
+  loadEvents();
+</script>
+</body>
+</html>

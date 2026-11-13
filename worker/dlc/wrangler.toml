@@ -1,0 +1,36 @@
+name = "gta-lorcana-dlc"
+main = "index.js"
+compatibility_date = "2025-09-27"
+
+# Local dev (wrangler dev) uses these top-level settings with a simulated KV.
+[vars]
+TRACKED_EVENTS = "1254364,1254365"
+
+[[kv_namespaces]]
+binding = "DLC"
+id = "local-dev-placeholder"
+
+[triggers]
+crons = ["* * * * *"]
+
+[observability]
+[observability.logs]
+enabled = true
+invocation_logs = true
+
+[env.production]
+routes = [
+  { pattern = "api.gtalorcana.ca/dlc/*", zone_name = "gtalorcana.ca" },
+]
+
+# Comma-separated RPH event IDs to ingest and serve. Add a DLC here and deploy.
+[env.production.vars]
+TRACKED_EVENTS = "1254364,1254365"
+
+# Namespace "production-DLC".
+[[env.production.kv_namespaces]]
+binding = "DLC"
+id = "db19409c85ea441e8827838a83b8fb0b"
+
+[env.production.triggers]
+crons = ["* * * * *"]
