@@ -140,6 +140,7 @@ async function runCron(env) {
     }
   } else if (job) {
     const idx = job.ev.state.rounds[job.round.id];
+    const cycleStarted = idx.cycle_started;
     try {
       if (job.kind === 'matches') await ingestMatchesPage(env, job, now);
       else await ingestStandingsPage(env, job);
@@ -147,6 +148,9 @@ async function runCron(env) {
     } catch (e) {
       console.log(`[dlc] ${job.kind} event ${job.ev.id} round ${job.round.id} failed: ${e.message}`);
       idx.retry_after = now + RETRY_MS;
+      // A first page that failed is not a cycle: without this the round would
+      // wait a full REFRESH_MS, not RETRY_MS, before it is tried again.
+      if (!idx.cycling) idx.cycle_started = cycleStarted;
       job.ev.dirty = true;
     }
   }
